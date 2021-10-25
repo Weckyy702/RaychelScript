@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Lexer",
+  "command": "/opt/cuda/bin/g++ -DRaychelScriptLexer_EXPORTS -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -fPIC -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror -std=gnu++20 -o CMakeFiles/RaychelScriptLexer.dir/src/Lexer.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/src/Lexer.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/src/Lexer.cpp"
+},
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Lexer/test",
+  "command": "/opt/cuda/bin/g++  -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -Wall -Wextra -Werror -Wpedantic -Wconversion -Wshadow -std=gnu++20 -o CMakeFiles/Lexer_test.dir/Lexer.test.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/test/Lexer.test.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/test/Lexer.test.cpp"
+},
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Parser",
+  "command": "/opt/cuda/bin/g++ -DRaychelScriptParser_EXPORTS -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -fPIC -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror -std=gnu++20 -o CMakeFiles/RaychelScriptParser.dir/src/Parser.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/Parser.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/Parser.cpp"
+},
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Parser",
+  "command": "/opt/cuda/bin/g++ -DRaychelScriptParser_EXPORTS -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -fPIC -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror -std=gnu++20 -o CMakeFiles/RaychelScriptParser.dir/src/ConfigBlock.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/ConfigBlock.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/ConfigBlock.cpp"
+},
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Parser",
+  "command": "/opt/cuda/bin/g++ -DRaychelScriptParser_EXPORTS -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -fPIC -Wall -Wextra -Wshadow -Wpedantic -Wconversion -Werror -std=gnu++20 -o CMakeFiles/RaychelScriptParser.dir/src/BodyBlock.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/BodyBlock.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/src/BodyBlock.cpp"
+},
+{
+  "directory": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/build/Parser/test",
+  "command": "/opt/cuda/bin/g++  -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/shared/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/include -I/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Lexer/include -isystem /usr/local/include/RaychelCore -isystem /usr/local/include/RaychelLogger -g -Wall -Wextra -Werror -Wpedantic -Wconversion -Wshadow -std=gnu++20 -o CMakeFiles/Parser_test.dir/parser.test.cpp.o -c /home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/test/parser.test.cpp",
+  "file": "/home/weckyy702/docs/dev/C++/Raychel/RaychelScript/Parser/test/parser.test.cpp"
+}
+]

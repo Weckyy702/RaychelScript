@@ -1,0 +1,29 @@
+Checks: " clang*,
+          bugprone-*,
+          concurrency-mt-unsafe,
+          cppcoreguidelines-*,
+          -cppcoreguidelines-avoid-magic-numbers,
+          -cppcoreguidelines-macro-usage,
+          google-build-explicit-make-pair,
+          google-build-namespaces,
+          google-default-arguments,
+          google-explicit-constructor,
+          google-global-names-in-headers,
+          hicpp-*,
+          llvm-else-after-return,
+          llvm-namespace-comment,
+          llvm-qualified-auto,
+          misc-*,
+          -misc-no-recursion,
+          modernize-*,
+          -modernize-use-trailing-return-type,
+          -modernize-pass-by-value,
+          mpi-type-mismatch,
+          performance-*,
+          readability-*,
+          -readability-magic-numbers
+"
+
+CheckOptions:
+  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:           '1'
