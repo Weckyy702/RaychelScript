@@ -54,6 +54,46 @@ namespace RaychelScript {
         }
         return parse(*tokens);
     }
+
+    inline std::variant<AST, ParserErrorCode> parse(const std::string& source_text) noexcept
+    {
+        std::stringstream s{source_text};
+        return parse(s);
+    }
+
+
+    /**
+    * \brief Parse the source tokens without checking for a valid config block
+    * 
+    * This function is intended for live-parsing from stdin.
+    * 
+    * \warning THIS FUNCTION DOES NOT PRODUCE A VALID AST!
+    * 
+    * \param source_tokens 
+    * \return  
+    */
+    std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+
+    /**
+    * \brief Parse the source text without checking for a valid config block
+    * 
+    * This function is intended for live-parsing from stdin.
+    * 
+    * \warning THIS FUNCTION DOES NOT PRODUCE A VALID AST!
+    * 
+    * \param source_text
+    * \return  
+    */
+    inline std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::string& source_text) noexcept
+    {
+        const auto maybe_tokens = lex(source_text);
+
+        if(!maybe_tokens.has_value()) {
+            return ParserErrorCode::no_input;
+        }
+
+        return _parse_no_config_check(*maybe_tokens);
+    }
 } // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_PARSER_H

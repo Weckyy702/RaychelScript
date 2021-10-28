@@ -137,4 +137,10 @@ namespace RaychelScript {
         return parse_body_block(body_tokens, ast);
     }
 
+    std::variant<AST, ParserErrorCode> _parse_no_config_check(const SourceTokens& source_tokens) noexcept
+    {
+        AST ast;
+        return parse_body_block(source_tokens, ast);
+    }
+
 } // namespace RaychelScript
