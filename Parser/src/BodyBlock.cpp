@@ -48,7 +48,48 @@ using ParseResult = std::variant<RaychelScript::ParserErrorCode, RaychelScript::
 
 namespace RaychelScript {
 
-    //TODO: clean this mess up
+    /**
+    * \brief Check if an operator token falls into the MD part of PEMDAS
+    * 
+    * \param token token to check
+    * \return
+    */
+    [[nodiscard]] static bool is_MD_op(TokenType::TokenType type) noexcept
+    {
+        return (type == TokenType::star) || (type == TokenType::slash);
+    }
+
+    /**
+    * \brief Check if an operator token falls into the AS part of PEMDAS
+    * 
+    * \param token token to check
+    * \return
+    */
+    [[nodiscard]] static bool is_AS_op(TokenType::TokenType type) noexcept
+    {
+        return (type == TokenType::plus) || (type == TokenType::minus);
+    }
+
+    /**
+    * \brief Check if a token is an arithmetic operator
+    * 
+    * \param token token to check
+    * \return
+    */
+    [[nodiscard]] static bool is_arith_op(TokenType::TokenType type) noexcept
+    {
+        return is_MD_op(type) || is_AS_op(type);
+    }
+
+    /**
+    * \brief Match a token against a provided pattern.
+    * 
+    * \tparam N size of the pattern.
+    * 
+    *  The purpose of this function is to provide regex-like matching of token sequences.
+    *  TokenType::expression_ is used like a wildcard and will mach all tokens up to the next token in the pattern.
+    *  TokenType::arith_op_ is used to find all arithmetic operators as defined by is_arith_op().
+    */
     template <std::size_t N>
     requires(N != 0) static SourceTokens match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern)
     noexcept
@@ -108,49 +149,13 @@ namespace RaychelScript {
     }
 
     /**
-    * \brief Check if an operator token falls into the MD part of PEMDAS
+    * \brief Find the least precedent arithmetic operator, if any.
     * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_MD_op(const Token& token) noexcept
-    {
-        const auto& type = token.type;
-
-        return (type == TokenType::star) || (type == TokenType::slash);
-    }
-
-    /**
-    * \brief Check if an operator token falls into the AS part of PEMDAS
-    * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_AS_op(const Token& token) noexcept
-    {
-        const auto& type = token.type;
-
-        return (type == TokenType::plus) || (type == TokenType::minus);
-    }
-
-    /**
-    * \brief Check if a token is an arithmetic operator
-    * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_arith_op(const Token& token) noexcept
-    {
-        return is_MD_op(token) || is_AS_op(token);
-    }
-
-    /**
-    * \brief Find the least precedent arithmetic operator, if any
+    * This function finds the operator that will be evaluated last according to operator precedence.
+    * Since the AST is inverted, the last operator is the top-level node in the chain
     * 
     * \param tokens List of tokens to scan
     * \return Iterator to the least precedent token, tokens.end() if no operator was found
-    * 
-    * TODO: this doesn't handle parentheses yet
     */
     [[nodiscard]] static LineTokens::const_iterator find_arithmetic_operator(LineView tokens) noexcept
     {
@@ -158,26 +163,51 @@ namespace RaychelScript {
             return tokens.end();
         }
 
+        int paren_depth{0}; //keep track of how deep we are inside nested parentheses
+
         auto it = tokens.end();
         bool op_was_MD = false;
 
         auto current = std::prev(tokens.end());
         do {
-            if (!is_arith_op(*current)) {
-                if (current->type != TokenType::identifer && current->type != TokenType::number) {
-                    break; //We can break early if the expression contains tokens not allowed in arithmetic expressions
+            if (!is_arith_op(current->type)) {
+                switch (current->type) {
+                    case TokenType::right_paren:
+                        paren_depth++;
+                        break;
+                    case TokenType::left_paren:
+                        if (--paren_depth < 0) {
+                            Logger::error("Unmatched parenthesis at ", current->location, '\n');
+                            return tokens.end(); //we closed too many parentheses
+                        }
+                        break;
+                    case TokenType::number:
+                    case TokenType::identifer:
+                        break; //the only non-operator token allowed are number and identifier
+                    default:
+                        return tokens.end(); //break out early if we found an illegal token
                 }
                 continue;
             }
-            if (is_AS_op(*current)) {
+
+            if (paren_depth != 0) {
+                continue;
+            }
+
+            if (is_AS_op(current->type)) {
                 it = current;
-                break; //If we found an AS operator, we can exit early
+                break; //If we found the right-most AS operator, we can exit early
             }
             if (!op_was_MD) {
                 it = current;
                 op_was_MD = true;
             }
         } while (current-- != tokens.begin());
+
+        if (paren_depth != 0) {
+            Logger::error("Unmatched parenthesis at ", tokens.back().location, '\n');
+            return tokens.end();
+        }
 
         return it;
     }
@@ -231,17 +261,23 @@ namespace RaychelScript {
 
         IndentHandler handler;
 
+        Logger::debug(handler.indent());
+        for (const auto& token : expression_tokens) {
+            Logger::log(token_type_to_string(token.type), ' ');
+        }
+        Logger::log('\n');
+
         if (expression_tokens.empty()) {
             Logger::error(handler.indent(), "parse_expression got empty token list!\n");
             return ParserErrorCode::no_input;
         }
 
-        //Assignment expressions
-        if (const auto matches = match_token_pattern(expression_tokens, array{expression_, equal, expression_});
+        //Parenthesised expressions
+        if (const auto matches = match_token_pattern(expression_tokens, array{left_paren, expression_, right_paren});
             !matches.empty()) {
-            Logger::debug(handler.indent(), "Found assignment expression at ", matches.at(1).front().location, '\n');
+            Logger::debug(handler.indent(), "Found parenthesised expression at ", matches.at(1).front().location, '\n');
 
-            return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2));
+            return parse_expression(matches.at(1));
         }
 
         //Unary operators
@@ -333,7 +369,7 @@ namespace RaychelScript {
                 "Found variable declaration at ",
                 matches.front().front().location,
                 " name=",
-                *matches.front().front().content,
+                *matches.at(1).front().content,
                 '\n');
 
             auto name = *matches.at(1).front().content;
