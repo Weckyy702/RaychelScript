@@ -44,6 +44,8 @@ using LineTokens = std::vector<RaychelScript::Token>;
 using LineView = std::ranges::subrange<LineTokens::const_iterator>;
 using SourceTokens = std::vector<LineTokens>;
 
+using ParseResult = std::variant<RaychelScript::ParserErrorCode, RaychelScript::AST_Node>;
+
 namespace RaychelScript {
 
     //TODO: clean this mess up
@@ -215,13 +217,14 @@ namespace RaychelScript {
     }
 
     template <NodeData T>
-    [[nodiscard]] static std::variant<ParserErrorCode, AST_Node>
-    handle_two_component_expression(LineView lhs, LineView rhs) noexcept;
+    [[nodiscard]] static ParseResult handle_two_component_expression(LineView lhs, LineView rhs) noexcept;
 
-    [[nodiscard]] static std::variant<ParserErrorCode, AST_Node>
-    handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op) noexcept;
+    [[nodiscard]] static ParseResult handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op) noexcept;
 
-    [[nodiscard]] static std::variant<ParserErrorCode, AST_Node> parse_expression(LineView expression_tokens) noexcept
+    [[nodiscard]] static ParseResult
+    handle_op_assign_expression(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op) noexcept;
+
+    [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens) noexcept
     {
         using namespace TokenType;
         using std::array;
@@ -250,6 +253,22 @@ namespace RaychelScript {
             Logger::debug(handler.indent(), "Found unary plus expression at ", matches.front().front().location, '\n');
         }
 
+        //operator-assign expressions
+        if (const auto matches = match_token_pattern(expression_tokens, array{identifer, arith_op_, equal, expression_});
+            !matches.empty()) {
+            Logger::debug(handler.indent(), "Found operator-assign expression at ", matches.front().front().location, '\n');
+            return handle_op_assign_expression(
+                matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type));
+        }
+
+        //Assignment expressions
+        if (const auto matches = match_token_pattern(expression_tokens, array{expression_, equal, expression_});
+            !matches.empty()) {
+            Logger::debug(handler.indent(), "Found assignment expression at ", matches.at(1).front().location, '\n');
+
+            return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2));
+        }
+
         //Mathematical operators
         if (const auto op_it = find_arithmetic_operator(expression_tokens); op_it != expression_tokens.end()) {
 
@@ -262,8 +281,6 @@ namespace RaychelScript {
 
             return handle_math_op(lhs, rhs, op);
         }
-
-        //TODO: operator-assign constructs would be here (*= += -= /= etc.)
 
         //Logical operators
 
@@ -332,8 +349,7 @@ namespace RaychelScript {
     }
 
     template <NodeData T>
-    [[nodiscard]] static std::variant<ParserErrorCode, AST_Node>
-    handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens) noexcept
+    [[nodiscard]] static ParseResult handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens) noexcept
     {
         const auto lhs_node_or_error = parse_expression(lhs_tokens);
         const auto rhs_node_or_error = parse_expression(rhs_tokens);
@@ -351,7 +367,7 @@ namespace RaychelScript {
         return AST_Node{T{{}, lhs_node, rhs_node}};
     }
 
-    [[nodiscard]] static std::variant<ParserErrorCode, AST_Node>
+    [[nodiscard]] static ParseResult
     handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op) noexcept
     {
         const auto lhs_node_or_error = parse_expression(lhs_tokens);
@@ -368,6 +384,27 @@ namespace RaychelScript {
         auto rhs_node = Raychel::get<AST_Node>(rhs_node_or_error);
 
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
+    }
+
+    [[nodiscard]] static ParseResult
+    handle_op_assign_expression(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op) noexcept
+    {
+        const auto operator_node_or_error = handle_math_op(lhs, rhs, op);
+
+        if (const auto* ec = std::get_if<ParserErrorCode>(&operator_node_or_error); ec) {
+            return *ec;
+        }
+
+        const auto identifier_node_or_error = parse_expression(lhs);
+
+        if (const auto* ec = std::get_if<ParserErrorCode>(&identifier_node_or_error); ec) {
+            return *ec;
+        }
+
+        auto operator_node = Raychel::get<AST_Node>(operator_node_or_error);
+        auto identifier_node = Raychel::get<AST_Node>(identifier_node_or_error);
+
+        return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
     }
 
     static ParserErrorCode parse_body_line(LineView line, AST& ast) noexcept
