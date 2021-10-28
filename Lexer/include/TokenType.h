@@ -56,6 +56,7 @@ namespace RaychelScript::TokenType {
         caret = '^',
 
         expression_ = '\0',
+        arith_op_ = '\1',
     };
 
 } //namespace RaychelScript::TokenType

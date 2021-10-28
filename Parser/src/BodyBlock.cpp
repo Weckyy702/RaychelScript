@@ -48,12 +48,16 @@ namespace RaychelScript {
 
     //TODO: clean this mess up
     template <std::size_t N>
-    requires(N != 0) SourceTokens match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern)
+    requires(N != 0) static SourceTokens match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern)
     noexcept
     {
         if (tokens.size() < N) {
             return {}; //The token list must be at least as long as the pattern
         }
+
+        const auto token_matched = [](TokenType::TokenType type, TokenType::TokenType expected) {
+            return (expected == TokenType::arith_op_ && is_arith_op(type)) || (type == expected);
+        };
 
         auto pattern_it = pattern.begin();
         auto token_it = tokens.begin();
@@ -85,7 +89,7 @@ namespace RaychelScript {
                     token_it++;
                     match.emplace_back(*it);
                 }
-            } else if (current.type == expected) {
+            } else if (token_matched(current.type, expected)) {
                 match.emplace_back(current);
                 pattern_it++;
                 token_it++;
