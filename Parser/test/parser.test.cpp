@@ -155,7 +155,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
     }
 }
 
-static void parse_file_and_print_debug_info(const std::string& filename) noexcept
+[[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& filename) noexcept
 {
     Logger::log(filename, '\n');
     std::ifstream in_file{"../../../shared/test/" + filename};
@@ -175,14 +175,46 @@ static void parse_file_and_print_debug_info(const std::string& filename) noexcep
     }
 }
 
+[[maybe_unused]] static void echo_AST_from_stdin() noexcept
+{
+    Logger::setMinimumLogLevel(Logger::LogLevel::info);
+    std::string line;
+
+    do {
+        RaychelScript::IndentHandler::reset_indent();
+        
+        std::cout << ">>";
+        std::getline(std::cin, line);
+
+        if(line == "exit") {
+            break;
+        }
+
+        const auto AST_or_error = RaychelScript::_parse_no_config_check(line);
+
+        if(const auto* ec = std::get_if<RaychelScript::ParserErrorCode>(&AST_or_error); ec) {
+            Logger::log("<ERROR>: ", error_code_to_reason_string(*ec), '\n');
+            continue;
+        }
+
+        const auto ast = Raychel::get<RaychelScript::AST>(AST_or_error);
+
+        pretty_print_ast(ast.nodes);
+
+
+    } while(true);
+}
+
 int main(int /*argc*/, char** /*argv*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    parse_file_and_print_debug_info("abc.rsc");
-    //parse_file_and_print_debug_info("unmatched_paren.rsc");
-    //parse_file_and_print_debug_info("floats.rsc");
-    //parse_file_and_print_debug_info("large.rsc");
-    //parse_file_and_print_debug_info("test.rsc");
-    //parse_file_and_print_debug_info("invalid_config.rsc");
-    //parse_file_and_print_debug_info("config_tests.rsc");
+    // parse_file_and_print_debug_info("abc.rsc");
+    // parse_file_and_print_debug_info("unmatched_paren.rsc");
+    // parse_file_and_print_debug_info("floats.rsc");
+    // //parse_file_and_print_debug_info("large.rsc");
+    // //parse_file_and_print_debug_info("test.rsc");
+    // //parse_file_and_print_debug_info("invalid_config.rsc");
+    // parse_file_and_print_debug_info("config_tests.rsc");
+
+    echo_AST_from_stdin();
 }
