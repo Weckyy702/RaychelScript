@@ -40,6 +40,9 @@
 namespace RaychelScript {
 
     // clang-format off
+    /**
+    * \brief Specifies that a type has all members needed to use it inside an AST_Node object
+    */
     template <typename T>
     concept NodeData = requires()
     {
@@ -60,6 +63,13 @@ namespace RaychelScript {
     };
     // clang-format on
 
+    /**
+    * \brief Class for representing parsed AST nodes
+    * 
+    * This class represents a single Node in the AST. All the actual AST structure is handle by the NodeData held inside this object
+    * An AST_Node can hold a value of any type that satisfies NodeData. It also holds the type of the data it contains
+    * 
+    */
     class AST_Node
     {
     public:

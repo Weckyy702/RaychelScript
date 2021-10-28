@@ -31,6 +31,9 @@
 #include <iostream>
 
 namespace RaychelScript {
+    /**
+    * \brief Class for representing locations inside a source file
+    */
     struct SourceLocation
     {
         std::size_t line{0};

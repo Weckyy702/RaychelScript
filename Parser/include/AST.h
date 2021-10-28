@@ -33,6 +33,14 @@
 
 namespace RaychelScript {
 
+    /**
+    * \brief Class for holding script information
+    * 
+    * This class holds the most important information needed for using the parsed script.
+    * The config_block member holds all input and output declarations and any additional configuration variables
+    * The nodes member holds the list of top-level AST nodes. Every entry in this vector corresponds to one parsed line in the source file
+    * 
+    */
     struct AST
     {
         ConfigBlock config_block;

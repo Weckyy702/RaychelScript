@@ -36,6 +36,17 @@
 
 namespace RaychelScript {
 
+    /**
+    * \brief Base class for all types satisfying the NodeData concept
+    * 
+    * \note Inheriting from this class is not required but encouraged
+    * 
+    * \refitem NodeData
+    * 
+    * \tparam _type Type of the node
+    * \tparam _is_value_ref If the node is a value reference
+    * \tparam _has_known_value If the nodes value is known at parse time. Used by the optimizer
+    */
     template <NodeType _type, bool _is_value_ref = false, bool _has_known_value = false>
     struct NodeDataBase
     {

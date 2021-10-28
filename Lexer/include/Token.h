@@ -10,6 +10,12 @@
 
 namespace RaychelScript {
 
+    /**
+    * \brief Class for representing lexed tokens
+    * 
+    * This class holds a type and a location as well as an optional string for Tokens which require additional information (e.g identifiers).
+    * 
+    */
     struct Token
     {
         TokenType::TokenType type{};
