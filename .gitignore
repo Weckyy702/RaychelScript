@@ -7,6 +7,9 @@ cmake**
 !CMakeLists.txt
 Makefile
 
+#documentation files
+/doxy/
+
 #binary files
 *.a
 *.o
