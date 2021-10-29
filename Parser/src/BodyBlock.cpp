@@ -264,11 +264,14 @@ namespace RaychelScript {
 
         IndentHandler handler;
 
+        #if 0
         Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
             Logger::log(token_type_to_string(token.type), ' ');
         }
         Logger::log('\n');
+
+        #endif
 
         if (expression_tokens.empty()) {
             Logger::error(handler.indent(), "parse_expression got empty token list!\n");
@@ -276,11 +279,10 @@ namespace RaychelScript {
         }
 
         //Parenthesised expressions
-        if (const auto matches = match_token_pattern(expression_tokens, array{left_paren, expression_, right_paren});
-            !matches.empty()) {
-            Logger::debug(handler.indent(), "Found parenthesised expression at ", matches.at(1).front().location, '\n');
+        if (expression_tokens.front().type == left_paren && expression_tokens.back().type == right_paren) {
+            Logger::debug(handler.indent(), "Found parenthesised expression at ", expression_tokens.front().location, '\n');
 
-            return parse_expression(matches.at(1));
+            return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())});
         }
 
         //Unary operators
@@ -471,7 +473,5 @@ namespace RaychelScript {
         }
         return ast;
     }
-
-    std::size_t IndentHandler::indent_ = 0; //I don't know where to put this
 
 } // namespace RaychelScript
