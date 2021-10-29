@@ -334,10 +334,10 @@ namespace RaychelScript {
 
             const auto& token = matches.front().front();
 
-            const std::string_view value_str = *token.content;
+            const auto& value_str = *token.content;
 
             double value{0};
-            if (const auto [_, ec] = std::from_chars(std::begin(value_str), std::end(value_str), value); ec != std::errc{}) {
+            if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value); ec != std::errc{}) {
                 Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a double!");
                 return ParserErrorCode::invalid_numeric_constant;
             }

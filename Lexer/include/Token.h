@@ -22,6 +22,12 @@ namespace RaychelScript {
         SourceLocation location{};
         Raychel::AssertingOptional<std::string> content{};
 
+        Token() = default;
+
+        Token(TokenType::TokenType _t, SourceLocation _loc = {}, Raychel::AssertingOptional<std::string> _c = {})
+            :type{_t}, location{_loc}, content{std::move(_c)}
+        {}
+
         bool operator==(const Token& other) const noexcept
         {
             if (type != other.type) {

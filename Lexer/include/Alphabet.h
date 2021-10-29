@@ -33,12 +33,12 @@ namespace RaychelScript {
         // clang-format off
     }
 
-    [[nodiscard]] constexpr bool is_identifier_char(char c)
+    [[nodiscard]] bool is_identifier_char(char c)
     {
         return std::isalpha(static_cast<unsigned char>(c)) != 0 || c == '_';
     }
 
-    [[nodiscard]] constexpr bool is_number_char(char c)
+    [[nodiscard]] bool is_number_char(char c)
     {
         return std::isdigit(static_cast<unsigned char>(c)) != 0;
     }

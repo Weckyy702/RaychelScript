@@ -14,18 +14,24 @@ target_include_directories(RaychelScriptLexer PUBLIC
 
 target_compile_features(RaychelScriptLexer PUBLIC cxx_std_20)
 
-target_compile_options(RaychelScriptLexer PUBLIC
-    -Wall
-    -Wextra
-    -Wshadow
-    -Wpedantic
-    -Wconversion
-    -Werror
-)
+if(${MSVC})
+    target_compile_options(RaychelScriptLexer PUBLIC
+        /W4
+    )
+else()
+    target_compile_options(RaychelScriptLexer PUBLIC
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wpedantic
+        -Wconversion
+        -Werror
+    )
+endif()
 
 target_link_libraries(RaychelScriptLexer PUBLIC 
     RaychelScriptBase
-    RaychelCore
+    RaychelLogger
 )
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})

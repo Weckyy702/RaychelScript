@@ -28,6 +28,16 @@
 #ifndef RAYCHELSCRIPT_PARSER_H
 #define RAYCHELSCRIPT_PARSER_H
 
+#ifdef _WIN32
+    #ifdef RaychelScriptParser_EXPORTS
+        #define RAYCHELSCRIPT_PARSER_API __declspec(dllexport)
+    #else
+        #define RAYCHELSCRIPT_PARSER_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_PARSER_API 
+#endif
+
 #include <istream>
 #include <variant>
 #include <vector>
@@ -44,7 +54,7 @@ namespace RaychelScript {
         invalid_numeric_constant,
     };
 
-    std::variant<AST, ParserErrorCode> parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode> parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     inline std::variant<AST, ParserErrorCode> parse(std::istream& source_stream) noexcept
     {
@@ -72,7 +82,7 @@ namespace RaychelScript {
     * \param source_tokens 
     * \return  
     */
-    std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     /**
     * \brief Parse the source text without checking for a valid config block

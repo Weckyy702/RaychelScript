@@ -33,6 +33,17 @@
 #include <RaychelCore/ClassMacros.h>
 #include <RaychelCore/Raychel_assert.h>
 
+#ifdef _WIN32
+
+    #ifdef RaychelScriptBase_EXPORTS
+        #define RAYCHELSCRIPT_BASE_API __declspec(dllexport)
+    #else
+        #define RAYCHELSCRIPT_BASE_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_BASE_API 
+#endif
+
 namespace RaychelScript {
     /**
     * \brief Class for handling indent-based pretty printing in recursive call chains.
@@ -45,7 +56,7 @@ namespace RaychelScript {
     class IndentHandler
     {
         //NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): false positive?
-        static std::size_t indent_;
+        RAYCHELSCRIPT_BASE_API static std::size_t indent_;
         static constexpr std::string_view indent_string{"...................................................................................................."};
 
     public:

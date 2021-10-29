@@ -7,14 +7,21 @@ add_executable(Parser_test
 )
 
 target_compile_features(Parser_test PUBLIC cxx_std_20)
-target_compile_options(Parser_test PUBLIC
-    -Wall
-    -Wextra
-    -Werror
-    -Wpedantic
-    -Wconversion
-    -Wshadow
-)
+
+if(${MSVC})
+    target_compile_options(Parser_test PUBLIC
+        /W4
+    )
+else()
+    target_compile_options(Parser_test PUBLIC
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wpedantic
+        -Wconversion
+        -Werror
+    )
+endif()
 
 target_link_libraries(Parser_test PUBLIC
     RaychelScriptBase

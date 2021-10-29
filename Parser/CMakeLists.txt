@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.14)
+
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
 
@@ -14,17 +16,24 @@ target_include_directories(RaychelScriptParser PUBLIC
 
 target_compile_features(RaychelScriptParser PUBLIC cxx_std_20)
 
-target_compile_options(RaychelScriptParser PUBLIC
-    -Wall
-    -Wextra
-    -Wshadow
-    -Wpedantic
-    -Wconversion
-    -Werror
-)
+if(${MSVC})
+    target_compile_options(RaychelScriptParser PUBLIC
+        /W4
+    )
+else()
+    target_compile_options(RaychelScriptParser PUBLIC
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wpedantic
+        -Wconversion
+        -Werror
+    )
+endif()
 
 target_link_libraries(RaychelScriptParser PUBLIC 
     RaychelScriptLexer
+    RaychelLogger
 )
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})

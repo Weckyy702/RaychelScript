@@ -9,15 +9,25 @@
 #include <vector>
 #include "Token.h"
 
+#ifdef _WIN32
+    #ifdef RaychelScriptLexer_EXPORTS
+    #define RAYCHELSCRIPT_LEXER_API __declspec(dllexport)
+    #else
+    #define RAYCHELSCRIPT_LEXER_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_LEXER_API 
+#endif
+
 namespace RaychelScript {
 
     /**
-    * \brief Produce a 'raw' token stream. This means that -12 will become MINUS NUMBER. Use is discouraged
+    * \brief Produce a 'raw' token stream. Use is discouraged
     * 
     * \param source_stream Input stream to read source code form
     * \return list of lexed tokens
     */
-    std::optional<std::vector<Token>> lex_raw(std::istream& source_stream) noexcept;
+    RAYCHELSCRIPT_LEXER_API std::optional<std::vector<Token>> _lex_raw(std::istream& source_stream) noexcept;
 
     /**
     * \brief Turn a raw token stream into a list of lines
@@ -25,12 +35,12 @@ namespace RaychelScript {
     * \param raw_tokens list of raw tokens
     * \return list of lines
     */
-    std::optional<std::vector<std::vector<Token>>>
+    RAYCHELSCRIPT_LEXER_API std::optional<std::vector<std::vector<Token>>>
     combine_tokens_into_lines(const std::optional<std::vector<Token>>& raw_tokens) noexcept;
 
     inline std::optional<std::vector<std::vector<Token>>> lex(std::istream& source_stream) noexcept
     {
-        return combine_tokens_into_lines(lex_raw(source_stream));
+        return combine_tokens_into_lines(_lex_raw(source_stream));
     }
 
     inline std::optional<std::vector<std::vector<Token>>> lex(const std::string& source_text) noexcept

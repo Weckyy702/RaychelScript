@@ -45,7 +45,7 @@ namespace RaychelScript {
     }
 
     //TODO: make this code less awful
-    std::optional<std::vector<Token>> lex_raw(std::istream& source_stream) noexcept
+    std::optional<std::vector<Token>> _lex_raw(std::istream& source_stream) noexcept
     {
         std::vector<Token> tokens{};
         std::string current_token{};
