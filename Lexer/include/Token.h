@@ -43,6 +43,7 @@ namespace RaychelScript {
     inline std::string token_type_to_string(RaychelScript::TokenType::TokenType type) noexcept
     {
         using TT = RaychelScript::TokenType::TokenType;
+
         switch (type) {
             case TT::number:
                 return "NUMBER";
@@ -51,7 +52,8 @@ namespace RaychelScript {
             case TT::identifer:
                 return "IDENTIFIER";
             case TT::expression_:
-                RAYCHEL_TERMINATE("TokenType::expression_ cannot appear in this context!\n");
+            case TT::arith_op_:
+                RAYCHEL_TERMINATE("TokenType::expression_ and TokenType::arith_op_ cannot appear in this context!\n");
             default:
                 return std::string{type};
         }
