@@ -168,8 +168,11 @@ namespace RaychelScript {
         auto it = tokens.end();
         bool op_was_MD = false;
 
-        auto current = std::prev(tokens.end());
+        auto current = tokens.end();
         do {
+
+            current--;
+
             if (!is_arith_op(current->type)) {
                 switch (current->type) {
                     case TokenType::right_paren:
@@ -202,7 +205,7 @@ namespace RaychelScript {
                 it = current;
                 op_was_MD = true;
             }
-        } while (current-- != tokens.begin());
+        } while (current != tokens.begin());
 
         if (paren_depth != 0) {
             Logger::error("Unmatched parenthesis at ", tokens.back().location, '\n');
