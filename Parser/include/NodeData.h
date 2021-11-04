@@ -46,13 +46,15 @@ namespace RaychelScript {
     * \tparam _type Type of the node
     * \tparam _is_value_ref If the node is a value reference
     * \tparam _has_known_value If the nodes value is known at parse time. Used by the optimizer
+    * \tparam _is_constant If the value holds a constant value. Used by the optimizer
     */
-    template <NodeType _type, bool _is_value_ref = false, bool _has_known_value = false>
+    template <NodeType _type, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
     struct NodeDataBase
     {
         static constexpr auto type = _type;
         static constexpr auto is_value_ref = _is_value_ref;
-        static constexpr auto has_known_value = _has_known_value; //For later use in the optimiser
+        static constexpr auto is_constant = _is_constant; //For later use in the optimizer
+        static constexpr auto has_known_value = _has_known_value;
     };
 
     struct AssignmentExpressionData : NodeDataBase<NodeType::assignment>
@@ -85,7 +87,7 @@ namespace RaychelScript {
         std::string name;
     };
 
-    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, true, true>
+    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, true, true, true>
     {
         double value;
     };

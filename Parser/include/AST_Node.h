@@ -30,7 +30,6 @@
 
 #include <any>
 #include <concepts>
-#include <memory>
 #include <type_traits>
 
 #include "RaychelCore/Raychel_assert.h"
@@ -57,6 +56,10 @@ namespace RaychelScript {
         };
         std::is_same_v<std::remove_cvref_t<decltype(T::is_value_ref)>, bool>;
         {
+            T::is_constant
+        };
+        std::is_same_v<std::remove_cvref_t<decltype(T::is_constant)>, bool>;
+        {
             T::has_known_value
         };
         std::is_same_v<std::remove_cvref_t<decltype(T::has_known_value)>, bool>;
@@ -74,7 +77,8 @@ namespace RaychelScript {
     {
     public:
         template <NodeData T>
-        explicit AST_Node(const T& data) : type_{T::type}, data_{data}
+        explicit AST_Node(T&& data)
+            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference{T::is_value_ref}, is_constant{T::is_constant}, has_known_value{T::has_known_value}
         {}
 
         [[nodiscard]] NodeType type() const noexcept
@@ -88,6 +92,10 @@ namespace RaychelScript {
             RAYCHEL_ASSERT(type() == T::type);
             return std::any_cast<T>(data_);
         }
+
+        const bool is_value_reference;
+        const bool has_known_value;
+        const bool is_constant;
 
     private:
         NodeType type_;
