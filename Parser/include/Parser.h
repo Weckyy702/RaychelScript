@@ -41,18 +41,39 @@
 #include <istream>
 #include <variant>
 #include <vector>
+#include <string_view>
 #include "AST.h"
 #include "Lexer.h"
 
 namespace RaychelScript {
 
-    enum class [[nodiscard]] ParserErrorCode : std::size_t{
+    enum class [[nodiscard]] ParserErrorCode : std::size_t {
         no_input = 1,
         invalid_config,
         invalid_construct,
         invalid_declaration,
         invalid_numeric_constant,
     };
+
+    constexpr std::string_view error_code_to_reason_string(RaychelScript::ParserErrorCode ec) noexcept
+    {
+    using namespace std::string_view_literals;
+    using RaychelScript::ParserErrorCode;
+
+    switch (ec) {
+        case ParserErrorCode::no_input:
+            return "No Input"sv;
+        case ParserErrorCode::invalid_config:
+            return "Error in configuration block"sv;
+        case ParserErrorCode::invalid_construct:
+            return "Invalid construct"sv;
+        case ParserErrorCode::invalid_declaration:
+            return "Invalid variable declaration"sv;
+        case ParserErrorCode::invalid_numeric_constant:
+            return "Invalid numeric constant"sv;
+    }
+    return "<Unknown reason>"sv;
+    }
 
     RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode> parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 

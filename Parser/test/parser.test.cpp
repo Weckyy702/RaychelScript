@@ -8,26 +8,6 @@
 #include "IndentHandler.h"
 #include "NodeData.h"
 
-constexpr std::string_view error_code_to_reason_string(RaychelScript::ParserErrorCode ec) noexcept
-{
-    using namespace std::string_view_literals;
-    using RaychelScript::ParserErrorCode;
-
-    switch (ec) {
-        case ParserErrorCode::no_input:
-            return "No Input"sv;
-        case ParserErrorCode::invalid_config:
-            return "Error in configuration block"sv;
-        case ParserErrorCode::invalid_construct:
-            return "Invalid construct"sv;
-        case ParserErrorCode::invalid_declaration:
-            return "Invalid variable declaration"sv;
-        case ParserErrorCode::invalid_numeric_constant:
-            return "Invalid numeric constant"sv;
-    }
-    return "<Unknown reason>"sv;
-}
-
 static void print_config_block(const RaychelScript::ConfigBlock& config_block) noexcept
 {
     if (config_block.input_identifiers.empty()) {
@@ -125,10 +105,6 @@ static void print_node(const RaychelScript::AST_Node& node, std::string_view pre
             handle_assignment_data(node.to_node_data<AssignmentExpressionData>());
             break;
 
-        case NodeType::numeric_constant:
-            handle_numeric_constant_data(node.to_node_data<NumericConstantData>());
-            break;
-
         case NodeType::variable_decl:
             handle_variable_declaration_data(node.to_node_data<VariableDeclarationData>());
             break;
@@ -215,13 +191,13 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 int main(int /*argc*/, char** /*argv*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    // parse_file_and_print_debug_info("abc.rsc");
-    // parse_file_and_print_debug_info("unmatched_paren.rsc");
-    // parse_file_and_print_debug_info("floats.rsc");
-    // //parse_file_and_print_debug_info("large.rsc");
-    // //parse_file_and_print_debug_info("test.rsc");
-    // //parse_file_and_print_debug_info("invalid_config.rsc");
-    // parse_file_and_print_debug_info("config_tests.rsc");
+    parse_file_and_print_debug_info("abc.rsc");
+    parse_file_and_print_debug_info("unmatched_paren.rsc");
+    parse_file_and_print_debug_info("floats.rsc");
+    // parse_file_and_print_debug_info("large.rsc");
+    parse_file_and_print_debug_info("test.rsc");
+    parse_file_and_print_debug_info("invalid_config.rsc");
+    parse_file_and_print_debug_info("config_tests.rsc");
 
     echo_AST_from_stdin();
 }

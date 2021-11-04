@@ -121,7 +121,7 @@ namespace RaychelScript {
         reset_state();
 
         const auto dur = Logger::getTimer(label);
-        Logger::debug("Lexing ", line_number, " lines took ", dur.count(), " ms\n");
+        Logger::debug("Lexing ", line_number, " line(s) took ", dur.count(), " ms\n");
 
         return tokens;
     }
