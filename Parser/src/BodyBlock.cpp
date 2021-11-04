@@ -228,17 +228,20 @@ namespace RaychelScript {
         int paren_depth{0};
         Token const* closing_paren = nullptr;
 
-        for (auto it = tokens.begin(); it != tokens.end(); it++) {
-            if (it->type == TokenType::left_paren)
+        std::for_each(tokens.begin(), tokens.end(), [&](const Token& token) {
+            if (closing_paren != nullptr) {
+                return;
+            }
+
+            if (token.type == TokenType::left_paren) {
                 paren_depth++;
-            if (it->type == TokenType::right_paren) {
+            } else if (token.type == TokenType::right_paren) {
                 paren_depth--;
                 if (paren_depth == 0) {
-                    closing_paren = &(*it);
-                    break;
+                    closing_paren = &token;
                 }
             }
-        }
+        });
 
         return closing_paren == &tokens.back();
     }
