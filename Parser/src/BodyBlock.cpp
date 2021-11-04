@@ -56,7 +56,7 @@ namespace RaychelScript {
     */
     [[nodiscard]] static bool is_MD_op(TokenType::TokenType type) noexcept
     {
-        return (type == TokenType::star) || (type == TokenType::slash);
+        return (type == TokenType::star) || (type == TokenType::slash) || (type == TokenType::caret);
     }
 
     /**
@@ -227,6 +227,8 @@ namespace RaychelScript {
                 return "addition"sv;
             case TokenType::minus:
                 return "subtraction"sv;
+            case TokenType::caret:
+                return "power"sv;
             default:
                 RAYCHEL_ASSERT_NOT_REACHED;
         }
@@ -244,6 +246,8 @@ namespace RaychelScript {
                 return Op::add;
             case TokenType::minus:
                 return Op::subtract;
+            case TokenType::caret:
+                return Op::power;
             default:
                 RAYCHEL_ASSERT_NOT_REACHED;
         }
@@ -264,6 +268,7 @@ namespace RaychelScript {
 
         IndentHandler handler;
 
+        //With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing
         #if 0
         Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
@@ -286,6 +291,7 @@ namespace RaychelScript {
         }
 
         //Unary operators
+        //TODO: handle these
         if (const auto matches = match_token_pattern(expression_tokens, array{minus, expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary minus expression at ", matches.front().front().location, '\n');
         }

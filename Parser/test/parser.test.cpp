@@ -102,6 +102,9 @@ static void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExp
         case Op::divide:
             Logger::log("DIVIDE\n");
             break;
+        case Op::power:
+            Logger::log("POWER\n");
+            break;
         default:
             RAYCHEL_ASSERT_NOT_REACHED;
     }
@@ -137,6 +140,10 @@ static void print_node(const RaychelScript::AST_Node& node, std::string_view pre
         case NodeType::math_op:
             handle_arithmetic_expression_data(node.to_node_data<ArithmeticExpressionData>());
             break;
+
+        case NodeType::numeric_constant:
+            handle_numeric_constant_data(node.to_node_data<NumericConstantData>());
+            break;
         default:
             RAYCHEL_ASSERT_NOT_REACHED;
     }
@@ -157,7 +164,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 
 [[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& filename) noexcept
 {
-    Logger::log(filename, '\n');
+    Logger::info("Parsing file '", filename, "'\n");
     std::ifstream in_file{"../../../shared/test/" + filename};
 
     const auto label = Logger::startTimer("parse time");

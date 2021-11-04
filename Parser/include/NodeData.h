@@ -70,6 +70,7 @@ namespace RaychelScript {
             subtract,
             multiply,
             divide,
+            power,
         };
         AST_Node lhs;
         AST_Node rhs;
