@@ -45,8 +45,8 @@ namespace RaychelScript {
     * 
     * \tparam _type Type of the node
     * \tparam _is_value_ref If the node is a value reference
-    * \tparam _has_known_value If the nodes value is known at parse time. Used by the optimizer
     * \tparam _is_constant If the value holds a constant value. Used by the optimizer
+    * \tparam _has_known_value If the nodes value is known at parse time. Used by the optimizer
     */
     template <NodeType _type, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
     struct NodeDataBase

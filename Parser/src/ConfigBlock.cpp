@@ -49,24 +49,24 @@ namespace RaychelScript {
         std::for_each(
             std::next(entry_tokens.begin()),
             entry_tokens.end(),
-            [&has_failed, &config_entries, i = 0U](const Token& token) mutable {
+            [&has_failed, &config_entries, index = 0U](const Token& token) mutable {
                 if (has_failed) {
                     return;
                 }
 
                 //every even token has to be an identifier
-                if (i % 2U == 0 && token.type != TokenType::identifer) {
+                if (index % 2U == 0 && token.type != TokenType::identifer) {
                     Logger::error(token.location, ": invalid token in config entry!\n");
                     has_failed = true;
                     return;
                 }
                 if (token.type == TokenType::comma) {
-                    i++;
+                    index++;
                     return;
                 }
 
                 config_entries.push_back(*token.content);
-                i++;
+                index++;
             });
 
         return !has_failed;

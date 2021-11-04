@@ -36,7 +36,7 @@ static void print_config_block(const RaychelScript::ConfigBlock& config_block) n
     }
 }
 
-static void print_node(const RaychelScript::AST_Node&, std::string_view) noexcept;
+static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept;
 
 static void handle_assignment_data(const RaychelScript::AssignmentExpressionData& data) noexcept
 {
@@ -47,22 +47,16 @@ static void handle_assignment_data(const RaychelScript::AssignmentExpressionData
 
 static void handle_numeric_constant_data(const RaychelScript::NumericConstantData& data) noexcept
 {
-    using namespace RaychelScript;
-
     Logger::log(data.value, '\n');
 }
 
 static void handle_variable_declaration_data(const RaychelScript::VariableDeclarationData& data) noexcept
 {
-    using namespace RaychelScript;
-
     Logger::log(data.is_const ? "CONST " : "MUT ", data.name, '\n');
 }
 
 static void handle_variable_reference_data(const RaychelScript::VariableReferenceData& data) noexcept
 {
-    using namespace RaychelScript;
-
     Logger::log(data.name, '\n');
 }
 
@@ -94,7 +88,9 @@ static void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExp
 
 static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
 {
-    using namespace RaychelScript;
+    using RaychelScript::IndentHandler, RaychelScript::NodeType, RaychelScript::AssignmentExpressionData,
+        RaychelScript::VariableDeclarationData, RaychelScript::VariableDeclarationData, RaychelScript::VariableReferenceData,
+        RaychelScript::ArithmeticExpressionData, RaychelScript::NumericConstantData;
 
     IndentHandler handler;
 
@@ -165,17 +161,17 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 
     do {
         RaychelScript::IndentHandler::reset_indent();
-        
+
         std::cout << ">>";
         std::getline(std::cin, line);
 
-        if(line == "exit") {
+        if (line == "exit") {
             break;
         }
 
         const auto AST_or_error = RaychelScript::_parse_no_config_check(line);
 
-        if(const auto* ec = std::get_if<RaychelScript::ParserErrorCode>(&AST_or_error); ec) {
+        if (const auto* ec = std::get_if<RaychelScript::ParserErrorCode>(&AST_or_error); ec) {
             Logger::log("<ERROR>: ", error_code_to_reason_string(*ec), '\n');
             continue;
         }
@@ -184,8 +180,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 
         pretty_print_ast(ast.nodes);
 
-
-    } while(true);
+    } while (true);
 }
 
 int main(int /*argc*/, char** /*argv*/)

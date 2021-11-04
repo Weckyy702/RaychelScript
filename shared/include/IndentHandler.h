@@ -41,7 +41,7 @@
         #define RAYCHELSCRIPT_BASE_API __declspec(dllimport)
     #endif
 #else
-    #define RAYCHELSCRIPT_BASE_API 
+    #define RAYCHELSCRIPT_BASE_API
 #endif
 
 namespace RaychelScript {
@@ -57,7 +57,8 @@ namespace RaychelScript {
     {
         //NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): false positive?
         RAYCHELSCRIPT_BASE_API static std::size_t indent_;
-        static constexpr std::string_view indent_string{"...................................................................................................."};
+        static constexpr std::string_view indent_string{
+            "...................................................................................................."};
 
     public:
         IndentHandler()

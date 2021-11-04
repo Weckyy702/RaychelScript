@@ -11,12 +11,12 @@
 
 #ifdef _WIN32
     #ifdef RaychelScriptLexer_EXPORTS
-    #define RAYCHELSCRIPT_LEXER_API __declspec(dllexport)
+        #define RAYCHELSCRIPT_LEXER_API __declspec(dllexport)
     #else
-    #define RAYCHELSCRIPT_LEXER_API __declspec(dllimport)
+        #define RAYCHELSCRIPT_LEXER_API __declspec(dllimport)
     #endif
 #else
-    #define RAYCHELSCRIPT_LEXER_API 
+    #define RAYCHELSCRIPT_LEXER_API
 #endif
 
 namespace RaychelScript {
@@ -45,8 +45,8 @@ namespace RaychelScript {
 
     inline std::optional<std::vector<std::vector<Token>>> lex(const std::string& source_text) noexcept
     {
-        std::stringstream s{source_text};
-        return lex(s);
+        std::stringstream stream{source_text};
+        return lex(stream);
     }
 
 } // namespace RaychelScript

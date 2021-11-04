@@ -4,14 +4,14 @@
 
 static std::string to_token_name(RaychelScript::TokenType::TokenType type) noexcept
 {
-    using namespace RaychelScript::TokenType;
+    namespace TT = RaychelScript::TokenType;
     using namespace std::string_literals;
     switch (type) {
-        case identifer:
+        case TT::identifer:
             return "IDENTIFIER"s;
-        case number:
+        case TT::number:
             return "NUMBER"s;
-        case declaration:
+        case TT::declaration:
             return "DECL"s;
         default:
             return {type};
@@ -29,7 +29,7 @@ int main(int /*unused*/, char** /*unused*/)
 
     //     [[body]]
     //     d = sqrt(x^2 + y^2 + z^2) - 2
-    // )");
+    //)");
 
     // Logger::setLogColor(Logger::LogLevel::debug, "\033[31;m");
 

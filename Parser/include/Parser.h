@@ -35,19 +35,19 @@
         #define RAYCHELSCRIPT_PARSER_API __declspec(dllimport)
     #endif
 #else
-    #define RAYCHELSCRIPT_PARSER_API 
+    #define RAYCHELSCRIPT_PARSER_API
 #endif
 
 #include <istream>
+#include <string_view>
 #include <variant>
 #include <vector>
-#include <string_view>
 #include "AST.h"
 #include "Lexer.h"
 
 namespace RaychelScript {
 
-    enum class [[nodiscard]] ParserErrorCode : std::size_t {
+    enum class [[nodiscard]] ParserErrorCode : std::size_t{
         no_input = 1,
         invalid_config,
         invalid_construct,
@@ -57,25 +57,26 @@ namespace RaychelScript {
 
     constexpr std::string_view error_code_to_reason_string(RaychelScript::ParserErrorCode ec) noexcept
     {
-    using namespace std::string_view_literals;
-    using RaychelScript::ParserErrorCode;
+        using namespace std::string_view_literals;
+        using RaychelScript::ParserErrorCode;
 
-    switch (ec) {
-        case ParserErrorCode::no_input:
-            return "No Input"sv;
-        case ParserErrorCode::invalid_config:
-            return "Error in configuration block"sv;
-        case ParserErrorCode::invalid_construct:
-            return "Invalid construct"sv;
-        case ParserErrorCode::invalid_declaration:
-            return "Invalid variable declaration"sv;
-        case ParserErrorCode::invalid_numeric_constant:
-            return "Invalid numeric constant"sv;
-    }
-    return "<Unknown reason>"sv;
+        switch (ec) {
+            case ParserErrorCode::no_input:
+                return "No Input"sv;
+            case ParserErrorCode::invalid_config:
+                return "Error in configuration block"sv;
+            case ParserErrorCode::invalid_construct:
+                return "Invalid construct"sv;
+            case ParserErrorCode::invalid_declaration:
+                return "Invalid variable declaration"sv;
+            case ParserErrorCode::invalid_numeric_constant:
+                return "Invalid numeric constant"sv;
+        }
+        return "<Unknown reason>"sv;
     }
 
-    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode> parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode>
+    parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     inline std::variant<AST, ParserErrorCode> parse(std::istream& source_stream) noexcept
     {
@@ -88,10 +89,9 @@ namespace RaychelScript {
 
     inline std::variant<AST, ParserErrorCode> parse(const std::string& source_text) noexcept
     {
-        std::stringstream s{source_text};
-        return parse(s);
+        std::stringstream stream{source_text};
+        return parse(stream);
     }
-
 
     /**
     * \brief Parse the source tokens without checking for a valid config block
@@ -103,7 +103,8 @@ namespace RaychelScript {
     * \param source_tokens 
     * \return  
     */
-    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode>
+    _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     /**
     * \brief Parse the source text without checking for a valid config block
@@ -119,7 +120,7 @@ namespace RaychelScript {
     {
         const auto maybe_tokens = lex(source_text);
 
-        if(!maybe_tokens.has_value()) {
+        if (!maybe_tokens.has_value()) {
             return ParserErrorCode::no_input;
         }
 

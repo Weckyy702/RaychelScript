@@ -91,8 +91,8 @@ namespace RaychelScript {
     *  TokenType::arith_op_ is used to find all arithmetic operators as defined by is_arith_op().
     */
     template <std::size_t N>
-    requires(N != 0) static SourceTokens match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern)
-    noexcept
+    requires(N != 0) static SourceTokens
+        match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern) noexcept
     {
         if (tokens.size() < N) {
             return {}; //The token list must be at least as long as the pattern
@@ -217,11 +217,13 @@ namespace RaychelScript {
 
     [[nodiscard]] bool is_toplevel_parenthesised_expression(LineView tokens)
     {
-        if (tokens.front().type != TokenType::left_paren)
+        if (tokens.front().type != TokenType::left_paren) {
             return false;
+        }
 
-        if (tokens.back().type != TokenType::right_paren)
+        if (tokens.back().type != TokenType::right_paren) {
             return false;
+        }
 
         int paren_depth{0};
         Token const* closing_paren = nullptr;
@@ -289,20 +291,20 @@ namespace RaychelScript {
 
     [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens) noexcept
     {
-        using namespace TokenType;
+        namespace TT = TokenType;
         using std::array;
 
         IndentHandler handler;
 
-        //With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing
-        #if 0
+//With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing
+#if 0
         Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
             Logger::log(token_type_to_string(token.type), ' ');
         }
         Logger::log('\n');
 
-        #endif
+#endif
 
         if (expression_tokens.empty()) {
             Logger::error(handler.indent(), "parse_expression got empty token list!\n");
@@ -318,16 +320,17 @@ namespace RaychelScript {
 
         //Unary operators
         //TODO: handle these
-        if (const auto matches = match_token_pattern(expression_tokens, array{minus, expression_}); !matches.empty()) {
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary minus expression at ", matches.front().front().location, '\n');
         }
 
-        if (const auto matches = match_token_pattern(expression_tokens, array{plus, expression_}); !matches.empty()) {
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::plus, TT::expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary plus expression at ", matches.front().front().location, '\n');
         }
 
         //operator-assign expressions
-        if (const auto matches = match_token_pattern(expression_tokens, array{identifer, arith_op_, equal, expression_});
+        if (const auto matches =
+                match_token_pattern(expression_tokens, array{TT::identifer, TT::arith_op_, TT::equal, TT::expression_});
             !matches.empty()) {
             Logger::debug(handler.indent(), "Found operator-assign expression at ", matches.front().front().location, '\n');
             return handle_op_assign_expression(
@@ -335,7 +338,7 @@ namespace RaychelScript {
         }
 
         //Assignment expressions
-        if (const auto matches = match_token_pattern(expression_tokens, array{expression_, equal, expression_});
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::equal, TT::expression_});
             !matches.empty()) {
             Logger::debug(handler.indent(), "Found assignment expression at ", matches.at(1).front().location, '\n');
 
@@ -360,7 +363,7 @@ namespace RaychelScript {
         //Misc
 
         //Leaf nodes
-        if (const auto matches = match_token_pattern(expression_tokens, array{number}); !matches.empty()) {
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::number}); !matches.empty()) {
             Logger::debug(
                 handler.indent(),
                 "Found numeric constant at ",
@@ -374,7 +377,9 @@ namespace RaychelScript {
             const auto& value_str = *token.content;
 
             double value{0};
-            if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value); ec != std::errc{}) {
+            //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
+            if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
+                ec != std::errc{}) {
                 Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a double!");
                 return ParserErrorCode::invalid_numeric_constant;
             }
@@ -382,7 +387,7 @@ namespace RaychelScript {
             return AST_Node{NumericConstantData{{}, value}};
         }
 
-        if (const auto matches = match_token_pattern(expression_tokens, array{identifer}); !matches.empty()) {
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::identifer}); !matches.empty()) {
             Logger::debug(
                 handler.indent(),
                 "Found variable reference at ",
@@ -400,7 +405,8 @@ namespace RaychelScript {
             return AST_Node{VariableReferenceData{{}, std::move(name)}};
         }
 
-        if (const auto matches = match_token_pattern(expression_tokens, array{declaration, identifer}); !matches.empty()) {
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::declaration, TT::identifer});
+            !matches.empty()) {
             Logger::debug(
                 handler.indent(),
                 "Found variable declaration at ",

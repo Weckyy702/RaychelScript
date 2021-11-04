@@ -38,38 +38,31 @@
 
 namespace RaychelScript {
 
-    // clang-format off
     /**
     * \brief Specifies that a type has all members needed to use it inside an AST_Node object
     */
     template <typename T>
     concept NodeData = requires()
     {
-        std::is_standard_layout_v<T> && std::is_trivial_v<T>; //equivalent to the deprecated std::is_pod_v<>
+        std::is_standard_layout_v<T>&& std::is_trivial_v<T>; //equivalent to the deprecated std::is_pod_v<>
 
-        {
-            T::type
-        };
+        {T::type};
         std::is_same_v<std::remove_cvref_t<decltype(T::type)>, NodeType>;
-        {
-            T::is_value_ref
-        };
+
+        {T::is_value_ref};
         std::is_same_v<std::remove_cvref_t<decltype(T::is_value_ref)>, bool>;
-        {
-            T::is_constant
-        };
+
+        {T::is_constant};
         std::is_same_v<std::remove_cvref_t<decltype(T::is_constant)>, bool>;
-        {
-            T::has_known_value
-        };
+
+        {T::has_known_value};
         std::is_same_v<std::remove_cvref_t<decltype(T::has_known_value)>, bool>;
     };
-    // clang-format on
 
     /**
     * \brief Class for representing parsed AST nodes
     * 
-    * This class represents a single Node in the AST. All the actual AST structure is handle by the NodeData held inside this object
+    * This class represents a single Node in the AST. All the actual AST structure is handled by the NodeData held inside this object
     * An AST_Node can hold a value of any type that satisfies NodeData. It also holds the type of the data it contains
     * 
     */
@@ -77,8 +70,12 @@ namespace RaychelScript {
     {
     public:
         template <NodeData T>
-        explicit AST_Node(T&& data)
-            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference{T::is_value_ref}, is_constant{T::is_constant}, has_known_value{T::has_known_value}
+        explicit AST_Node(T&& data) //NOLINT(bugprone-forwarding-reference-overload): Our template parameter is constrained
+            : type_{T::type},
+              data_{std::forward<T>(data)},
+              is_value_reference_{T::is_value_ref},
+              is_constant_{T::is_constant},
+              has_known_value_{T::has_known_value}
         {}
 
         [[nodiscard]] NodeType type() const noexcept
@@ -93,13 +90,33 @@ namespace RaychelScript {
             return std::any_cast<T>(data_);
         }
 
-        const bool is_value_reference;
-        const bool has_known_value;
-        const bool is_constant;
+        [[nodiscard]] bool is_value_reference() const noexcept
+        {
+            return is_value_reference_;
+        }
+
+        [[nodiscard]] bool is_constant() const noexcept
+        {
+            return is_constant_;
+        }
+
+        [[nodiscard]] bool has_kown_value() const noexcept
+        {
+            return has_known_value_;
+        }
+
+        void has_value(bool value) noexcept
+        {
+            has_known_value_ = value;
+        }
 
     private:
         NodeType type_;
         std::any data_;
+
+        bool is_value_reference_;
+        bool is_constant_;
+        bool has_known_value_;
     };
 
 } // namespace RaychelScript
