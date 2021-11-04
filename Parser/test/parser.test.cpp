@@ -194,5 +194,15 @@ int main(int /*argc*/, char** /*argv*/)
     parse_file_and_print_debug_info("invalid_config.rsc");
     parse_file_and_print_debug_info("config_tests.rsc");
 
+    RaychelScript::parse(R"(
+        [[config]]
+        name alsdkjfsdaklj
+        input x, y, z, r
+        output d
+
+        [[body]]
+        d = (x^2 + y^2 + z^2)^0.5 - 2
+    )");
+
     echo_AST_from_stdin();
 }
