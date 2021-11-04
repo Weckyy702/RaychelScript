@@ -56,6 +56,10 @@ namespace RaychelScript {
         std::size_t line_number = 1U;
         std::size_t column_number = 1U;
 
+        int line_paren_depth{0};
+
+        bool has_failed = false;
+
         const auto reset_state = [&] {
             if (!current_token.empty()) {
                 auto type = parse_token(current_token);
@@ -88,7 +92,7 @@ namespace RaychelScript {
 
         const auto label = Logger::startTimer("lex_time");
 
-        for (char c{0}; source_stream.get(c);) {
+        for (char c{0}; source_stream.get(c) && !has_failed;) {
             column_number++;
 
             if (c == '\n') {
@@ -96,6 +100,13 @@ namespace RaychelScript {
                 if (tokens.empty() || tokens.back().type != TokenType::newline) { //multiple newlines in sequence are ignored
                     tokens.emplace_back(TokenType::newline, SourceLocation{line_number, column_number});
                 }
+
+                if (line_paren_depth != 0) {
+                    Logger::error("Unmatched parenthesis in line ", line_number, "!\n");
+                    has_failed = true;
+                }
+
+                line_paren_depth = 0;
                 in_comment = false;
                 column_number = 1U;
                 line_number++;
@@ -103,6 +114,12 @@ namespace RaychelScript {
 
             if (in_comment) {
                 continue;
+            }
+
+            if (c == '(') {
+                line_paren_depth++;
+            } else if (c == ')') {
+                line_paren_depth--;
             }
 
             if (c == '#') {
