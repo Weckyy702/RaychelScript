@@ -215,6 +215,32 @@ namespace RaychelScript {
         return it;
     }
 
+    [[nodiscard]] bool is_toplevel_parenthesised_expression(LineView tokens)
+    {
+        if (tokens.front().type != TokenType::left_paren)
+            return false;
+
+        if (tokens.back().type != TokenType::right_paren)
+            return false;
+
+        int paren_depth{0};
+        Token const* closing_paren = nullptr;
+
+        for (auto it = tokens.begin(); it != tokens.end(); it++) {
+            if (it->type == TokenType::left_paren)
+                paren_depth++;
+            if (it->type == TokenType::right_paren) {
+                paren_depth--;
+                if (paren_depth == 0) {
+                    closing_paren = &(*it);
+                    break;
+                }
+            }
+        }
+
+        return closing_paren == &tokens.back();
+    }
+
     [[nodiscard]] inline std::string_view get_op_string_from_token_type(TokenType::TokenType type) noexcept
     {
         using namespace std::string_view_literals;
@@ -284,7 +310,7 @@ namespace RaychelScript {
         }
 
         //Parenthesised expressions
-        if (expression_tokens.front().type == left_paren && expression_tokens.back().type == right_paren) {
+        if (is_toplevel_parenthesised_expression(expression_tokens)) {
             Logger::debug(handler.indent(), "Found parenthesised expression at ", expression_tokens.front().location, '\n');
 
             return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())});
