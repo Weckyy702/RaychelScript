@@ -21,10 +21,16 @@ Building
   * RaychelLogger
 
 * Compiler support
-  * I have tested GCC 11.1.0 on linux 5.14. Clang 12 seems to have a problem with C++20s std::ranges library
+  * I have tested GCC 11.1.0 on linux 5.14 and MSVC on Windows 10.
+  * Clang seems to have trouble with the STL ranges library from libstdc++.
 
 * GNU/Linux
   * Run cmake, then run make and you have your binaries built in the *build/xxx* directory where xxx is the name of the module
+
+* Windows
+  * You will need Visual Studio with the C++ workload and CMake installed. You also have to install the dependencies manually.
+  * Running cmake will create a RaychelScript.sln file. Open it in Visual Studio to compile the program. Due to windows limitations, you will have
+    to copy the built DLLs into the executable directory (either manually or via copy_DLLs.sh)
 
 I found a bug!!!
 -
