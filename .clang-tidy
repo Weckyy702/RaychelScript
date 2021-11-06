@@ -27,5 +27,5 @@ CheckOptions:
     value:          2
   - key:            readability-identifier-length.IgnoredParameterNames
     value:          'c|n'
-  - key:            readability-identifier-length.IgnoredParameterNames
+  - key:            readability-identifier-length.IgnoredLoopCounterNames
     value:          'c|i|j|k|n'
