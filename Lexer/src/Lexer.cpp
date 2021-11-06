@@ -27,6 +27,7 @@
 */
 
 #include "Lexer.h"
+
 #include <RaychelLogger/Logger.h>
 #include "Alphabet.h"
 
@@ -35,7 +36,7 @@ namespace RaychelScript {
     TokenType::TokenType parse_token(const std::string& token) noexcept
     {
         //if the token starts with a digit, it must be a number
-        if (std::isdigit(token.at(0)) != 0) {
+        if (is_number_char(token.front())) {
             return TokenType::number;
         }
         if (token == "let" || token == "var") {
@@ -86,7 +87,7 @@ namespace RaychelScript {
                 Logger::error(line_number, ':', column_number, " : invalid Token!\n");
                 return false;
             }
-            current_token += c;
+            current_token.push_back(c);
             return true;
         };
 
@@ -116,9 +117,9 @@ namespace RaychelScript {
                 continue;
             }
 
-            if (c == '(') {
+            if (is_opening_parenthesis(static_cast<TokenType::TokenType>(c))) {
                 line_paren_depth++;
-            } else if (c == ')') {
+            } else if (is_closing_parenthesis(static_cast<TokenType::TokenType>(c))) {
                 line_paren_depth--;
             }
 
