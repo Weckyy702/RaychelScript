@@ -36,6 +36,7 @@
 #include "NodeData.h"
 #include "Parser.h"
 #include "Token.h"
+#include "Alphabet.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
@@ -47,40 +48,6 @@ using SourceTokens = std::vector<LineTokens>;
 using ParseResult = std::variant<RaychelScript::ParserErrorCode, RaychelScript::AST_Node>;
 
 namespace RaychelScript {
-
-    /**
-    * \brief Check if an operator token falls into the MD part of PEMDAS
-    * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_MD_op(TokenType::TokenType type) noexcept
-    {
-        return (type == TokenType::star) || (type == TokenType::slash) || (type == TokenType::caret);
-    }
-
-    /**
-    * \brief Check if an operator token falls into the AS part of PEMDAS
-    * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_AS_op(TokenType::TokenType type) noexcept
-    {
-        return (type == TokenType::plus) || (type == TokenType::minus);
-    }
-
-    /**
-    * \brief Check if a token is an arithmetic operator
-    * 
-    * \param token token to check
-    * \return
-    */
-    [[nodiscard]] static bool is_arith_op(TokenType::TokenType type) noexcept
-    {
-        return is_MD_op(type) || is_AS_op(type);
-    }
-
     /**
     * \brief Match a token against a provided pattern.
     * 
@@ -174,21 +141,12 @@ namespace RaychelScript {
             current--;
 
             if (!is_arith_op(current->type)) {
-                switch (current->type) {
-                    case TokenType::right_paren:
-                        paren_depth++;
-                        break;
-                    case TokenType::left_paren:
-                        if (--paren_depth < 0) {
-                            Logger::error("Unmatched parenthesis at ", current->location, '\n');
-                            return tokens.end(); //we closed too many parentheses
-                        }
-                        break;
-                    case TokenType::number:
-                    case TokenType::identifer:
-                        break; //the only non-operator token allowed are number and identifier
-                    default:
-                        return tokens.end(); //break out early if we found an illegal token
+                if(is_opening_parenthesis(current->type)) {
+                    paren_depth++;
+                } else if(is_closing_parenthesis(current->type)){
+                    paren_depth--;
+                }else if(current->type != TokenType::number && current->type != TokenType::identifer) {
+                    return tokens.end();
                 }
                 continue;
             }
@@ -217,11 +175,11 @@ namespace RaychelScript {
 
     [[nodiscard]] bool is_toplevel_parenthesised_expression(LineView tokens)
     {
-        if (tokens.front().type != TokenType::left_paren) {
+        if (!is_opening_parenthesis(tokens.front().type)) {
             return false;
         }
 
-        if (tokens.back().type != TokenType::right_paren) {
+        if (!is_closing_parenthesis(tokens.back().type)) {
             return false;
         }
 
@@ -233,9 +191,9 @@ namespace RaychelScript {
                 return;
             }
 
-            if (token.type == TokenType::left_paren) {
+            if (is_opening_parenthesis(token.type)) {
                 paren_depth++;
-            } else if (token.type == TokenType::right_paren) {
+            } else if (is_closing_parenthesis(token.type)) {
                 paren_depth--;
                 if (paren_depth == 0) {
                     closing_paren = &token;
@@ -299,7 +257,7 @@ namespace RaychelScript {
 
         IndentHandler handler;
 
-//With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing
+//With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing quite a bit
 #if 0
         Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
