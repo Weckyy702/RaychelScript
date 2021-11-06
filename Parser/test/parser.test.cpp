@@ -186,23 +186,25 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 int main(int /*argc*/, char** /*argv*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    parse_file_and_print_debug_info("abc.rsc");
-    parse_file_and_print_debug_info("unmatched_paren.rsc");
-    parse_file_and_print_debug_info("floats.rsc");
-    // parse_file_and_print_debug_info("large.rsc");
-    parse_file_and_print_debug_info("test.rsc");
-    parse_file_and_print_debug_info("invalid_config.rsc");
-    parse_file_and_print_debug_info("config_tests.rsc");
+    // parse_file_and_print_debug_info("abc.rsc");
+    // parse_file_and_print_debug_info("unmatched_paren.rsc");
+    // parse_file_and_print_debug_info("floats.rsc");
+    // // parse_file_and_print_debug_info("large.rsc");
+    // parse_file_and_print_debug_info("test.rsc");
+    // parse_file_and_print_debug_info("invalid_config.rsc");
+    // parse_file_and_print_debug_info("config_tests.rsc");
 
-    RaychelScript::parse(R"(
-        [[config]]
-        name alsdkjfsdaklj
-        input x, y, z, r
-        output d
+    parse_file_and_print_debug_info("parentheses.rsc");
 
-        [[body]]
-        d = (x^2 + y^2 + z^2)^0.5 - 2
-    )");
+    // RaychelScript::parse(R"(
+    //     [[config]]
+    //     name alsdkjfsdaklj
+    //     input x, y, z, r
+    //     output d
+
+    //     [[body]]
+    //     d = (x^2 + y^2 + z^2)^0.5 - 2
+    // )");
 
     echo_AST_from_stdin();
 }
