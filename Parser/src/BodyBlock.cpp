@@ -353,7 +353,7 @@ namespace RaychelScript {
             //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
             if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
                 ec != std::errc{}) {
-                Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a double!");
+                Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!");
                 return ParserErrorCode::invalid_numeric_constant;
             }
 
