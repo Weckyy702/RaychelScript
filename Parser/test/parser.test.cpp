@@ -157,6 +157,11 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 [[maybe_unused]] static void echo_AST_from_stdin() noexcept
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::info);
+    Logger::log(
+        R"(Welcome to the interactive RaychelScript parser!
+Enter any valid expression and the AST will be echoed back to you.
+If you wish to exit this mode, type "exit")",
+        '\n');
     std::string line;
 
     do {
