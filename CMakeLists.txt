@@ -4,6 +4,7 @@ project(RaychelScript VERSION 0.0.1 LANGUAGES CXX)
 
 option(RAYCHELSCRIPT_BUILD_LEXER "Build the RaychelScript lexer" ON)
 option(RAYCHELSCRIPT_BUILD_PARSER "Build the RaychelScript parser" ON)
+option(RAYCHELSCRIPT_BUILD_INTERPRETER "Build the RaychelScript interpreter" ON)
 option(RAYCHELSCRIPT_BUILD_ASSEMBLER "Build the RASM assembler" OFF)
 option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" OFF)
 
@@ -14,6 +15,7 @@ option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" 
 if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
     set(RAYCHELSCRIPT_BUILD_LEXER ON)
     set(RAYCHELSCRIPT_BUILD_PARSER ON)
+    set(RAYCHELSCRIPT_BUILD_INTERPRETER ON)
     set(RAYCHELSCRIPT_BUILD_ASSEMBLER ON)
     set(RAYCHELSCRIPT_BUILD_VM ON)
 endif()
@@ -26,4 +28,8 @@ endif()
 
 if(${RAYCHELSCRIPT_BUILD_PARSER})
     add_subdirectory(Parser)
+endif()
+
+if({RAYCHELSCRIPT_BUILD_INTERPRETER})
+    add_subdirectory(Interpreter)
 endif()

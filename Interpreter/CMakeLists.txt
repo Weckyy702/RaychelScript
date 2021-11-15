@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.14)
+
+find_package(RaychelLogger REQUIRED)
+
+add_library(RaychelScriptInterpreter SHARED
+    "include/Interpreter.h"
+    "src/Interpreter.cpp"
+)
+
+target_include_directories(RaychelScriptInterpreter PUBLIC
+    "include"
+)
+
+target_compile_features(RaychelScriptInterpreter PUBLIC cxx_std_20)
+
+if(${MSVC})
+    target_compile_options(RaychelScriptInterpreter PUBLIC
+        /W4
+    )
+else()
+    target_compile_options(RaychelScriptInterpreter PUBLIC
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wpedantic
+        -Wconversion
+        -Werror
+    )
+endif()
+
+target_link_libraries(RaychelScriptInterpreter PUBLIC
+    RaychelScriptBase
+    RaychelLogger
+)
+
+if(${RAYCHELSCRIPT_BUILD_TESTS})
+    add_subdirectory(test)
+endif()
