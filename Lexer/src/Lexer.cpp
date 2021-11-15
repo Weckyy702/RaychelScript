@@ -29,9 +29,9 @@
 #include "Lexer.h"
 
 #include <RaychelLogger/Logger.h>
-#include "Alphabet.h"
+#include "Lexing/Alphabet.h"
 
-namespace RaychelScript {
+namespace RaychelScript::Lexer {
 
     TokenType::TokenType parse_token(const std::string& token) noexcept
     {

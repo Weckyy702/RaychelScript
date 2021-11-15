@@ -34,7 +34,7 @@
 using SourceTokens = std::vector<std::vector<RaychelScript::Token>>;
 using LineTokens = std::vector<RaychelScript::Token>;
 
-namespace RaychelScript {
+namespace RaychelScript::Parser {
 
     template <std::size_t N>
     requires(N != 0)

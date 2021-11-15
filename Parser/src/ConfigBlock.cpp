@@ -29,13 +29,13 @@
 #include <array>
 #include <vector>
 
-#include "AST.h"
-#include "Token.h"
+#include "AST//AST.h"
+#include "Lexing/Token.h"
 
 using SourceTokens = std::vector<std::vector<RaychelScript::Token>>;
 using LineTokens = std::vector<RaychelScript::Token>;
 
-namespace RaychelScript {
+namespace RaychelScript::Parser {
 
     [[nodiscard]] static bool
     parse_config_entry(const LineTokens& entry_tokens, std::vector<std::string>& config_entries) noexcept

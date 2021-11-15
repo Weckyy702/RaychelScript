@@ -7,7 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "Token.h"
+#include "Lexing/Token.h"
 
 #ifdef _WIN32
     #ifdef RaychelScriptLexer_EXPORTS
@@ -19,7 +19,7 @@
     #define RAYCHELSCRIPT_LEXER_API
 #endif
 
-namespace RaychelScript {
+namespace RaychelScript::Lexer {
 
     /**
     * \brief Produce a 'raw' token stream. Use is discouraged

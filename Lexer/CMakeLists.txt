@@ -2,8 +2,6 @@ find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
 
 add_library(RaychelScriptLexer SHARED
-    "include/TokenType.h"
-    "include/Token.h"
     "include/Lexer.h"
     "src/Lexer.cpp"
 )

@@ -7,6 +7,14 @@ find_package(RaychelLogger REQUIRED)
 add_library(RaychelScriptBase SHARED 
     "include/IndentHandler.h"
     "include/SourceLocation.h"
+    "include/AST/AST.h"
+    "include/AST/AST_Node.h"
+    "include/AST/NodeData.h"
+    "include/AST/NodeType.h"
+    "include/Execution/ExecutionState.h"
+    "include/Lexing/Alphabet.h"
+    "include/Lexing/Token.h"
+    "include/Lexing/TokenType.h"
     "src/IndentHandler.cpp"
 )
 target_include_directories(RaychelScriptBase PUBLIC

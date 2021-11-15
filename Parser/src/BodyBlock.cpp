@@ -31,17 +31,17 @@
 #if __has_include(<ranges>)
     #include <ranges>
 #else
-    #pragma message("We could not find the <ranges> header. Using a workaround that will be a little slower")
+    #pragma message("We could not find the <ranges> header. Using a workaround that will be a little less elegant")
     #define RAYCHELSCRIPT_NO_RANGES_HEADER
 #endif
 #include <variant>
 #include <vector>
 
-#include "Alphabet.h"
+#include "Lexing/Alphabet.h"
 #include "IndentHandler.h"
-#include "NodeData.h"
+#include "AST/NodeData.h"
 #include "Parser.h"
-#include "Token.h"
+#include "Lexing/Token.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
@@ -54,9 +54,9 @@ using LineView = const LineTokens&;
 #endif
 using SourceTokens = std::vector<LineTokens>;
 
-using ParseResult = std::variant<RaychelScript::ParserErrorCode, RaychelScript::AST_Node>;
+using ParseResult = std::variant<RaychelScript::Parser::ParserErrorCode, RaychelScript::AST_Node>;
 
-namespace RaychelScript {
+namespace RaychelScript::Parser {
     /**
     * \brief Match a token against a provided pattern.
     * 

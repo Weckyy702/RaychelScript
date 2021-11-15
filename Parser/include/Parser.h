@@ -42,10 +42,10 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-#include "AST.h"
+#include "AST/AST.h"
 #include "Lexer.h"
 
-namespace RaychelScript {
+namespace RaychelScript::Parser {
 
     enum class [[nodiscard]] ParserErrorCode : std::size_t{
         no_input = 1,
@@ -55,10 +55,10 @@ namespace RaychelScript {
         invalid_numeric_constant,
     };
 
-    constexpr std::string_view error_code_to_reason_string(RaychelScript::ParserErrorCode ec) noexcept
+    constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
-        using RaychelScript::ParserErrorCode;
+        using RaychelScript::Parser::ParserErrorCode;
 
         switch (ec) {
             case ParserErrorCode::no_input:
@@ -80,7 +80,7 @@ namespace RaychelScript {
 
     inline std::variant<AST, ParserErrorCode> parse(std::istream& source_stream) noexcept
     {
-        const auto tokens = lex(source_stream);
+        const auto tokens = Lexer::lex(source_stream);
         if (!tokens.has_value()) {
             return ParserErrorCode::no_input;
         }
@@ -118,7 +118,7 @@ namespace RaychelScript {
     */
     inline std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::string& source_text) noexcept
     {
-        const auto maybe_tokens = lex(source_text);
+        const auto maybe_tokens = Lexer::lex(source_text);
 
         if (!maybe_tokens.has_value()) {
             return ParserErrorCode::no_input;

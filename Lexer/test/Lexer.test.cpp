@@ -34,7 +34,7 @@ int main(int /*unused*/, char** /*unused*/)
     // Logger::setLogColor(Logger::LogLevel::debug, "\033[31;m");
 
     std::ifstream in_file{"../../../shared/test/abc.rsc"};
-    const auto lines = RaychelScript::lex(in_file);
+    const auto lines = RaychelScript::Lexer::lex(in_file);
 
     if (!lines.has_value()) {
         return EXIT_FAILURE;

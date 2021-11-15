@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "IndentHandler.h"
-#include "NodeData.h"
+#include "AST/NodeData.h"
 
 static void print_config_block(const RaychelScript::ConfigBlock& config_block) noexcept
 {
@@ -140,7 +140,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
     std::ifstream in_file{"../../../shared/test/" + filename};
 
     const auto label = Logger::startTimer("parse time");
-    const auto res = RaychelScript::parse(in_file);
+    const auto res = RaychelScript::Parser::parse(in_file);
     Logger::logDuration(label);
 
     if (const RaychelScript::AST* ast = std::get_if<RaychelScript::AST>(&res); ast) {
@@ -149,7 +149,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
     } else {
         Logger::log(
             "The following error occured during parsing: ",
-            error_code_to_reason_string(Raychel::get<RaychelScript::ParserErrorCode>(res)),
+            error_code_to_reason_string(Raychel::get<RaychelScript::Parser::ParserErrorCode>(res)),
             '\n');
     }
 }
@@ -174,9 +174,9 @@ If you wish to exit this mode, type "exit")",
             break;
         }
 
-        const auto AST_or_error = RaychelScript::_parse_no_config_check(line);
+        const auto AST_or_error = RaychelScript::Parser::_parse_no_config_check(line);
 
-        if (const auto* ec = std::get_if<RaychelScript::ParserErrorCode>(&AST_or_error); ec) {
+        if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&AST_or_error); ec) {
             Logger::log("<ERROR>: ", error_code_to_reason_string(*ec), '\n');
             continue;
         }
