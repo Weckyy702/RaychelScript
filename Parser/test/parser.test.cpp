@@ -47,17 +47,17 @@ static void handle_assignment_data(const RaychelScript::AssignmentExpressionData
 
 static void handle_numeric_constant_data(const RaychelScript::NumericConstantData& data) noexcept
 {
-    Logger::log(data.value, '\n');
+    Logger::log("NUMBER ", data.value, '\n');
 }
 
 static void handle_variable_declaration_data(const RaychelScript::VariableDeclarationData& data) noexcept
 {
-    Logger::log(data.is_const ? "CONST " : "MUT ", data.name, '\n');
+    Logger::log("VAR_REF ", data.is_const ? "CONST " : "MUT ", data.name, '\n');
 }
 
 static void handle_variable_reference_data(const RaychelScript::VariableReferenceData& data) noexcept
 {
-    Logger::log(data.name, '\n');
+    Logger::log("VAR ", data.name, '\n');
 }
 
 static void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExpressionData& data) noexcept
