@@ -2,8 +2,9 @@
 #ifndef RAYCHELSCRIPT_ALPHABET_H
 #define RAYCHELSCRIPT_ALPHABET_H
 
-#include <algorithm>
 #include <array>
+#include <cctype>
+
 #include "TokenType.h"
 
 namespace RaychelScript {
@@ -43,7 +44,7 @@ namespace RaychelScript {
         return std::isdigit(static_cast<unsigned char>(c)) != 0;
     }
 
-
+    
 
     /**
     * \brief Check if an operator token falls into the MD part of PEMDAS
