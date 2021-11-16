@@ -22,6 +22,16 @@ namespace RaychelScript {
             return id_;
         }
 
+        T& value() noexcept
+        {
+            return value_;
+        }
+
+        const T& value() const noexcept
+        {
+            return value_;
+        }
+
     private:
         std::size_t id_;
         T value_{0};
