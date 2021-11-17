@@ -33,9 +33,13 @@ namespace RaychelScript {
     enum class ExecutionErrorCode
     {
         //General error codes
-        no_input = 1,
+        ok,
+        no_input,
+        not_enough_input_identifiers,
+        invalid_input_identifier,
 
         //Interpreter specific error codes
+        invalid_node,
 
         //RASM specific error codes
         invalid_instruction,
