@@ -23,13 +23,16 @@ endif()
 add_subdirectory(shared)
 
 if(${RAYCHELSCRIPT_BUILD_LEXER})
+    message(STATUS "Adding RaychelScript Lexer...")
     add_subdirectory(Lexer)
 endif()
 
 if(${RAYCHELSCRIPT_BUILD_PARSER})
+    message(STATUS "Adding RaychelScript Parser...")
     add_subdirectory(Parser)
 endif()
 
-if({RAYCHELSCRIPT_BUILD_INTERPRETER})
+if(${RAYCHELSCRIPT_BUILD_INTERPRETER})
+    message(STATUS "Adding RaychelScript Interpreter...")
     add_subdirectory(Interpreter)
 endif()
