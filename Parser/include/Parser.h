@@ -47,8 +47,9 @@
 
 namespace RaychelScript::Parser {
 
-    enum class [[nodiscard]] ParserErrorCode : std::size_t{
-        no_input = 1,
+    enum class [[nodiscard]] ParserErrorCode : std::size_t {
+        ok,
+        no_input,
         invalid_config,
         invalid_construct,
         invalid_declaration,
@@ -61,6 +62,8 @@ namespace RaychelScript::Parser {
         using RaychelScript::Parser::ParserErrorCode;
 
         switch (ec) {
+            case ParserErrorCode::ok:
+                return "Everything's fine :)"sv;
             case ParserErrorCode::no_input:
                 return "No Input"sv;
             case ParserErrorCode::invalid_config:

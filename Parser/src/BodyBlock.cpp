@@ -479,7 +479,7 @@ namespace RaychelScript::Parser {
             line_index++;
         }
 
-        if (ec != ParserErrorCode{}) {
+        if (ec != ParserErrorCode::ok) {
             return ec;
         }
         return ast;
