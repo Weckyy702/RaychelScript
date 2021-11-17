@@ -28,15 +28,22 @@
 #ifndef RAYCHELSCRIPT_INTERPRETER_H
 #define RAYCHELSCRIPT_INTERPRETER_H
 
+#include <concepts>
+#include <map>
+#include <string>
 #include <variant>
 
-#include "Execution/ExecutionState.h"
+#include "AST/AST.h"
 #include "Execution/ExecutionErrorCode.h"
+#include "Execution/ExecutionState.h"
 
 namespace RaychelScript::Interpreter {
 
-    using ExecutionResult = std::variant<ExecutionErrorCode, ExecutionState>;
+    template<std::floating_point T>
+    using ExecutionResult = std::variant<ExecutionErrorCode, ExecutionState<T>>;
 
-}//namespace RaychelScript::Interpreter
+    [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept;
+
+} //namespace RaychelScript::Interpreter
 
 #endif //!RAYCHELSCRIPT_INTERPRETER_H
