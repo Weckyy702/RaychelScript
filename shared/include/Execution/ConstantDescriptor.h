@@ -1,7 +1,7 @@
 /**
-* \file VariableDescriptor.h
+* \file ConstantDescriptor.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for VariableDescriptor class
+* \brief Header file for ConstantDescriptor class
 * \date 2021-11-16
 * 
 * MIT License
@@ -25,8 +25,8 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
-#define RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#ifndef RAYCHELSCRIPT_CONSTANT_DESCRIPTOR_H
+#define RAYCHELSCRIPT_CONSTANT_DESCRIPTOR_H
 
 #include <concepts>
 
@@ -35,12 +35,11 @@
 namespace RaychelScript {
 
     template <std::floating_point T>
-    class VariableDescriptor
+    class ConstantDescriptor
     {
-    public:
-        VariableDescriptor() = default;
 
-        explicit VariableDescriptor(T value) : value_{value}
+    public:
+        explicit ConstantDescriptor(T value) : value_{value}
         {}
 
         [[nodiscard]] DescriptorID id() const noexcept
@@ -48,21 +47,16 @@ namespace RaychelScript {
             return id_;
         }
 
-        [[nodiscard]] T& value() noexcept
-        {
-            return value_;
-        }
-
-        [[nodiscard]] const T& value() const noexcept
+        [[nodiscard]] T value() const noexcept
         {
             return value_;
         }
 
     private:
         DescriptorID id_;
-        T value_{};
+        const T value_;
     };
 
 } //namespace RaychelScript
 
-#endif //!RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#endif //!RAYCHELSCRIPT_CONSTANT_DESCRIPTOR_H

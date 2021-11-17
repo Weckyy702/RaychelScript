@@ -1,7 +1,7 @@
 /**
-* \file VariableDescriptor.h
+* \file DescriptorID.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for VariableDescriptor class
+* \brief Header file for DescriptorID class
 * \date 2021-11-16
 * 
 * MIT License
@@ -25,44 +25,48 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
-#define RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#ifndef RAYCHELSCRIPT_DESCRIPTOR_ID_H
+#define RAYCHELSCRIPT_DESCRIPTOR_ID_H
 
-#include <concepts>
-
-#include "DescriptorID.h"
+#include <compare>
+#include <cstddef>
+#include <ostream>
 
 namespace RaychelScript {
 
-    template <std::floating_point T>
-    class VariableDescriptor
+    class DescriptorID
     {
-    public:
-        VariableDescriptor() = default;
+        [[nodiscard]] static std::size_t _get_id() noexcept
+        {
+            static std::size_t s_id{id_base()};
+            return s_id++;
+        }
 
-        explicit VariableDescriptor(T value) : value_{value}
+    public:
+        DescriptorID() : id_{_get_id()}
         {}
 
-        [[nodiscard]] DescriptorID id() const noexcept
+        [[nodiscard]] std::size_t id() const noexcept
         {
             return id_;
         }
 
-        [[nodiscard]] T& value() noexcept
+        [[nodiscard]] static constexpr std::size_t id_base()
         {
-            return value_;
+            return 0xBEA115;
         }
 
-        [[nodiscard]] const T& value() const noexcept
-        {
-            return value_;
-        }
+        auto operator<=>(const DescriptorID& other) const noexcept = default;
 
     private:
-        DescriptorID id_;
-        T value_{};
+        std::size_t id_{0};
     };
+
+    inline std::ostream& operator<<(std::ostream& os, const DescriptorID& obj)
+    {
+        return os << obj.id();
+    }
 
 } //namespace RaychelScript
 
-#endif //!RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#endif //!RAYCHELSCRIPT_DESCRIPTOR_ID_H
