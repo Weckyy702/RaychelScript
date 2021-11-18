@@ -32,11 +32,11 @@ namespace RaychelScript::Interpreter {
                         input_identifiers.end(),
                         [&](const auto& pair) { return pair.first == identifier; });
                     it != input_identifiers.end()) {
-                        auto descriptor = ConstantDescriptor{it->second};
-                        Logger::debug("Adding constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
+                    auto descriptor = ConstantDescriptor{it->second};
+                    Logger::debug("Adding constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
 
-                        state.descriptor_table.insert({identifier, descriptor.id()});
-                        state.input_vars.push_back(std::move(descriptor));
+                    state.descriptor_table.insert({identifier, descriptor.id()});
+                    state.input_vars.push_back(std::move(descriptor));
                 } else {
                     Logger::error("Input identifier '", identifier, "' has no value assigned!\n");
                     error_code = ExecutionErrorCode::invalid_input_identifier;
@@ -46,7 +46,8 @@ namespace RaychelScript::Interpreter {
         return error_code;
     }
 
-    [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept
+    [[nodiscard]] ExecutionResult<double>
+    interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept
     {
         ExecutionState<double> state;
 

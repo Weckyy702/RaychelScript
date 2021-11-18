@@ -39,10 +39,11 @@
 
 namespace RaychelScript::Interpreter {
 
-    template<std::floating_point T>
+    template <std::floating_point T>
     using ExecutionResult = std::variant<ExecutionErrorCode, ExecutionState<T>>;
 
-    [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept;
+    [[nodiscard]] ExecutionResult<double>
+    interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept;
 
 } //namespace RaychelScript::Interpreter
 
