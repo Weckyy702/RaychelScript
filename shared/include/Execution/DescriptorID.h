@@ -31,6 +31,7 @@
 #include <compare>
 #include <cstddef>
 #include <ostream>
+#include <atomic>
 
 namespace RaychelScript {
 
@@ -38,7 +39,7 @@ namespace RaychelScript {
     {
         [[nodiscard]] static std::size_t _get_id() noexcept
         {
-            static std::size_t s_id{id_base()};
+            static std::atomic_size_t s_id{0};
             return s_id++;
         }
 
@@ -49,6 +50,11 @@ namespace RaychelScript {
         [[nodiscard]] std::size_t id() const noexcept
         {
             return id_;
+        }
+
+        [[nodiscard]] std::size_t index() const noexcept
+        {
+            return id_ - id_base();
         }
 
         [[nodiscard]] static constexpr std::size_t id_base()
