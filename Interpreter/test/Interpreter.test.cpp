@@ -6,14 +6,14 @@
 
 int main()
 {
-
-    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-
     const auto ast_or_error_code = RaychelScript::Parser::parse(R"raw_string(
         [[config]]
             name execution_test
             input a, b
-            output c
+            output d
+
+            use_strict_mode
+            exit_on_fperror
         [[body]]
             let d = a + b
             d *= 2
@@ -25,6 +25,8 @@ int main()
     }
 
     const auto ast = Raychel::get<RaychelScript::AST>(ast_or_error_code);
+
+    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     const auto state_or_error_code = RaychelScript::Interpreter::interpret(
         ast,
@@ -40,8 +42,8 @@ int main()
 
         const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
-        for (const auto& descriptor : state.output_vars) {
-            Logger::log(descriptor.value(), '\n');
+        for (const auto& descriptor : state.variables) {
+            Logger::log(descriptor.id() , ": ", descriptor.value(), '\n');
         }
     }
 }

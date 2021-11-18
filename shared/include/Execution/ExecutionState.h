@@ -39,11 +39,10 @@ namespace RaychelScript {
     template <std::floating_point T>
     struct ExecutionState
     {
-        std::vector<ConstantDescriptor<T>> input_vars;
-        std::vector<VariableDescriptor<T>> output_vars;
-        std::vector<VariableDescriptor<T>> runtime_vars;
+        std::vector<ConstantDescriptor<T>> constants;
+        std::vector<VariableDescriptor<T>> variables;
 
-        std::map<std::string_view, DescriptorID> descriptor_table;
+        std::map<std::string_view, DescriptorID> _descriptor_table;
     };
 
 } //namespace RaychelScript

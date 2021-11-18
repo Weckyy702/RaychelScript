@@ -39,6 +39,7 @@ namespace RaychelScript {
 
         //Interpreter specific error codes
         invalid_node,
+        duplicate_name,
 
         //RASM specific error codes
         invalid_instruction,
