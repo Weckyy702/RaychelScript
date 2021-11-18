@@ -37,11 +37,11 @@
 #include <variant>
 #include <vector>
 
-#include "Lexing/Alphabet.h"
-#include "IndentHandler.h"
 #include "AST/NodeData.h"
-#include "Parser.h"
+#include "IndentHandler.h"
+#include "Lexing/Alphabet.h"
 #include "Lexing/Token.h"
+#include "Parser.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
@@ -485,4 +485,4 @@ namespace RaychelScript::Parser {
         return ast;
     }
 
-} // namespace RaychelScript
+} // namespace RaychelScript::Parser

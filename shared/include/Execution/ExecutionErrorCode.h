@@ -30,8 +30,7 @@
 
 namespace RaychelScript {
 
-    enum class ExecutionErrorCode
-    {
+    enum class ExecutionErrorCode {
         //General error codes
         ok,
         no_input,
@@ -45,6 +44,6 @@ namespace RaychelScript {
         invalid_instruction,
     };
 
-}//namespace RaychelScript
+} //namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H

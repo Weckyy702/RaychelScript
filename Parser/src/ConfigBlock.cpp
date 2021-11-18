@@ -132,4 +132,4 @@ namespace RaychelScript::Parser {
 
         return !has_failed;
     }
-} // namespace RaychelScript
+} // namespace RaychelScript::Parser

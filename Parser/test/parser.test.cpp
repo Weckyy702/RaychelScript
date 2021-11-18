@@ -5,8 +5,8 @@
 #include <string_view>
 #include <vector>
 
-#include "IndentHandler.h"
 #include "AST/NodeData.h"
+#include "IndentHandler.h"
 
 static void print_config_block(const RaychelScript::ConfigBlock& config_block) noexcept
 {

@@ -53,9 +53,11 @@ namespace RaychelScript {
             return value_;
         }
 
-        [[nodiscard]] const T& value() const noexcept {
+        [[nodiscard]] const T& value() const noexcept
+        {
             return value_;
         }
+
     private:
         DescriptorID id_;
         T value_{};

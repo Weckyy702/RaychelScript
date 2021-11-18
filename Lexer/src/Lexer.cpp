@@ -174,4 +174,4 @@ namespace RaychelScript::Lexer {
         return tokens;
     }
 
-} //namespace RaychelScript
+} // namespace RaychelScript::Lexer

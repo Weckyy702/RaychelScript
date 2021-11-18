@@ -29,14 +29,16 @@
 #define RAYCHELSCRIPT_EXECUTION_STATE_H
 
 #include <vector>
+#include <map>
 
 #include "ConstantDescriptor.h"
 #include "VariableDescriptor.h"
 
 namespace RaychelScript {
-    
-    template<std::floating_point T>
-    struct ExecutionState {
+
+    template <std::floating_point T>
+    struct ExecutionState
+    {
         std::vector<ConstantDescriptor<T>> input_vars;
         std::vector<VariableDescriptor<T>> output_vars;
         std::vector<VariableDescriptor<T>> runtime_vars;
@@ -44,6 +46,6 @@ namespace RaychelScript {
         std::map<std::string_view, DescriptorID> descriptor_table;
     };
 
-}//namespace RaychelScript
+} //namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_EXECUTION_STATE_H

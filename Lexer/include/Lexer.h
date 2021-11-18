@@ -49,6 +49,6 @@ namespace RaychelScript::Lexer {
         return lex(stream);
     }
 
-} // namespace RaychelScript
+} // namespace RaychelScript::Lexer
 
 #endif //!RAYCHELSCRIPT_LEXER_H

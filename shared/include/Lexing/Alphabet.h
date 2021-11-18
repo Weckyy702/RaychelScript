@@ -44,8 +44,6 @@ namespace RaychelScript {
         return std::isdigit(static_cast<unsigned char>(c)) != 0;
     }
 
-    
-
     /**
     * \brief Check if an operator token falls into the MD part of PEMDAS
     * 

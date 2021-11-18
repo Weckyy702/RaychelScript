@@ -47,7 +47,7 @@
 
 namespace RaychelScript::Parser {
 
-    enum class [[nodiscard]] ParserErrorCode : std::size_t {
+    enum class [[nodiscard]] ParserErrorCode : std::size_t{
         ok,
         no_input,
         invalid_config,
@@ -129,6 +129,6 @@ namespace RaychelScript::Parser {
 
         return _parse_no_config_check(*maybe_tokens);
     }
-} // namespace RaychelScript
+} // namespace RaychelScript::Parser
 
 #endif //!RAYCHELSCRIPT_PARSER_H

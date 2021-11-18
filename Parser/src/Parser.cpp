@@ -143,4 +143,4 @@ namespace RaychelScript::Parser {
         return parse_body_block(source_tokens, ast);
     }
 
-} // namespace RaychelScript
+} // namespace RaychelScript::Parser
