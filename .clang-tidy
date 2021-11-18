@@ -16,6 +16,7 @@ Checks: " *,
           -fuchsia-default-arguments-declarations,
           -llvm-include-order,
           -abseil-string-find-str-contains,
+          -bugprone-exception-escape
 "
 
 CheckOptions:
