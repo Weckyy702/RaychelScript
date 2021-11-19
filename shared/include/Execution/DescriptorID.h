@@ -28,23 +28,42 @@
 #ifndef RAYCHELSCRIPT_DESCRIPTOR_ID_H
 #define RAYCHELSCRIPT_DESCRIPTOR_ID_H
 
-#include <compare>
-#include <cstddef>
-#include <ostream>
 #include <atomic>
+#include <compare>
+#include <concepts>
+#include <ostream>
 
 namespace RaychelScript {
 
+    template <std::floating_point T>
+    class ConstantDescriptor;
+
     class DescriptorID
     {
+
+        template <typename T>
         [[nodiscard]] static std::size_t _get_id() noexcept
         {
-            static std::atomic_size_t s_id{0};
+            static std::atomic_size_t s_id{id_base()};
             return s_id++;
         }
 
     public:
-        DescriptorID() : id_{_get_id()}
+
+        DescriptorID()=default;
+
+        /**
+        * \brief Construct a new Descriptor ID object.
+        * 
+        * \tparam T used so different types can have differnet IDs
+        */
+        template <typename T>
+        explicit DescriptorID([[maybe_unused]] T* /*unused*/) : id_{_get_id<T>()}
+        {}
+
+        template <typename T>
+        explicit DescriptorID([[maybe_unused]] ConstantDescriptor<T>* /*unused*/)
+            :id_{_get_id<ConstantDescriptor<T>>()}, is_constant_{true}
         {}
 
         [[nodiscard]] std::size_t id() const noexcept
@@ -57,6 +76,11 @@ namespace RaychelScript {
             return id_ - id_base();
         }
 
+        [[nodiscard]] bool is_constant() const noexcept
+        {
+            return is_constant_;
+        }
+
         [[nodiscard]] static constexpr std::size_t id_base()
         {
             return 0xBEA115;
@@ -66,6 +90,7 @@ namespace RaychelScript {
 
     private:
         std::size_t id_{0};
+        bool is_constant_{false};
     };
 
     inline std::ostream& operator<<(std::ostream& os, const DescriptorID& obj)
