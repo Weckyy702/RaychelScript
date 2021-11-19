@@ -39,10 +39,12 @@ namespace RaychelScript {
     {
 
     public:
-        explicit ConstantDescriptor(T value) : value_{value}
+        ConstantDescriptor() = default;
+
+        explicit ConstantDescriptor(T value) : has_value_set_{true}, value_{value}
         {}
 
-        [[nodiscard]] DescriptorID id() const noexcept
+        [[nodiscard]] auto id() const noexcept
         {
             return id_;
         }
@@ -52,9 +54,19 @@ namespace RaychelScript {
             return value_;
         }
 
+        void set_value(T value) noexcept
+        {
+            if (!has_value_set_) {
+                value_ = value;
+                has_value_set_ = true;
+            }
+        }
+
     private:
-        DescriptorID id_;
-        const T value_;
+        DescriptorID id_{this};
+
+        bool has_value_set_{false};
+        T value_{};
     };
 
 } //namespace RaychelScript

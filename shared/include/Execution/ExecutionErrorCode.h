@@ -28,23 +28,54 @@
 #ifndef RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H
 #define RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H
 
-namespace RaychelScript {
+#include <string_view>
 
-    enum class ExecutionErrorCode {
+namespace RaychelScript::Interpreter {
+
+    enum class InterpreterErrorCode {
         //General error codes
         ok,
         no_input,
         not_enough_input_identifiers,
         invalid_input_identifier,
+        divide_by_zero,
 
         //Interpreter specific error codes
         invalid_node,
         duplicate_name,
-
-        //RASM specific error codes
-        invalid_instruction,
+        unresolved_identifier,
+        invalid_arithmetic_operation,
     };
 
-} //namespace RaychelScript
+    inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
+    {
+        using namespace std::string_view_literals;
+        using EC = InterpreterErrorCode;
+        switch (ec) {
+            //General error codes
+            case EC::ok:
+                return "Everything's fine :)"sv;
+            case EC::no_input:
+                return "No Input"sv;
+            case EC::not_enough_input_identifiers:
+                return "Not enough input identifiers were provided"sv;
+            case EC::invalid_input_identifier:
+                return "Input identifier was not in the ASTs input specification";
+            case EC::divide_by_zero:
+                return "Division by Zero"sv;
+            //Interpreter specific error codes
+            case EC::invalid_node:
+                return "Unknown AST node encountered"sv;
+            case EC::duplicate_name:
+                return "Dupliate identifier"sv;
+            case EC::unresolved_identifier:
+                return "Unable to resolve identifier to an existing descriptor"sv;
+            case EC::invalid_arithmetic_operation:
+                return "Unknown arithmetic operation in arithmetic expression node"sv;
+        }
+        return "<Unknown Reason>"sv;
+    }
+
+} // namespace RaychelScript::Interpreter
 
 #endif //!RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H

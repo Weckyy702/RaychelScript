@@ -43,7 +43,7 @@ namespace RaychelScript {
         explicit VariableDescriptor(T value) : value_{value}
         {}
 
-        [[nodiscard]] DescriptorID id() const noexcept
+        [[nodiscard]] auto id() const noexcept
         {
             return id_;
         }
@@ -59,7 +59,7 @@ namespace RaychelScript {
         }
 
     private:
-        DescriptorID id_;
+        DescriptorID id_{this};
         T value_{};
     };
 
