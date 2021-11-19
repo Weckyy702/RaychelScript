@@ -40,13 +40,12 @@ namespace RaychelScript::Interpreter {
         invalid_input_identifier,
         divide_by_zero,
 
-        //Interpreter specific error codes
         invalid_node,
         duplicate_name,
         unresolved_identifier,
         invalid_arithmetic_operation,
     };
-
+        //Interpreter specific error codes
     inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
