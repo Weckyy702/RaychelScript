@@ -28,13 +28,45 @@
 #ifndef RAYCHELSCRIPT_EXECUTION_STATE_H
 #define RAYCHELSCRIPT_EXECUTION_STATE_H
 
-#include <vector>
 #include <map>
+#include <string>
+#include <vector>
 
 #include "ConstantDescriptor.h"
 #include "VariableDescriptor.h"
 
+#define RAYCHELSCRIPT_BIT(x) (1U << (x))
+
 namespace RaychelScript {
+
+    enum class StateFlags : std::uint32_t {
+        none = 0,
+        zero = RAYCHELSCRIPT_BIT(1U),
+        negative = RAYCHELSCRIPT_BIT(2U),
+    };
+
+    inline StateFlags& operator|=(StateFlags& lhs, StateFlags rhs) noexcept
+    {
+        using T = std::underlying_type_t<StateFlags>;
+
+        lhs = StateFlags{static_cast<T>(lhs) | static_cast<T>(rhs)};
+        return lhs;
+    }
+
+    inline StateFlags operator&(StateFlags lhs, StateFlags rhs) noexcept
+    {
+        using T = std::underlying_type_t<StateFlags>;
+        return StateFlags{static_cast<T>(lhs) & static_cast<T>(rhs)};
+    }
+
+    template <std::floating_point T>
+    struct StateRegisters
+    {
+        T a{}, b{};
+        T result{};
+
+        StateFlags flags{StateFlags::none};
+    };
 
     template <std::floating_point T>
     struct ExecutionState
@@ -42,9 +74,22 @@ namespace RaychelScript {
         std::vector<ConstantDescriptor<T>> constants;
         std::vector<VariableDescriptor<T>> variables;
 
-        std::map<std::string_view, DescriptorID> _descriptor_table;
+        std::map<std::string, DescriptorID> _descriptor_table;
+        StateRegisters<T> _registers;
+        DescriptorID _current_descriptor;
+        bool _load_references{false};
     };
 
+    [[nodiscard]] std::string
+    get_descriptor_identifier(const std::map<std::string, DescriptorID>& descriptor_table, const DescriptorID& id) noexcept;
+
+    template <typename T>
+    [[nodiscard]] std::string get_descriptor_identifier(const ExecutionState<T>& state, const DescriptorID& id) noexcept
+    {
+        return get_descriptor_identifier(state._descriptor_table, id);
+    }
 } //namespace RaychelScript
+
+#undef RAYCHELSCRIPT_BIT
 
 #endif //!RAYCHELSCRIPT_EXECUTION_STATE_H

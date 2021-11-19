@@ -27,7 +27,7 @@ else()
 endif()
 
 target_link_libraries(RaychelScriptInterpreter PUBLIC
-    RaychelScriptBase
+    RaychelScriptParser
     RaychelLogger
 )
 

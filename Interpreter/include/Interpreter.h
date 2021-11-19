@@ -36,14 +36,37 @@
 #include "AST/AST.h"
 #include "Execution/ExecutionErrorCode.h"
 #include "Execution/ExecutionState.h"
+#include "Parser.h"
+
+#include "RaychelCore/AssertingGet.h"
 
 namespace RaychelScript::Interpreter {
 
     template <std::floating_point T>
-    using ExecutionResult = std::variant<ExecutionErrorCode, ExecutionState<T>>;
+    using ExecutionResult = std::variant<InterpreterErrorCode, ExecutionState<T>>;
 
-    [[nodiscard]] ExecutionResult<double>
-    interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept;
+    template <std::floating_point T>
+    using ParameterMap = std::map<std::string, T>;
+
+    [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const ParameterMap<double>& parameters) noexcept;
+
+    [[nodiscard]] inline ExecutionResult<double>
+    interpret(std::istream& source_stream, const ParameterMap<double>& parameters) noexcept
+    {
+        const auto ast_or_error = Parser::parse(source_stream);
+        if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&ast_or_error); ec) {
+            return InterpreterErrorCode::no_input;
+        }
+
+        return interpret(Raychel::get<AST>(ast_or_error), parameters);
+    }
+
+    [[nodiscard]] inline ExecutionResult<double>
+    interpret(const std::string& source_text, const ParameterMap<double>& parameters) noexcept
+    {
+        std::stringstream stream{source_text};
+        return interpret(stream, parameters);
+    }
 
 } //namespace RaychelScript::Interpreter
 
