@@ -28,4 +28,6 @@ target_link_libraries(Interpreter_test PUBLIC
     RaychelScriptInterpreter
     RaychelScriptParser
     RaychelLogger
+
+    pthread
 )

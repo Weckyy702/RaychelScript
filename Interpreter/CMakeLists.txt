@@ -1,6 +1,8 @@
 find_package(RaychelLogger REQUIRED)
 
 add_library(RaychelScriptInterpreter SHARED
+    "include/ExecutionErrorCode.h"
+    "include/ExecutionState.h"
     "include/Interpreter.h"
     "src/Interpreter.cpp"
 )
