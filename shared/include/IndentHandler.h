@@ -45,6 +45,41 @@
 #endif
 
 namespace RaychelScript {
+
+    namespace details {
+
+        class ThreadSafeIndentHandler
+        {
+        public:
+            [[nodiscard]] static std::size_t increment() noexcept
+            {
+                return _instance().indent_++;
+            }
+
+            static std::size_t decrement() noexcept
+            {
+                return _instance().indent_--;
+            }
+
+            void static reset() noexcept
+            {
+                _instance().indent_ = 0U;
+            }
+
+        private:
+            ThreadSafeIndentHandler() = default;
+
+            [[nodiscard]] static ThreadSafeIndentHandler& _instance() noexcept
+            {
+                static thread_local ThreadSafeIndentHandler instance_{};
+                return instance_;
+            }
+
+            std::size_t indent_{0};
+        };
+
+    } // namespace details
+
     /**
     * \brief Class for handling indent-based pretty printing in recursive call chains.
     * 
@@ -55,15 +90,14 @@ namespace RaychelScript {
     */
     class IndentHandler
     {
-        //NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables): false positive?
-        RAYCHELSCRIPT_BASE_API static std::size_t indent_;
         static constexpr std::string_view indent_string{
             "...................................................................................................."};
 
     public:
         IndentHandler()
+            :indent_{details::ThreadSafeIndentHandler::increment()}
         {
-            RAYCHEL_ASSERT(++indent_ != 50);
+            RAYCHEL_ASSERT(indent_ != 50);
         }
 
         RAYCHEL_MAKE_NONCOPY_NONMOVE(IndentHandler)
@@ -74,7 +108,7 @@ namespace RaychelScript {
         */
         static void reset_indent() noexcept
         {
-            indent_ = 0;
+            details::ThreadSafeIndentHandler::reset();
         }
 
         /**
@@ -82,7 +116,6 @@ namespace RaychelScript {
         * 
         * \return An indent string based on the internal indent counter
         */
-        //NOLINTNEXTLINE(readability-convert-member-functions-to-static)
         [[nodiscard]] auto indent() const noexcept
         {
             //this is very very stupid
@@ -91,8 +124,11 @@ namespace RaychelScript {
 
         ~IndentHandler() noexcept
         {
-            indent_--;
+            details::ThreadSafeIndentHandler::decrement();
         }
+
+        private:
+            std::size_t indent_;
     };
 
 } // namespace RaychelScript
