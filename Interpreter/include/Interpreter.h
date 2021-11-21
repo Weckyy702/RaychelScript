@@ -34,8 +34,8 @@
 #include <variant>
 
 #include "AST/AST.h"
-#include "Execution/ExecutionErrorCode.h"
-#include "Execution/ExecutionState.h"
+#include "ExecutionErrorCode.h"
+#include "ExecutionState.h"
 #include "Parser.h"
 
 #include "RaychelCore/AssertingGet.h"

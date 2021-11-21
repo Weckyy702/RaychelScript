@@ -33,7 +33,6 @@
 namespace RaychelScript::Interpreter {
 
     enum class InterpreterErrorCode {
-        //General error codes
         ok,
         no_input,
         not_enough_input_identifiers,
@@ -45,7 +44,6 @@ namespace RaychelScript::Interpreter {
         unresolved_identifier,
         invalid_arithmetic_operation,
     };
-        //Interpreter specific error codes
     inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
@@ -62,9 +60,8 @@ namespace RaychelScript::Interpreter {
                 return "Input identifier was not in the ASTs input specification";
             case EC::divide_by_zero:
                 return "Division by Zero"sv;
-            //Interpreter specific error codes
             case EC::invalid_node:
-                return "Unknown AST node encountered"sv;
+                return "Encountered unknown AST node"sv;
             case EC::duplicate_name:
                 return "Dupliate identifier"sv;
             case EC::unresolved_identifier:

@@ -32,8 +32,8 @@
 #include <string>
 #include <vector>
 
-#include "ConstantDescriptor.h"
-#include "VariableDescriptor.h"
+#include "Execution/ConstantDescriptor.h"
+#include "Execution/VariableDescriptor.h"
 
 #define RAYCHELSCRIPT_BIT(x) (1U << (x))
 
