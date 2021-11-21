@@ -38,19 +38,53 @@ namespace RaychelScript {
     template <std::floating_point T>
     class ConstantDescriptor;
 
+    namespace details {
+
+        constexpr std::size_t id_base()
+        {
+            return 0xBEA115;
+        }
+
+        template <typename T>
+        class IdHandler
+        {
+
+            [[nodiscard]] static IdHandler& _instance() noexcept
+            {
+                static thread_local IdHandler instance_;
+
+                return instance_;
+            }
+
+        public:
+            [[nodiscard]] static std::size_t id() noexcept
+            {
+                return _instance().id_++;
+            }
+
+            static void reset() noexcept
+            {
+                _instance().id_ = id_base();
+            }
+
+        private:
+            IdHandler() = default;
+
+            std::size_t id_{id_base()};
+        };
+    }; // namespace details
+
     class DescriptorID
     {
 
         template <typename T>
         [[nodiscard]] static std::size_t _get_id() noexcept
         {
-            static std::atomic_size_t s_id{id_base()};
-            return s_id++;
+            return details::IdHandler<T>::id();
         }
 
     public:
-
-        DescriptorID()=default;
+        DescriptorID() = default;
 
         /**
         * \brief Construct a new Descriptor ID object.
@@ -63,8 +97,14 @@ namespace RaychelScript {
 
         template <typename T>
         explicit DescriptorID([[maybe_unused]] ConstantDescriptor<T>* /*unused*/)
-            :id_{_get_id<ConstantDescriptor<T>>()}, is_constant_{true}
+            : id_{_get_id<ConstantDescriptor<T>>()}, is_constant_{true}
         {}
+
+        template <typename T>
+        static void reset_id() noexcept
+        {
+            details::IdHandler<T>::reset();
+        }
 
         [[nodiscard]] std::size_t id() const noexcept
         {
@@ -83,7 +123,7 @@ namespace RaychelScript {
 
         [[nodiscard]] static constexpr std::size_t id_base()
         {
-            return 0xBEA115;
+            return details::id_base();
         }
 
         auto operator<=>(const DescriptorID& other) const noexcept = default;

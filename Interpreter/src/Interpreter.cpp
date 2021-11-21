@@ -405,6 +405,8 @@ namespace RaychelScript::Interpreter {
     {
         ExecutionState<double> state;
 
+        DescriptorID::reset_id<ConstantDescriptor<double>>();
+        DescriptorID::reset_id<VariableDescriptor<double>>();
         if (const auto ec = populate_input_descriptors(state, ast, input_identifiers); ec != InterpreterErrorCode::ok) {
             return ec;
         }
