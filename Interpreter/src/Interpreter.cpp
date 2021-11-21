@@ -126,7 +126,6 @@ namespace RaychelScript::Interpreter {
             descriptor.value() = value;
         }
 
-        //TODO: clear the registers in a good way
         clear_value_registers(state);
 
         return InterpreterErrorCode::ok;
@@ -276,7 +275,7 @@ namespace RaychelScript::Interpreter {
         } else {
             auto descriptor = VariableDescriptor<T>{};
 
-            Logger::debug("Adding new variable descriptor with id ", descriptor.id(), '\n');
+            Logger::debug("Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
 
             set_descriptor_index(state, descriptor.id());
             add_variable(state, std::move(descriptor), data.name);
@@ -407,6 +406,7 @@ namespace RaychelScript::Interpreter {
 
         DescriptorID::reset_id<ConstantDescriptor<double>>();
         DescriptorID::reset_id<VariableDescriptor<double>>();
+
         if (const auto ec = populate_input_descriptors(state, ast, input_identifiers); ec != InterpreterErrorCode::ok) {
             return ec;
         }
