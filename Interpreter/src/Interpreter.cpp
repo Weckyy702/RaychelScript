@@ -9,20 +9,7 @@
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
     [[nodiscard]] InterpreterErrorCode handle_##name(ExecutionState<T>& state, const AST_Node& node) noexcept
-
-namespace RaychelScript {
-    [[nodiscard]] std::string
-    get_descriptor_identifier(const std::map<std::string, DescriptorID>& descriptor_table, const DescriptorID& id) noexcept
-    {
-        if (const auto it = std::find_if(
-                descriptor_table.begin(), descriptor_table.end(), [&](const auto& pair) { return pair.second == id; });
-            it != descriptor_table.end()) {
-            return it->first;
-        }
-        return "<Descriptor not found>";
-    }
-} // namespace RaychelScript
-
+    
 namespace RaychelScript::Interpreter {
 
     //helper functions

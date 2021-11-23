@@ -54,13 +54,15 @@
 
 namespace RaychelScript{
 
-    RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] std::string
-    get_descriptor_identifier(const std::map<std::string, DescriptorID>& descriptor_table, const DescriptorID& id) noexcept;
-
     template <typename T>
     [[nodiscard]] std::string get_descriptor_identifier(const ExecutionState<T>& state, const DescriptorID& id) noexcept
     {
-        return get_descriptor_identifier(state._descriptor_table, id);
+        if (const auto it = std::find_if(
+                state._descriptor_table.begin(), state._descriptor_table.end(), [&](const auto& pair) { return pair.second == id; });
+            it != state._descriptor_table.end()) {
+            return it->first;
+        }
+        return "<Descriptor not found>";
     }
 
     template<typename T>
