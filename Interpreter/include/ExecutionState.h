@@ -79,15 +79,6 @@ namespace RaychelScript {
         DescriptorID _current_descriptor;
         bool _load_references{false};
     };
-
-    [[nodiscard]] std::string
-    get_descriptor_identifier(const std::map<std::string, DescriptorID>& descriptor_table, const DescriptorID& id) noexcept;
-
-    template <typename T>
-    [[nodiscard]] std::string get_descriptor_identifier(const ExecutionState<T>& state, const DescriptorID& id) noexcept
-    {
-        return get_descriptor_identifier(state._descriptor_table, id);
-    }
 } //namespace RaychelScript
 
 #undef RAYCHELSCRIPT_BIT
