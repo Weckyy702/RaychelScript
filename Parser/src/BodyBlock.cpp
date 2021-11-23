@@ -154,7 +154,7 @@ namespace RaychelScript::Parser {
                     paren_depth++;
                 } else if (is_closing_parenthesis(current->type)) {
                     paren_depth--;
-                } else if (current->type != TokenType::number && current->type != TokenType::identifer) {
+                } else if (!is_allowed_token(current->type)) {
                     return tokens.end();
                 }
                 continue;
@@ -294,7 +294,6 @@ namespace RaychelScript::Parser {
         }
 
         //Unary operators
-        //TODO: handle these
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary minus expression at ", matches.front().front().location, '\n');
 
@@ -302,9 +301,21 @@ namespace RaychelScript::Parser {
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::plus, TT::expression_}); !matches.empty()) {
-            Logger::debug(handler.indent(), "Found unary plus expression at ", matches.front().front().location, '\n');
+            Logger::debug(handler.indent(), "Found unary factorial expression at ", matches.front().front().location, '\n');
 
             return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus, line_index);
+        }
+
+        if(const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::bang}); !matches.empty()) {
+            Logger::debug(handler.indent(), "Found unary factorial expression at ", matches.front().front().location, '\n');
+
+            return handle_unary_epression(matches.front(), UnaryExpressionData::Operation::factorial, line_index);
+        }
+
+        if(const auto matches = match_token_pattern(expression_tokens, array{TT::pipe, TT::expression_, TT::pipe}); !matches.empty())  {
+            Logger::debug(handler.indent(), "Found unary magnitude expression at ", matches.front().front().location, '\n');
+
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude, line_index);
         }
 
         //operator-assign expressions

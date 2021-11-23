@@ -77,6 +77,11 @@ namespace RaychelScript {
         return is_MD_op(type) || is_AS_op(type);
     }
 
+    [[nodiscard]] inline bool is_allowed_token(TokenType::TokenType type) noexcept
+    {
+        return (type == TokenType::number) || (type == TokenType::identifer) || (type == TokenType::pipe) || (type == TokenType::bang);
+    }
+
     /**
     * \brief Check if a token is a closing parenthesis
     * 

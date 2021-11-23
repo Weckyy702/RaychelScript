@@ -94,7 +94,8 @@ namespace RaychelScript {
         enum class Operation {
             minus,
             plus,
-            factorial
+            factorial,
+            magnitude,
         };
 
         AST_Node value;

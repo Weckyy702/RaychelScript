@@ -99,6 +99,9 @@ static void handle_unary_operator_data(const RaychelScript::UnaryExpressionData&
         case Op::factorial:
             Logger::log("FACTORIAL\n");
             break;
+        case Op::magnitude:
+            Logger::log("MAGNITUDE\n");
+            break;
         default:
             RAYCHEL_ASSERT_NOT_REACHED;
     }

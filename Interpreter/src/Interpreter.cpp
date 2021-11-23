@@ -376,8 +376,10 @@ namespace RaychelScript::Interpreter {
                 //do nothing
                 break;
             case Op::factorial:
-                RAYCHEL_TODO("Factorial operations");
                 break;
+            case Op::magnitude:
+                state._registers.result = std::abs(state._registers.result);
+            break;
         }
 
         set_status_registers(state);
