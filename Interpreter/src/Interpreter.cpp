@@ -28,12 +28,6 @@ namespace RaychelScript::Interpreter {
     //helper functions
 
     template <typename T>
-    [[nodiscard]] auto find_input_identifier(const std::string& name, const std::map<std::string, T>& identifiers) noexcept
-    {
-        return std::find_if(identifiers.begin(), identifiers.end(), [&](const auto& pair) { return pair.first == name; });
-    }
-
-    template <typename T>
     [[nodiscard]] bool has_identifier(const ExecutionState<T>& state, const std::string& name) noexcept
     {
         return state._descriptor_table.find(name) != state._descriptor_table.end();
@@ -86,14 +80,6 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    std::pair<bool, std::size_t> get_descriptor_index(ExecutionState<T>& state) noexcept
-    {
-        const auto id = state._current_descriptor;
-
-        return {id.is_constant(), id.index()};
-    }
-
-    template <typename T>
     std::pair<bool, std::size_t> get_descriptor_index(ExecutionState<T>& state, const std::string& name) noexcept
     {
         const auto id = state._descriptor_table.at(name);
@@ -104,16 +90,15 @@ namespace RaychelScript::Interpreter {
     template <typename T>
     InterpreterErrorCode do_initial_assign(ExecutionState<T>& state) noexcept
     {
-        const auto [is_constant_descriptor, index] = get_descriptor_index(state);
         const auto value = state._registers.result;
 
         Logger::debug(
             "Assigning value ",
             value,
             " to ",
-            is_constant_descriptor ? "constant" : "variable",
+            state._current_descriptor.is_constant() ? "constant" : "variable",
             " descriptor at index ",
-            index,
+            state._current_descriptor.index(),
             '\n');
 
         if (state._current_descriptor.is_constant()) {
@@ -126,7 +111,7 @@ namespace RaychelScript::Interpreter {
 
             descriptor.set_value(value);
         } else {
-            auto& descriptor = state.variables.at(index);
+            auto& descriptor = state.variables.at(state._current_descriptor.index());
 
             descriptor.value() = value;
         }
@@ -177,7 +162,7 @@ namespace RaychelScript::Interpreter {
                     return;
                 }
 
-                if (const auto it = find_input_identifier(identifier, input_identifiers); it != input_identifiers.end()) {
+                if (const auto it = input_identifiers.find(identifier); it != input_identifiers.end()) {
                     auto descriptor = ConstantDescriptor<T>{it->second};
                     Logger::debug(
                         "Adding empty constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
