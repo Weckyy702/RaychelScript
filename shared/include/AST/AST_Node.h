@@ -51,12 +51,6 @@ namespace RaychelScript {
 
         {T::is_value_ref};
         std::is_same_v<std::remove_cvref_t<decltype(T::is_value_ref)>, bool>;
-
-        {T::is_constant};
-        std::is_same_v<std::remove_cvref_t<decltype(T::is_constant)>, bool>;
-
-        {T::has_known_value};
-        std::is_same_v<std::remove_cvref_t<decltype(T::has_known_value)>, bool>;
     };
 
     /**
@@ -73,9 +67,7 @@ namespace RaychelScript {
         explicit AST_Node(T&& data) //NOLINT(bugprone-forwarding-reference-overload): Our template parameter is constrained
             : type_{T::type},
               data_{std::forward<T>(data)},
-              is_value_reference_{T::is_value_ref},
-              is_constant_{T::is_constant},
-              has_known_value_{T::has_known_value}
+              is_value_reference_{T::is_value_ref}
         {}
 
         [[nodiscard]] NodeType type() const noexcept
@@ -86,7 +78,7 @@ namespace RaychelScript {
         template <NodeData T>
         [[nodiscard]] T to_node_data() const noexcept
         {
-            RAYCHEL_ASSERT(type() == T::type);
+            RAYCHEL_ASSERT(type_ == T::type);
             return std::any_cast<T>(data_);
         }
 
@@ -95,28 +87,11 @@ namespace RaychelScript {
             return is_value_reference_;
         }
 
-        [[nodiscard]] bool is_constant() const noexcept
-        {
-            return is_constant_;
-        }
-
-        [[nodiscard]] bool has_kown_value() const noexcept
-        {
-            return has_known_value_;
-        }
-
-        void has_value(bool value) noexcept
-        {
-            has_known_value_ = value;
-        }
-
     private:
         NodeType type_;
         std::any data_;
 
         bool is_value_reference_;
-        bool is_constant_;
-        bool has_known_value_;
     };
 
 } // namespace RaychelScript
