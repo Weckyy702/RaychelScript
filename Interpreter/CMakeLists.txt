@@ -1,4 +1,5 @@
 find_package(RaychelLogger REQUIRED)
+find_package(RaychelMath REQUIRED)
 
 add_library(RaychelScriptInterpreter SHARED
     "include/ExecutionErrorCode.h"
@@ -29,6 +30,7 @@ else()
 endif()
 
 target_link_libraries(RaychelScriptInterpreter PUBLIC
+    RaychelMath
     RaychelScriptParser
     RaychelLogger
 )

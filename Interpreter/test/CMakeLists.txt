@@ -28,6 +28,10 @@ target_link_libraries(Interpreter_test PUBLIC
     RaychelScriptInterpreter
     RaychelScriptParser
     RaychelLogger
-
-    pthread
 )
+
+if(NOT ${MSVC})
+    target_link_libraries(Interpreter_test PUBLIC
+        pthread
+    )
+endif()
