@@ -9,7 +9,7 @@
 
 int main()
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::log);
+    Logger::setMinimumLogLevel(Logger::LogLevel::info);
 
     std::vector<std::thread> threads;
 
@@ -18,7 +18,7 @@ int main()
     std::condition_variable stop_var;
     std::mutex mtx;
 
-    for (std::size_t i = 0; i < 12'000; i++) {
+    for (std::size_t i = 0; i < 100; i++) {
         threads.emplace_back([&stop_var, &mtx, &done, i] {
             Logger::log("Thread number ", i + 1, '\n');
 
@@ -33,9 +33,9 @@ int main()
             var d2 = 2 * d
             d2 *= d
             d2 *= 3.5
-            c = d
+            c = d2
             )source_code",
-                {{"a", 1}, {"b", 1}});
+                {{"a", i}, {"b", 1}});
 
             std::unique_lock lck{mtx};
 
@@ -45,20 +45,23 @@ int main()
                 Logger::error(
                     "Error during execution! Reason: ", RaychelScript::Interpreter::error_code_to_reason_string(*ec), '\n');
             } else {
-                Logger::info("SUCCESS :)\n");
 
                 const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
-                Logger::log("Constant values: \n");
-                for (const auto& descriptor : state.constants) {
-                    Logger::log(
-                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                }
-                Logger::log("Variable values: \n");
-                for (const auto& descriptor : state.variables) {
-                    Logger::log(
-                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                }
+                Logger::info("SUCCESS from thread ", i+1, ". c=", RaychelScript::get_variable_value(state, "c").value_or(0.0), '\n');
+
+                // const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
+
+                // Logger::log("Constant values: \n");
+                // for (const auto& descriptor : state.constants) {
+                //     Logger::log(
+                //         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
+                // }
+                // Logger::log("Variable values: \n");
+                // for (const auto& descriptor : state.variables) {
+                //     Logger::log(
+                //         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
+                // }
             }
         });
     }
