@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include "RaychelMath/equivalent.h"
+#include "RaychelMath/math.h"
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
@@ -116,6 +117,33 @@ namespace RaychelScript::Interpreter {
         RAYCHEL_ASSERT(!is_constant); //TODO: this should be reported to the user
 
         return state.variables.at(index);
+    }
+
+    template<typename T>
+    InterpreterErrorCode do_factorial(ExecutionState<T>& state) {
+
+        const auto value = state._registers.result;
+
+        if(value < 0) {
+            Logger::error("Factorial is only defined for positive numbers!\n");
+        }
+        if(!Raychel::is_integer(value)) {
+            Logger::error("Factorial is only defined for integral numbers!\n");
+            return InterpreterErrorCode::invalid_argument;
+        }
+
+        std::size_t value_as_integer = static_cast<std::size_t>(value);
+
+        T result{1};
+
+        for(std::size_t i = 1; i <= value_as_integer; i++) {
+            result *= i;
+        }
+
+        state._registers.result = result;
+        set_status_registers(state);
+
+        return InterpreterErrorCode::ok;
     }
 
     //setup functions
@@ -376,6 +404,7 @@ namespace RaychelScript::Interpreter {
                 //do nothing
                 break;
             case Op::factorial:
+                return do_factorial(state);
                 break;
             case Op::magnitude:
                 state._registers.result = std::abs(state._registers.result);

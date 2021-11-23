@@ -39,6 +39,7 @@ namespace RaychelScript::Interpreter {
         invalid_input_identifier,
         divide_by_zero,
         constant_reassign,
+        invalid_argument,
 
         invalid_node,
         duplicate_name,
