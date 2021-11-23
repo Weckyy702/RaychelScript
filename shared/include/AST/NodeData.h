@@ -59,7 +59,7 @@ namespace RaychelScript {
         AST_Node rhs;
     };
 
-    struct ArithmeticExpressionData : NodeDataBase<NodeType::math_op>
+    struct ArithmeticExpressionData : NodeDataBase<NodeType::arithmetic_operator>
     {
         enum class Operation {
             add = 1,
@@ -87,6 +87,18 @@ namespace RaychelScript {
     struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, true>
     {
         double value;
+    };
+
+    struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator>
+    {
+        enum class Operation {
+            minus,
+            plus,
+            factorial
+        };
+
+        AST_Node value;
+        Operation operation;
     };
 } // namespace RaychelScript
 

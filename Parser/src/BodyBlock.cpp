@@ -261,6 +261,8 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseResult handle_op_assign_expression(
         LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept;
 
+    [[nodiscard]] static ParseResult handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept;
+
     [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens, std::size_t& line_index) noexcept
     {
         namespace TT = TokenType;
@@ -295,10 +297,14 @@ namespace RaychelScript::Parser {
         //TODO: handle these
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary minus expression at ", matches.front().front().location, '\n');
+
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::minus, line_index);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::plus, TT::expression_}); !matches.empty()) {
             Logger::debug(handler.indent(), "Found unary plus expression at ", matches.front().front().location, '\n');
+
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus, line_index);
         }
 
         //operator-assign expressions
@@ -318,7 +324,7 @@ namespace RaychelScript::Parser {
             return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2), line_index);
         }
 
-        //Mathematical operators
+        //Arithmetic operators
         if (const auto op_it = find_arithmetic_operator(expression_tokens); op_it != expression_tokens.end()) {
 
             Logger::debug(
@@ -391,8 +397,6 @@ namespace RaychelScript::Parser {
             auto name = *matches.at(1).front().content;
             const bool is_const = matches.front().front().content == "let";
 
-            //TODO: handle duplicate declarations
-
             return AST_Node{VariableDeclarationData{{}, std::move(name), is_const}};
         }
 
@@ -458,6 +462,19 @@ namespace RaychelScript::Parser {
         auto identifier_node = Raychel::get<AST_Node>(identifier_node_or_error);
 
         return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
+    }
+
+    [[nodiscard]] static ParseResult handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept
+    {
+        const auto node_or_error = parse_expression(rhs, line_index);
+
+        if(const auto* ec = std::get_if<ParserErrorCode>(&node_or_error); ec) {
+            return *ec;
+        }
+
+        auto node = Raychel::get<AST_Node>(node_or_error);
+
+        return AST_Node{UnaryExpressionData{{}, node, op}};
     }
 
     std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept

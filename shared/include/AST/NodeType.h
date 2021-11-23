@@ -33,8 +33,9 @@ namespace RaychelScript {
         assignment,
         variable_decl,
         variable_ref,
-        math_op,
+        arithmetic_operator,
         numeric_constant,
+        unary_operator,
     };
 } // namespace RaychelScript
 

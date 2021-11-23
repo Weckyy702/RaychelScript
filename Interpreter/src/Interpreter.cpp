@@ -75,7 +75,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    InterpreterErrorCode do_initial_assign(ExecutionState<T>& state) noexcept
+    InterpreterErrorCode do_assign(ExecutionState<T>& state) noexcept
     {
         const auto value = state._registers.result;
 
@@ -228,7 +228,7 @@ namespace RaychelScript::Interpreter {
             return ec;
         }
 
-        return do_initial_assign(state);
+        return do_assign(state);
     }
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(variable_declaration)
@@ -355,6 +355,36 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+    RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(unary_expression)
+    {
+        using Op = UnaryExpressionData::Operation;
+
+        Logger::debug("handle_unary_expression()\n");
+
+        const auto data = node.to_node_data<UnaryExpressionData>();
+
+        state._load_references = true;
+        if(const auto ec = execute_node(state, data.value); ec != InterpreterErrorCode::ok) {
+            return ec;
+        }
+
+        switch(data.operation) {
+            case Op::minus:
+                state._registers.result = -state._registers.result;
+                break;
+            case Op::plus:
+                //do nothing
+                break;
+            case Op::factorial:
+                RAYCHEL_TODO("Factorial operations");
+                break;
+        }
+
+        set_status_registers(state);
+
+        return InterpreterErrorCode::ok;
+    }
+
     template <typename T>
     [[nodiscard]] InterpreterErrorCode execute_node(ExecutionState<T>& state, const AST_Node& node) noexcept
     {
@@ -365,10 +395,12 @@ namespace RaychelScript::Interpreter {
                 return handle_variable_declaration(state, node);
             case NodeType::variable_ref:
                 return handle_variable_reference(state, node);
-            case NodeType::math_op:
+            case NodeType::arithmetic_operator:
                 return handle_arithmetic_operation(state, node);
             case NodeType::numeric_constant:
                 return handle_numeric_constant(state, node);
+            case NodeType::unary_operator:
+                return handle_unary_expression(state, node);
         }
 
         return InterpreterErrorCode::invalid_node;

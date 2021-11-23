@@ -86,11 +86,28 @@ static void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExp
     print_node(data.rhs, "rhs=");
 }
 
+static void handle_unary_operator_data(const RaychelScript::UnaryExpressionData& data) noexcept
+{
+    using Op = RaychelScript::UnaryExpressionData::Operation;
+    switch(data.operation) {
+        case Op::minus:
+            Logger::log("UNARY MINUS\n");
+            break;
+        case Op::plus:
+            Logger::log("UNARY PLUS\n");
+            break;
+        case Op::factorial:
+            Logger::log("FACTORIAL\n");
+            break;
+        default:
+            RAYCHEL_ASSERT_NOT_REACHED;
+    }
+    print_node(data.value, "expression=");
+}
+
 static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
 {
-    using RaychelScript::IndentHandler, RaychelScript::NodeType, RaychelScript::AssignmentExpressionData,
-        RaychelScript::VariableDeclarationData, RaychelScript::VariableDeclarationData, RaychelScript::VariableReferenceData,
-        RaychelScript::ArithmeticExpressionData, RaychelScript::NumericConstantData;
+    using namespace RaychelScript;
 
     IndentHandler handler;
 
@@ -109,12 +126,15 @@ static void print_node(const RaychelScript::AST_Node& node, std::string_view pre
             handle_variable_reference_data(node.to_node_data<VariableReferenceData>());
             break;
 
-        case NodeType::math_op:
+        case NodeType::arithmetic_operator:
             handle_arithmetic_expression_data(node.to_node_data<ArithmeticExpressionData>());
             break;
 
         case NodeType::numeric_constant:
             handle_numeric_constant_data(node.to_node_data<NumericConstantData>());
+            break;
+        case NodeType::unary_operator:
+            handle_unary_operator_data(node.to_node_data<UnaryExpressionData>());
             break;
         default:
             RAYCHEL_ASSERT_NOT_REACHED;
@@ -156,7 +176,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 
 [[maybe_unused]] static void echo_AST_from_stdin() noexcept
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::info);
+    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     Logger::log(
         R"(Welcome to the interactive RaychelScript parser!
 Enter any valid expression and the AST will be echoed back to you.
@@ -199,7 +219,7 @@ int main(int /*argc*/, char** /*argv*/)
     // parse_file_and_print_debug_info("invalid_config.rsc");
     // parse_file_and_print_debug_info("config_tests.rsc");
 
-    parse_file_and_print_debug_info("parentheses.rsc");
+    //parse_file_and_print_debug_info("parentheses.rsc");
 
     // RaychelScript::parse(R"(
     //     [[config]]

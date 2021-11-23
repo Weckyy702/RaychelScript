@@ -9,7 +9,7 @@
 
 int main()
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::info);
+    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::vector<std::thread> threads;
 
@@ -18,7 +18,7 @@ int main()
     std::condition_variable stop_var;
     std::mutex mtx;
 
-    for (std::size_t i = 0; i < 100; i++) {
+    for (std::size_t i = 0; i < 1; i++) {
         threads.emplace_back([&stop_var, &mtx, &done, i] {
             Logger::log("Thread number ", i + 1, '\n');
 
@@ -30,7 +30,7 @@ int main()
 
             [[body]]
             let d = a + b
-            var d2 = 2 * d
+            var d2 = 2 * (-d)
             d2 *= d
             d2 *= 3.5
             c = d2
@@ -45,7 +45,6 @@ int main()
                 Logger::error(
                     "Error during execution! Reason: ", RaychelScript::Interpreter::error_code_to_reason_string(*ec), '\n');
             } else {
-
                 const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
                 Logger::info("SUCCESS from thread ", i+1, ". c=", RaychelScript::get_variable_value(state, "c").value_or(0.0), '\n');
