@@ -116,8 +116,13 @@ namespace RaychelScript::Interpreter {
             index,
             '\n');
 
-        if (is_constant_descriptor) {
-            auto& descriptor = state.constants.at(index);
+        if (state._current_descriptor.is_constant()) {
+            auto& descriptor = state.constants.at(state._current_descriptor.index());
+
+            if (descriptor.has_value()) {
+                Logger::error("Assigning to already-initialized constant!\n");
+                return InterpreterErrorCode::constant_reassign;
+            }
 
             descriptor.set_value(value);
         } else {

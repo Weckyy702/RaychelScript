@@ -38,6 +38,7 @@ namespace RaychelScript::Interpreter {
         not_enough_input_identifiers,
         invalid_input_identifier,
         divide_by_zero,
+        constant_reassign,
 
         invalid_node,
         duplicate_name,
@@ -60,6 +61,8 @@ namespace RaychelScript::Interpreter {
                 return "Input identifier was not in the ASTs input specification";
             case EC::divide_by_zero:
                 return "Division by Zero"sv;
+            case EC::constant_reassign:
+                return "Attempt to reassign to constant value";
             case EC::invalid_node:
                 return "Encountered unknown AST node"sv;
             case EC::duplicate_name:
