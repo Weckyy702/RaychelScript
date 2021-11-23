@@ -66,7 +66,7 @@ namespace RaychelScript{
     }
 
     template<typename T>
-    [[nodiscard]] std::optional<T> get_variable_value(const ExecutionState<T>& state, std::string_view name) noexcept
+    [[nodiscard]] std::optional<T> get_identifier_value(const ExecutionState<T>& state, std::string_view name) noexcept
     {
         if(const auto it = state._descriptor_table.find(std::string{name}); it != state._descriptor_table.end()) {
             const auto[_, descriptor] = *it;

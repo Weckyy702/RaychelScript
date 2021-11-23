@@ -47,7 +47,7 @@ int main()
             } else {
                 const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
-                Logger::info("SUCCESS from thread ", i+1, ". c=", RaychelScript::get_variable_value(state, "c").value_or(0.0), '\n');
+                Logger::info("SUCCESS from thread ", i+1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
 
                 // const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
