@@ -54,6 +54,11 @@ namespace RaychelScript {
             return value_;
         }
 
+        [[nodiscard]] bool has_value() const noexcept
+        {
+            return has_value_set_;
+        }
+
         void set_value(T value) noexcept
         {
             if (!has_value_set_) {
