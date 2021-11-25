@@ -72,6 +72,8 @@ namespace RaychelScript::Interpreter {
                 return "Unable to resolve identifier to an existing descriptor"sv;
             case EC::invalid_arithmetic_operation:
                 return "Unknown arithmetic operation in arithmetic expression node"sv;
+            case EC::invalid_argument:
+                return "Invalid argument to function"sv;
         }
         return "<Unknown Reason>"sv;
     }

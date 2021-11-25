@@ -119,28 +119,22 @@ namespace RaychelScript::Interpreter {
         return state.variables.at(index);
     }
 
-    template<typename T>
-    InterpreterErrorCode do_factorial(ExecutionState<T>& state) {
+    template <typename T>
+    InterpreterErrorCode do_factorial(ExecutionState<T>& state)
+    {
 
         const auto value = state._registers.result;
 
-        if(value < 0) {
-            Logger::error("Factorial is only defined for positive numbers!\n");
-        }
-        if(!Raychel::is_integer(value)) {
-            Logger::error("Factorial is only defined for integral numbers!\n");
+        if (Raychel::is_integer(value) && value < 0) {
+            Logger::error("Cannot compute factorial of negative integer value!\n");
             return InterpreterErrorCode::invalid_argument;
         }
 
-        std::size_t value_as_integer = static_cast<std::size_t>(value);
-
-        T result{1};
-
-        for(std::size_t i = 1; i <= value_as_integer; i++) {
-            result *= i;
+        if (Raychel::equivalent<T>(value, 0)) {
+            state._registers.result = 1;
+        } else {
+            state._registers.result = std::tgamma(value+1);
         }
-
-        state._registers.result = result;
         set_status_registers(state);
 
         return InterpreterErrorCode::ok;
@@ -408,7 +402,9 @@ namespace RaychelScript::Interpreter {
                 break;
             case Op::magnitude:
                 state._registers.result = std::abs(state._registers.result);
-            break;
+                break;
+            default:
+                return InterpreterErrorCode::invalid_arithmetic_operation;
         }
 
         set_status_registers(state);
