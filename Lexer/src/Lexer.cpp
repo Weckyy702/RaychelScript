@@ -28,8 +28,8 @@
 
 #include "Lexer.h"
 
-#include <RaychelLogger/Logger.h>
 #include "Lexing/Alphabet.h"
+#include "RaychelLogger/Logger.h"
 
 namespace RaychelScript::Lexer {
 
@@ -91,8 +91,6 @@ namespace RaychelScript::Lexer {
             return true;
         };
 
-        const auto label = Logger::startTimer("lex_time");
-
         for (char c{0}; source_stream.get(c) && !has_failed;) {
             column_number++;
 
@@ -137,9 +135,6 @@ namespace RaychelScript::Lexer {
             }
         }
         reset_state();
-
-        const auto dur = Logger::getTimer(label);
-        Logger::debug("Lexing ", line_number, " line(s) took ", dur.count(), " ms\n");
 
         return tokens;
     }

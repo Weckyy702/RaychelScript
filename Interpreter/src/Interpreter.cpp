@@ -2,15 +2,25 @@
 #include "AST/NodeData.h"
 
 #include <algorithm>
+#include <cerrno>
+#include <cfenv>
 #include <cmath>
 
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
+
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
     [[nodiscard]] InterpreterErrorCode handle_##name(ExecutionState<T>& state, const AST_Node& node) noexcept
-    
+
+#if !RAYCHELSCRIPT_INTERPRETER_SILENT
+    #define RAYCHELSCRIPT_INTERPRETER_DEBUG(...) Logger::debug(__VA_ARGS__)
+#else
+    #define RAYCHELSCRIPT_INTERPRETER_DEBUG(...)
+#endif
+
 namespace RaychelScript::Interpreter {
 
     //helper functions
@@ -80,7 +90,7 @@ namespace RaychelScript::Interpreter {
     {
         const auto value = state._registers.result;
 
-        Logger::debug(
+        RAYCHELSCRIPT_INTERPRETER_DEBUG(
             "Assigning value ",
             value,
             " to ",
@@ -173,7 +183,7 @@ namespace RaychelScript::Interpreter {
 
                 if (const auto it = input_identifiers.find(identifier); it != input_identifiers.end()) {
                     auto descriptor = ConstantDescriptor<T>{it->second};
-                    Logger::debug(
+                    RAYCHELSCRIPT_INTERPRETER_DEBUG(
                         "Adding empty constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
 
                     state._descriptor_table.insert({identifier, descriptor.id()});
@@ -199,7 +209,7 @@ namespace RaychelScript::Interpreter {
 
             VariableDescriptor<T> descriptor;
 
-            Logger::debug("Adding output variable descriptor with id=", descriptor.id(), '\n');
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding output variable descriptor with id=", descriptor.id(), '\n');
 
             state._descriptor_table.insert({name, descriptor.id()});
             state.variables.push_back(std::move(descriptor));
@@ -214,9 +224,9 @@ namespace RaychelScript::Interpreter {
         (void)state;
 
         for (const auto& [name, values] : ast.config_block.config_vars) {
-            Logger::debug("Got configuration variable(s) with name '", name, "':\n");
-            for (const auto& value : values) {
-                Logger::debug("\t'", value, "'\n");
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("Got configuration variable(s) with name '", name, "':\n");
+            for ([[maybe_unused]] const auto& value : values) {
+                RAYCHELSCRIPT_INTERPRETER_DEBUG("\t'", value, "'\n");
             }
         }
 
@@ -230,7 +240,7 @@ namespace RaychelScript::Interpreter {
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(assignment_node)
     {
-        Logger::debug("handle_assignment_node()\n");
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_assignment_node()\n");
         const auto data = node.to_node_data<AssignmentExpressionData>();
 
         if (!data.lhs.is_value_reference()) {
@@ -255,7 +265,7 @@ namespace RaychelScript::Interpreter {
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(variable_declaration)
     {
-        Logger::debug("handle_variable_declaration()\n");
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_variable_declaration()\n");
 
         const auto data = node.to_node_data<VariableDeclarationData>();
 
@@ -267,14 +277,14 @@ namespace RaychelScript::Interpreter {
         if (data.is_const) {
             auto descriptor = ConstantDescriptor<T>{};
 
-            Logger::debug("Adding new constant descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new constant descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
 
             set_descriptor_index(state, descriptor.id());
             add_constant(state, std::move(descriptor), data.name);
         } else {
             auto descriptor = VariableDescriptor<T>{};
 
-            Logger::debug("Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
 
             set_descriptor_index(state, descriptor.id());
             add_variable(state, std::move(descriptor), data.name);
@@ -285,7 +295,7 @@ namespace RaychelScript::Interpreter {
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(variable_reference)
     {
-        Logger::debug("handle_variable_reference(): ", state._load_references ? "LOAD" : "STORE", '\n');
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_variable_reference(): ", state._load_references ? "LOAD" : "STORE", '\n');
 
         const auto data = node.to_node_data<VariableReferenceData>();
 
@@ -318,7 +328,7 @@ namespace RaychelScript::Interpreter {
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(arithmetic_operation)
     {
         using Op = ArithmeticExpressionData::Operation;
-        Logger::debug("handle_arithmetic_operation()\n");
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_arithmetic_operation()\n");
 
         const auto data = node.to_node_data<ArithmeticExpressionData>();
 
@@ -366,7 +376,7 @@ namespace RaychelScript::Interpreter {
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(numeric_constant)
     {
-        Logger::debug("handle_numeric_constant()\n");
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_numeric_constant()\n");
 
         const auto data = node.to_node_data<NumericConstantData>();
 
@@ -381,16 +391,16 @@ namespace RaychelScript::Interpreter {
     {
         using Op = UnaryExpressionData::Operation;
 
-        Logger::debug("handle_unary_expression()\n");
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_unary_expression()\n");
 
         const auto data = node.to_node_data<UnaryExpressionData>();
 
         state._load_references = true;
-        if(const auto ec = execute_node(state, data.value); ec != InterpreterErrorCode::ok) {
+        if (const auto ec = execute_node(state, data.value); ec != InterpreterErrorCode::ok) {
             return ec;
         }
 
-        switch(data.operation) {
+        switch (data.operation) {
             case Op::minus:
                 state._registers.result = -state._registers.result;
                 break;
@@ -435,15 +445,14 @@ namespace RaychelScript::Interpreter {
 
     //Interpreter entry point
 
-    [[nodiscard]] ExecutionResult<double>
-    interpret(const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept
+    [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const std::map<std::string, double>& parameters) noexcept
     {
         ExecutionState<double> state;
 
         DescriptorID::reset_id<ConstantDescriptor<double>>();
         DescriptorID::reset_id<VariableDescriptor<double>>();
 
-        if (const auto ec = populate_input_descriptors(state, ast, input_identifiers); ec != InterpreterErrorCode::ok) {
+        if (const auto ec = populate_input_descriptors(state, ast, parameters); ec != InterpreterErrorCode::ok) {
             return ec;
         }
 
@@ -454,8 +463,6 @@ namespace RaychelScript::Interpreter {
         if (const auto ec = handle_config_vars(state, ast); ec != InterpreterErrorCode::ok) {
             return ec;
         }
-
-        //TODO: walk the AST and manipulate the state
 
         for (const auto& node : ast.nodes) {
             clear_value_registers(state);
