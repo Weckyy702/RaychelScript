@@ -30,7 +30,7 @@ target_link_libraries(Interpreter_test PUBLIC
     RaychelLogger
 )
 
-if(NOT ${MSVC})
+if(NOT MSVC)
     target_link_libraries(Interpreter_test PUBLIC
         pthread
     )

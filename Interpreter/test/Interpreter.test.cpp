@@ -2,15 +2,15 @@
 
 #include "Parser.h"
 
+#include <charconv>
 #include <condition_variable>
 #include <mutex>
 #include <thread>
-#include <charconv>
 #include "RaychelCore/AssertingGet.h"
 
 int main()
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::info);
+    Logger::setMinimumLogLevel(Logger::LogLevel::error);
 
     std::vector<std::thread> threads;
 
@@ -19,13 +19,18 @@ int main()
     std::condition_variable stop_var;
     std::mutex mtx;
 
-    for (std::size_t i = 0; i < 10; i++) {
-        threads.emplace_back([&stop_var, &mtx, &done, i] {
+    std::uint64_t average_duration{0};
+    constexpr std::size_t iterations = 100;
+
+    for (std::size_t i = 0; i < iterations; i++) {
+        threads.emplace_back([&stop_var, &mtx, &done, &average_duration, i] {
             Logger::log("Thread number ", i + 1, '\n');
 
-            char c[3] = {0, 0, 0};
-            std::to_chars(std::begin(c), std::end(c), i);
-            const auto label = Logger::startTimer({c, 3});
+            //NOLINTBEGIN this is a very evil hacky solution
+            char name[10] = {};
+            std::to_chars(std::begin(name), std::end(name), i + 1);
+            const auto label = Logger::startTimer({reinterpret_cast<char*>(name), sizeof(name)});
+            //NOLINTEND
 
             const auto state_or_error_code = RaychelScript::Interpreter::interpret(
                 R"source_code(
@@ -35,16 +40,17 @@ int main()
 
             [[body]]
             let d = a + b
-            var d2 = 2 * |d|
+            var d2 = 2 * d
             d2 *= d
             d2 *= 3.5
             c = d2
 
-            let fac = 4!
+            #let fac = (a / 10)!
             )source_code",
                 {{"a", i}, {"b", 1}});
 
-            Logger::logDuration(label);
+            average_duration += Logger::getTimer<std::chrono::microseconds>(label).count();
+            Logger::logDuration<std::chrono::microseconds>(Logger::LogLevel::log, label);
 
             std::unique_lock lck{mtx};
 
@@ -56,21 +62,25 @@ int main()
             } else {
                 const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
 
-                Logger::info("SUCCESS from thread ", i+1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
-                Logger::info("fac=", RaychelScript::get_identifier_value(state, "fac").value_or(0.0), '\n');
+                Logger::info(
+                    "SUCCESS from thread ", i + 1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
+                Logger::info(
+                    "a=",
+                    RaychelScript::get_identifier_value(state, "a").value_or(0.0),
+                    " -> fac=",
+                    RaychelScript::get_identifier_value(state, "fac").value_or(0.0),
+                    '\n');
 
-                // const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
-
-                // Logger::log("Constant values: \n");
-                // for (const auto& descriptor : state.constants) {
-                //     Logger::log(
-                //         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                // }
-                // Logger::log("Variable values: \n");
-                // for (const auto& descriptor : state.variables) {
-                //     Logger::log(
-                //         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                // }
+                Logger::log("Constant values: \n");
+                for (const auto& descriptor : state.constants) {
+                    Logger::log(
+                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
+                }
+                Logger::log("Variable values: \n");
+                for (const auto& descriptor : state.variables) {
+                    Logger::log(
+                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
+                }
             }
         });
     }
@@ -81,4 +91,6 @@ int main()
     for (auto& thread : threads) {
         thread.join();
     }
+
+    Logger::log("Average duration: ", average_duration / iterations, "us\n");
 }
