@@ -89,7 +89,7 @@ static void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExp
 static void handle_unary_operator_data(const RaychelScript::UnaryExpressionData& data) noexcept
 {
     using Op = RaychelScript::UnaryExpressionData::Operation;
-    switch(data.operation) {
+    switch (data.operation) {
         case Op::minus:
             Logger::log("UNARY MINUS\n");
             break;
@@ -110,34 +110,34 @@ static void handle_unary_operator_data(const RaychelScript::UnaryExpressionData&
 
 static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
 {
-    using namespace RaychelScript;
+    namespace RS = RaychelScript;
 
-    IndentHandler handler;
+    RS::IndentHandler handler;
 
     Logger::log(handler.indent(), prefix);
 
     switch (node.type()) {
-        case NodeType::assignment:
-            handle_assignment_data(node.to_node_data<AssignmentExpressionData>());
+        case RS::NodeType::assignment:
+            handle_assignment_data(node.to_node_data<RS::AssignmentExpressionData>());
             break;
 
-        case NodeType::variable_decl:
-            handle_variable_declaration_data(node.to_node_data<VariableDeclarationData>());
+        case RS::NodeType::variable_decl:
+            handle_variable_declaration_data(node.to_node_data<RS::VariableDeclarationData>());
             break;
 
-        case NodeType::variable_ref:
-            handle_variable_reference_data(node.to_node_data<VariableReferenceData>());
+        case RS::NodeType::variable_ref:
+            handle_variable_reference_data(node.to_node_data<RS::VariableReferenceData>());
             break;
 
-        case NodeType::arithmetic_operator:
-            handle_arithmetic_expression_data(node.to_node_data<ArithmeticExpressionData>());
+        case RS::NodeType::arithmetic_operator:
+            handle_arithmetic_expression_data(node.to_node_data<RS::ArithmeticExpressionData>());
             break;
 
-        case NodeType::numeric_constant:
-            handle_numeric_constant_data(node.to_node_data<NumericConstantData>());
+        case RS::NodeType::numeric_constant:
+            handle_numeric_constant_data(node.to_node_data<RS::NumericConstantData>());
             break;
-        case NodeType::unary_operator:
-            handle_unary_operator_data(node.to_node_data<UnaryExpressionData>());
+        case RS::NodeType::unary_operator:
+            handle_unary_operator_data(node.to_node_data<RS::UnaryExpressionData>());
             break;
         default:
             RAYCHEL_ASSERT_NOT_REACHED;
@@ -164,7 +164,7 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 
     const auto label = Logger::startTimer("parse time");
     const auto res = RaychelScript::Parser::parse(in_file);
-    Logger::logDuration(label);
+    Logger::logDuration<std::chrono::microseconds>(label);
 
     if (const RaychelScript::AST* ast = std::get_if<RaychelScript::AST>(&res); ast) {
         print_config_block(ast->config_block);
