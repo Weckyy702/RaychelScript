@@ -28,7 +28,6 @@
 #ifndef RAYCHELSCRIPT_INTERPRETER_H
 #define RAYCHELSCRIPT_INTERPRETER_H
 
-
 #ifdef _WIN32
     #ifdef RaychelScriptInterpreter_EXPORTS
         #define RAYCHELSCRIPT_INTERPRETER_API __declspec(dllexport)
@@ -41,9 +40,9 @@
 
 #include <concepts>
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
-#include <optional>
 
 #include "AST/AST.h"
 #include "ExecutionErrorCode.h"
@@ -52,26 +51,28 @@
 
 #include "RaychelCore/AssertingGet.h"
 
-namespace RaychelScript{
+namespace RaychelScript {
 
     template <typename T>
     [[nodiscard]] std::string get_descriptor_identifier(const ExecutionState<T>& state, const DescriptorID& id) noexcept
     {
         if (const auto it = std::find_if(
-                state._descriptor_table.begin(), state._descriptor_table.end(), [&](const auto& pair) { return pair.second == id; });
+                state._descriptor_table.begin(),
+                state._descriptor_table.end(),
+                [&](const auto& pair) { return pair.second == id; });
             it != state._descriptor_table.end()) {
             return it->first;
         }
         return "<Descriptor not found>";
     }
 
-    template<typename T>
+    template <typename T>
     [[nodiscard]] std::optional<T> get_identifier_value(const ExecutionState<T>& state, std::string_view name) noexcept
     {
-        if(const auto it = state._descriptor_table.find(std::string{name}); it != state._descriptor_table.end()) {
-            const auto[_, descriptor] = *it;
+        if (const auto it = state._descriptor_table.find(std::string{name}); it != state._descriptor_table.end()) {
+            const auto [_, descriptor] = *it;
 
-            if(descriptor.is_constant()) {
+            if (descriptor.is_constant()) {
                 return state.constants.at(descriptor.index()).value();
             }
             return state.variables.at(descriptor.index()).value();
@@ -87,7 +88,8 @@ namespace RaychelScript{
         template <std::floating_point T>
         using ParameterMap = std::map<std::string, T>;
 
-        RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<double> interpret(const AST& ast, const ParameterMap<double>& parameters) noexcept;
+        RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<double>
+        interpret(const AST& ast, const ParameterMap<double>& parameters) noexcept;
 
         [[nodiscard]] inline ExecutionResult<double>
         interpret(std::istream& source_stream, const ParameterMap<double>& parameters) noexcept
@@ -106,8 +108,8 @@ namespace RaychelScript{
             std::stringstream stream{source_text};
             return interpret(stream, parameters);
         }
-    }
+    } // namespace Interpreter
 
-} //namespace RaychelScript::Interpreter
+} // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_INTERPRETER_H
