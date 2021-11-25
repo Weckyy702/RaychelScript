@@ -94,8 +94,7 @@ namespace RaychelScript {
             "...................................................................................................."};
 
     public:
-        IndentHandler()
-            :indent_{details::ThreadSafeIndentHandler::increment()}
+        IndentHandler() : indent_{details::ThreadSafeIndentHandler::increment()}
         {
             RAYCHEL_ASSERT(indent_ != 50);
         }
@@ -127,8 +126,8 @@ namespace RaychelScript {
             details::ThreadSafeIndentHandler::decrement();
         }
 
-        private:
-            std::size_t indent_;
+    private:
+        std::size_t indent_;
     };
 
 } // namespace RaychelScript

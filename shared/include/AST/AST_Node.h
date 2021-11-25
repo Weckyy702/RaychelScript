@@ -65,9 +65,7 @@ namespace RaychelScript {
     public:
         template <NodeData T>
         explicit AST_Node(T&& data) //NOLINT(bugprone-forwarding-reference-overload): Our template parameter is constrained
-            : type_{T::type},
-              data_{std::forward<T>(data)},
-              is_value_reference_{T::is_value_ref}
+            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference_{T::is_value_ref}
         {}
 
         [[nodiscard]] NodeType type() const noexcept

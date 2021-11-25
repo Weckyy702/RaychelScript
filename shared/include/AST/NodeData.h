@@ -99,7 +99,7 @@ namespace RaychelScript {
         };
 
         AST_Node value;
-        Operation operation;
+        Operation operation{};
     };
 } // namespace RaychelScript
 
