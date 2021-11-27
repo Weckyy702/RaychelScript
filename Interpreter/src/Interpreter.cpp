@@ -120,16 +120,6 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    VariableDescriptor<T> get_current_variable_descriptor(ExecutionState<T>& state) noexcept
-    {
-        const auto [is_constant, index] = get_descriptor_index(state);
-
-        RAYCHEL_ASSERT(!is_constant); //TODO: this should be reported to the user
-
-        return state.variables.at(index);
-    }
-
-    template <typename T>
     InterpreterErrorCode do_factorial(ExecutionState<T>& state)
     {
 
