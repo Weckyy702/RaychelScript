@@ -54,6 +54,13 @@
     #define RAYCHELSCRIPT_PARSER_DEBUG(...) Logger::debug(__VA_ARGS__)
 #endif
 
+#define TRY_GET_NODE(name)                                                                                                       \
+    const auto name##_node_or_error = parse_expression(name##_tokens, ctx);                                                      \
+    if (const auto* ec = std::get_if<ParserErrorCode>(&(name##_node_or_error)); ec) {                                            \
+        return *ec;                                                                                                              \
+    }                                                                                                                            \
+    auto name##_node = Raychel::get<AST_Node>((name##_node_or_error));
+
 using LineTokens = std::vector<RaychelScript::Token>;
 #ifndef RAYCHELSCRIPT_NO_RANGES_HEADER
 using LineView = std::ranges::subrange<LineTokens::const_iterator>;
@@ -281,7 +288,7 @@ namespace RaychelScript::Parser {
     handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept;
 
     [[nodiscard]] static ParseResult handle_op_assign_expression(
-        LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept;
+        LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseResult
     handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept;
@@ -449,18 +456,8 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseResult
     handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens, std::size_t& line_index) noexcept
     {
-        const auto lhs_node_or_error = parse_expression(lhs_tokens, line_index);
-        const auto rhs_node_or_error = parse_expression(rhs_tokens, line_index);
-
-        if (const auto* ec = std::get_if<ParserErrorCode>(&lhs_node_or_error); ec) {
-            return *ec;
-        }
-        if (const auto* ec = std::get_if<ParserErrorCode>(&rhs_node_or_error); ec) {
-            return *ec;
-        }
-
-        auto lhs_node = Raychel::get<AST_Node>(lhs_node_or_error);
-        auto rhs_node = Raychel::get<AST_Node>(rhs_node_or_error);
+        TRY_GET_NODE(lhs);
+        TRY_GET_NODE(rhs);
 
         return AST_Node{T{{}, lhs_node, rhs_node}};
     }
@@ -468,24 +465,13 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseResult handle_math_op(
         LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept
     {
-        const auto lhs_node_or_error = parse_expression(lhs_tokens, line_index);
-        const auto rhs_node_or_error = parse_expression(rhs_tokens, line_index);
-
-        if (const auto* ec = std::get_if<ParserErrorCode>(&lhs_node_or_error); ec) {
-            return *ec;
-        }
-        if (const auto* ec = std::get_if<ParserErrorCode>(&rhs_node_or_error); ec) {
-            return *ec;
-        }
-
-        auto lhs_node = Raychel::get<AST_Node>(lhs_node_or_error);
-        auto rhs_node = Raychel::get<AST_Node>(rhs_node_or_error);
-
+        TRY_GET_NODE(lhs);
+        TRY_GET_NODE(rhs);
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
     }
 
     [[nodiscard]] static ParseResult handle_op_assign_expression(
-        LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept
+        LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         const auto operator_node_or_error = handle_math_op(lhs, rhs, op, line_index);
 
@@ -493,11 +479,7 @@ namespace RaychelScript::Parser {
             return *ec;
         }
 
-        const auto identifier_node_or_error = parse_expression(lhs, line_index);
-
-        if (const auto* ec = std::get_if<ParserErrorCode>(&identifier_node_or_error); ec) {
-            return *ec;
-        }
+        TRY_GET_NODE(identifier);
 
         auto operator_node = Raychel::get<AST_Node>(operator_node_or_error);
         auto identifier_node = Raychel::get<AST_Node>(identifier_node_or_error);
@@ -508,7 +490,7 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseResult
     handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept
     {
-        const auto node_or_error = parse_expression(rhs, line_index);
+        TRY_GET_NODE(rhs);
 
         if (const auto* ec = std::get_if<ParserErrorCode>(&node_or_error); ec) {
             return *ec;
