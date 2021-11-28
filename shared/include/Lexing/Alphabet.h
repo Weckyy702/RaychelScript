@@ -79,7 +79,8 @@ namespace RaychelScript {
 
     [[nodiscard]] inline bool is_allowed_token(TokenType::TokenType type) noexcept
     {
-        return (type == TokenType::number) || (type == TokenType::identifer) || (type == TokenType::pipe) || (type == TokenType::bang);
+        return (type == TokenType::number) || (type == TokenType::identifer) || (type == TokenType::pipe) ||
+               (type == TokenType::bang);
     }
 
     /**

@@ -133,7 +133,7 @@ namespace RaychelScript::Interpreter {
         if (Raychel::equivalent<T>(value, 0)) {
             state._registers.result = 1;
         } else {
-            state._registers.result = std::tgamma(value+1);
+            state._registers.result = std::tgamma(value + 1);
         }
         set_status_registers(state);
 
@@ -267,14 +267,16 @@ namespace RaychelScript::Interpreter {
         if (data.is_const) {
             auto descriptor = ConstantDescriptor<T>{};
 
-            RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new constant descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
+            RAYCHELSCRIPT_INTERPRETER_DEBUG(
+                "Adding new constant descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
 
             set_descriptor_index(state, descriptor.id());
             add_constant(state, std::move(descriptor), data.name);
         } else {
             auto descriptor = VariableDescriptor<T>{};
 
-            RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
+            RAYCHELSCRIPT_INTERPRETER_DEBUG(
+                "Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
 
             set_descriptor_index(state, descriptor.id());
             add_variable(state, std::move(descriptor), data.name);
