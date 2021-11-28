@@ -10,7 +10,7 @@ The syntax is deliberately simple and focussed on mathematical operations. It is
 
 Features
 -
-*In its current state, the language cannot even be executed. Of course, hat will change in the future, but it will remain Turing-incomplete for a while.*
+*In its current state, the language barely be executed. Of course, that will change in the future, but it will remain Turing-incomplete for a while.*
 
 This languages intended purpose is as a scripting language for use in my engine [RaychelCPU](https://github.com/Weckyy702/RaychelCPU). Therefore, its syntax and featureset are tailored towards high-throughput mathematical operations (like shaders).
 
