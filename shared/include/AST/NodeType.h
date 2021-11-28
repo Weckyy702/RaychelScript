@@ -36,6 +36,7 @@ namespace RaychelScript {
         arithmetic_operator,
         numeric_constant,
         unary_operator,
+        conditional_construct,
     };
 } // namespace RaychelScript
 

@@ -54,6 +54,7 @@ namespace RaychelScript::Parser {
         invalid_construct,
         invalid_declaration,
         invalid_numeric_constant,
+        mismatched_conditional,
     };
 
     constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
@@ -74,6 +75,8 @@ namespace RaychelScript::Parser {
                 return "Invalid variable declaration"sv;
             case ParserErrorCode::invalid_numeric_constant:
                 return "Invalid numeric constant"sv;
+            case ParserErrorCode::mismatched_conditional:
+                return "Mismatched if/endif"sv;
         }
         return "<Unknown reason>"sv;
     }

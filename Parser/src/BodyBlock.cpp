@@ -42,16 +42,18 @@
 #include "Lexing/Alphabet.h"
 #include "Lexing/Token.h"
 #include "Parser.h"
+#include "ParsingContext.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
 
+#define RAYCHELSCRIPT_PARSER_NOISY 1
 #define RAYCHELSCRIPT_PARSER_SILENT 0
 
 #if RAYCHELSCRIPT_PARSER_SILENT
     #define RAYCHELSCRIPT_PARSER_DEBUG(...)
 #else
-    #define RAYCHELSCRIPT_PARSER_DEBUG(...) Logger::debug(__VA_ARGS__)
+    #define RAYCHELSCRIPT_PARSER_DEBUG(...) Logger::debug(__VA_ARGS__, '\n')
 #endif
 
 #define TRY_GET_NODE(name)                                                                                                       \
@@ -72,6 +74,7 @@ using SourceTokens = std::vector<LineTokens>;
 using ParseResult = std::variant<RaychelScript::Parser::ParserErrorCode, RaychelScript::AST_Node>;
 
 namespace RaychelScript::Parser {
+
     /**
     * \brief Match a token against a provided pattern.
     * 
@@ -123,12 +126,9 @@ namespace RaychelScript::Parser {
                     } else if (is_closing_parenthesis(it->type)) {
                         paren_depth--;
                     }
-                    if (paren_depth != 0) {
-
-                        if (it->type == escape_token) {
-                            pattern_it++;
-                            break;
-                        }
+                    if (paren_depth == 0 && it->type == escape_token) {
+                        pattern_it++;
+                        break;
                     }
                     token_it++;
                     match.emplace_back(*it);
@@ -281,19 +281,22 @@ namespace RaychelScript::Parser {
     }
 
     template <NodeData T>
-    [[nodiscard]] static ParseResult
-    handle_two_component_expression(LineView lhs, LineView rhs, std::size_t& line_index) noexcept;
+    [[nodiscard]] static ParseResult handle_two_component_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseResult
-    handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept;
+    handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseResult handle_op_assign_expression(
         LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseResult
-    handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept;
+    handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens, std::size_t& line_index) noexcept
+    [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
         namespace TT = TokenType;
         using std::array;
@@ -301,8 +304,8 @@ namespace RaychelScript::Parser {
         IndentHandler handler;
 
 //With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing quite a bit
-#if 1
-        RAYCHELSCRIPT_PARSER_DEBUG(handler.indent());
+#if !RAYCHELSCRIPT_PARSER_SILENT && RAYCHELSCRIPT_PARSER_NOISY
+        Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
             Logger::log(token_type_to_string(token.type), ' ');
         }
@@ -318,10 +321,22 @@ namespace RaychelScript::Parser {
         //Parenthesised expressions
         if (is_toplevel_parenthesised_expression(expression_tokens)) {
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found parenthesised expression at ", expression_tokens.front().location, '\n');
+                handler.indent(), "Found parenthesised expression at ", expression_tokens.front().location);
 
-            return parse_expression(
-                LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())}, line_index);
+            return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())}, ctx);
+        }
+
+        //conditional header
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::conditional_header, TT::expression_});
+            !matches.empty()) {
+
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found conditional header at", matches.front().front().location);
+            return handle_conditional_header(matches.at(1), ctx);
+        }
+
+        //conditional footer
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::conditional_footer}); !matches.empty()) {
+            return handle_conditional_footer(ctx);
         }
 
         //Operator-assign expressions
@@ -329,30 +344,30 @@ namespace RaychelScript::Parser {
                 match_token_pattern(expression_tokens, array{TT::identifer, TT::arith_op_, TT::equal, TT::expression_});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found operator-assign expression at ", matches.front().front().location, '\n');
+                handler.indent(), "Found operator-assign expression at ", matches.front().front().location);
             return handle_op_assign_expression(
-                matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type), line_index);
+                matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type), ctx);
         }
 
         //Assignment expressions
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::equal, TT::expression_});
             !matches.empty()) {
-            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found assignment expression at ", matches.at(1).front().location, '\n');
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found assignment expression at ", matches.at(1).front().location);
 
-            return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2), line_index);
+            return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2), ctx);
         }
 
         //Arithmetic operators
         if (const auto op_it = find_arithmetic_operator(expression_tokens); op_it != expression_tokens.end()) {
 
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found ", get_op_string_from_token_type(op_it->type), " expression at ", op_it->location, '\n');
+                handler.indent(), "Found ", get_op_string_from_token_type(op_it->type), " expression at ", op_it->location);
 
             const auto op = get_op_type_from_token_type(op_it->type);
             const auto lhs = LineView{expression_tokens.begin(), op_it};
             const auto rhs = LineView{std::next(op_it), expression_tokens.end()};
 
-            return handle_math_op(lhs, rhs, op, line_index);
+            return handle_math_op(lhs, rhs, op, ctx);
         }
 
         //Logical operators
@@ -361,32 +376,31 @@ namespace RaychelScript::Parser {
 
         //Unary operators
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
-            RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found unary minus expression at ", matches.front().front().location, '\n');
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found unary minus expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::minus, line_index);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::minus, ctx);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::plus, TT::expression_}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found unary factorial expression at ", matches.front().front().location, '\n');
+                handler.indent(), "Found unary factorial expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus, line_index);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus, ctx);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::bang}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found unary factorial expression at ", matches.front().front().location, '\n');
+                handler.indent(), "Found unary factorial expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.front(), UnaryExpressionData::Operation::factorial, line_index);
+            return handle_unary_epression(matches.front(), UnaryExpressionData::Operation::factorial, ctx);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::pipe, TT::expression_, TT::pipe});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found unary magnitude expression at ", matches.front().front().location, '\n');
+                handler.indent(), "Found unary magnitude expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude, line_index);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude, ctx);
         }
 
         //Leaf nodes
@@ -396,8 +410,7 @@ namespace RaychelScript::Parser {
                 "Found numeric constant at ",
                 matches.front().front().location,
                 " value=",
-                *matches.front().front().content,
-                '\n');
+                *matches.front().front().content);
 
             const auto& token = matches.front().front();
 
@@ -407,7 +420,7 @@ namespace RaychelScript::Parser {
             //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
             if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
                 ec != std::errc{}) {
-                Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!");
+                Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!\n");
                 return ParserErrorCode::invalid_numeric_constant;
             }
 
@@ -420,14 +433,11 @@ namespace RaychelScript::Parser {
                 "Found variable reference at ",
                 matches.front().front().location,
                 " name=",
-                *matches.front().front().content,
-                '\n');
+                *matches.front().front().content);
 
             const auto& token = matches.front().front();
 
             auto name = *token.content;
-
-            //TODO: handle non-existent variable names
 
             return AST_Node{VariableReferenceData{{}, std::move(name)}};
         }
@@ -439,8 +449,7 @@ namespace RaychelScript::Parser {
                 "Found variable declaration at ",
                 matches.front().front().location,
                 " name=",
-                *matches.at(1).front().content,
-                '\n');
+                *matches.at(1).front().content);
 
             auto name = *matches.at(1).front().content;
             const bool is_const = matches.front().front().content == "let";
@@ -448,13 +457,13 @@ namespace RaychelScript::Parser {
             return AST_Node{VariableDeclarationData{{}, std::move(name), is_const}};
         }
 
-        Logger::error(handler.indent(), "Unknown construct at ", expression_tokens.begin()->location, "!\n");
+        Logger::error(handler.indent(), "Unknown construct at ", expression_tokens.begin()->location, '\n');
         return ParserErrorCode::invalid_construct;
     }
 
     template <NodeData T>
     [[nodiscard]] static ParseResult
-    handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens, std::size_t& line_index) noexcept
+    handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);
         TRY_GET_NODE(rhs);
@@ -462,8 +471,8 @@ namespace RaychelScript::Parser {
         return AST_Node{T{{}, lhs_node, rhs_node}};
     }
 
-    [[nodiscard]] static ParseResult handle_math_op(
-        LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, std::size_t& line_index) noexcept
+    [[nodiscard]] static ParseResult
+    handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);
         TRY_GET_NODE(rhs);
@@ -473,7 +482,7 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseResult handle_op_assign_expression(
         LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
-        const auto operator_node_or_error = handle_math_op(lhs, rhs, op, line_index);
+        const auto operator_node_or_error = handle_math_op(identifier_tokens, rhs, op, ctx);
 
         if (const auto* ec = std::get_if<ParserErrorCode>(&operator_node_or_error); ec) {
             return *ec;
@@ -482,47 +491,72 @@ namespace RaychelScript::Parser {
         TRY_GET_NODE(identifier);
 
         auto operator_node = Raychel::get<AST_Node>(operator_node_or_error);
-        auto identifier_node = Raychel::get<AST_Node>(identifier_node_or_error);
 
         return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
     }
 
     [[nodiscard]] static ParseResult
-    handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, std::size_t& line_index) noexcept
+    handle_unary_epression(LineView rhs_tokens, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(rhs);
 
-        if (const auto* ec = std::get_if<ParserErrorCode>(&node_or_error); ec) {
-            return *ec;
+        return AST_Node{UnaryExpressionData{{}, rhs_node, op}};
+    }
+
+    [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept
+    {
+        TRY_GET_NODE(condition);
+
+        ctx.scopes.emplace(ConditionalConstructData{{}, condition_node});
+
+        return ParserErrorCode::ok;
+    }
+
+    [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept
+    {
+        if(ctx.scopes.empty()) {
+            Logger::error("Mismatched if/endif: too many footers!\n");
+            return ParserErrorCode::mismatched_conditional;
         }
+        auto data = std::move(ctx.scopes.top().parent);
+        ctx.scopes.pop();
 
-        auto node = Raychel::get<AST_Node>(node_or_error);
-
-        return AST_Node{UnaryExpressionData{{}, node, op}};
+        return AST_Node{std::move(data)};
     }
 
     std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
     {
+        ParsingContext ctx;
         ParserErrorCode ec{};
-        std::size_t line_index{0};
 
-        while (line_index < source_tokens.size()) {
-            auto top_node_or_error = parse_expression(source_tokens.at(line_index), line_index);
+        std::for_each(source_tokens.begin(), source_tokens.end(), [&](const LineTokens& tokens) {
+            if(ec != ParserErrorCode::ok) {
+                return;
+            }
+            auto top_node_or_error = parse_expression(tokens, ctx);
 
-            if (const auto* error = std::get_if<ParserErrorCode>(&top_node_or_error); error) {
-                ec = *error;
-                break;
+            if (const auto* error_code = std::get_if<ParserErrorCode>(&top_node_or_error); error_code) {
+                ec = *error_code;
+                return;
             }
             auto node = Raychel::get<AST_Node>(top_node_or_error);
 
-            ast.nodes.emplace_back(std::move(node));
+            if (ctx.scopes.empty()) {
+                ast.nodes.emplace_back(std::move(node));
+            } else {
+                ctx.scopes.top().parent.body.emplace_back(std::move(node));
+            }
+        });
 
-            line_index++;
+        if(!ctx.scopes.empty()) {
+            Logger::error("Mismatched if/endif: too many headers!\n");
+            return ParserErrorCode::mismatched_conditional;
         }
 
-        if (ec != ParserErrorCode::ok) {
+        if(ec != ParserErrorCode::ok) {
             return ec;
         }
+
         return ast;
     }
 

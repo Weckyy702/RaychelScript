@@ -5,6 +5,7 @@ find_package(RaychelLogger REQUIRED)
 
 add_library(RaychelScriptParser SHARED
     "include/Parser.h"
+    "include/ParsingContext.h"
     "src/Parser.cpp"
     "src/ConfigBlock.cpp"
     "src/BodyBlock.cpp"

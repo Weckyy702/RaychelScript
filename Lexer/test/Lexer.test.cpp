@@ -1,23 +1,6 @@
 #include "Lexer.h"
 #include <fstream>
 #include "RaychelLogger/Logger.h"
-
-static std::string to_token_name(RaychelScript::TokenType::TokenType type) noexcept
-{
-    namespace TT = RaychelScript::TokenType;
-    using namespace std::string_literals;
-    switch (type) {
-        case TT::identifer:
-            return "IDENTIFIER"s;
-        case TT::number:
-            return "NUMBER"s;
-        case TT::declaration:
-            return "DECL"s;
-        default:
-            return {type};
-    }
-}
-
 int main(int /*unused*/, char** /*unused*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
@@ -33,7 +16,7 @@ int main(int /*unused*/, char** /*unused*/)
 
     // Logger::setLogColor(Logger::LogLevel::debug, "\033[31;m");
 
-    std::ifstream in_file{"../../../shared/test/abc.rsc"};
+    std::ifstream in_file{"../../../shared/test/conditionals.rsc"};
     const auto lines = RaychelScript::Lexer::lex(in_file);
 
     if (!lines.has_value()) {
@@ -45,7 +28,7 @@ int main(int /*unused*/, char** /*unused*/)
     for (const auto& line : *lines) {
         Logger::log(line_no, ": ");
         for (const auto& [type, _, __] : line) {
-            Logger::log(to_token_name(type), ' ');
+            Logger::log(RaychelScript::token_type_to_string(type), ' ');
         }
         Logger::log('\n');
         line_no++;

@@ -108,6 +108,17 @@ static void handle_unary_operator_data(const RaychelScript::UnaryExpressionData&
     print_node(data.value, "expression=");
 }
 
+static void handle_conditional_construct(const RaychelScript::ConditionalConstructData& data) noexcept
+{
+    Logger::log("CONDITIONAL\n");
+
+    print_node(data.condition_node, "condition=");
+
+    for (const auto& node : data.body) {
+        print_node(node, "body=");
+    }
+}
+
 static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
 {
     namespace RS = RaychelScript;
@@ -136,11 +147,14 @@ static void print_node(const RaychelScript::AST_Node& node, std::string_view pre
         case RS::NodeType::numeric_constant:
             handle_numeric_constant_data(node.to_node_data<RS::NumericConstantData>());
             break;
+
         case RS::NodeType::unary_operator:
             handle_unary_operator_data(node.to_node_data<RS::UnaryExpressionData>());
             break;
-        default:
-            RAYCHEL_ASSERT_NOT_REACHED;
+
+        case RS::NodeType::conditional_construct:
+            handle_conditional_construct(node.to_node_data<RS::ConditionalConstructData>());
+            break;
     }
 }
 
@@ -211,28 +225,11 @@ If you wish to exit this mode, type "exit")",
     } while (true);
 }
 
-int main(int /*argc*/, char** /*argv*/)
+int main()
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    // parse_file_and_print_debug_info("abc.rsc");
-    // parse_file_and_print_debug_info("unmatched_paren.rsc");
-    // parse_file_and_print_debug_info("floats.rsc");
-    // // parse_file_and_print_debug_info("large.rsc");
-    // parse_file_and_print_debug_info("test.rsc");
-    // parse_file_and_print_debug_info("invalid_config.rsc");
-    // parse_file_and_print_debug_info("config_tests.rsc");
 
-    //parse_file_and_print_debug_info("parentheses.rsc");
+    parse_file_and_print_debug_info("conditionals.rsc");
 
-    // RaychelScript::parse(R"(
-    //     [[config]]
-    //     name alsdkjfsdaklj
-    //     input x, y, z, r
-    //     output d
-
-    //     [[body]]
-    //     d = (x^2 + y^2 + z^2)^0.5 - 2
-    // )");
-
-    echo_AST_from_stdin();
+    return 0;
 }

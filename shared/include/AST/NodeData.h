@@ -101,6 +101,15 @@ namespace RaychelScript {
         AST_Node value;
         Operation operation{};
     };
+
+    struct ConditionalConstructData : NodeDataBase<NodeType::conditional_construct>
+    {
+        AST_Node condition_node;
+        std::vector<AST_Node> body{};
+
+        //TODO: else blocks
+    };
+
 } // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_NODE_DATA_H

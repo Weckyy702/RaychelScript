@@ -42,6 +42,12 @@ namespace RaychelScript::Lexer {
         if (token == "let" || token == "var") {
             return TokenType::declaration;
         }
+        if (token == "if") {
+            return TokenType::conditional_header;
+        }
+        if (token == "endif") {
+            return TokenType::conditional_footer;
+        }
         return TokenType::identifer;
     }
 

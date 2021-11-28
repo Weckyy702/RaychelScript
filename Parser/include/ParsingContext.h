@@ -1,8 +1,8 @@
 /**
-* \file TokenType.hpp
+* \file ParsingContext.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief TokenyType enum declaration
-* \date 2021-09-28
+* \brief Header file for ParsingContext class
+* \date 2021-11-26
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,42 +25,29 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_TOKEN_TYPE_H
-#define RAYCHELSCRIPT_TOKEN_TYPE_H
+#ifndef RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
+#define RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
 
-namespace RaychelScript::TokenType {
+#include <cstdint>
+#include <stack>
+#include <vector>
 
-    enum TokenType : char {
-        newline = '\n',
-        left_paren = '(',
-        right_paren = ')',
-        left_bracket = '[',
-        right_bracket = ']',
-        left_curly = '{',
-        right_curly = '}',
-        comma = ',',
-        number = '0',
-        identifer = '1',
-        declaration = '2',
-        conditional_header = '3',
-        conditional_footer = '4',
-        plus = '+',
-        minus = '-',
-        star = '*',
-        slash = '/',
-        percent = '%',
-        equal = '=',
-        left_angle = '<',
-        right_angle = '>',
-        bang = '!',
-        ampersand = '&',
-        pipe = '|',
-        caret = '^',
+#include "AST/NodeData.h"
 
-        expression_ = '\0',
-        arith_op_ = '\1',
+#include "RaychelCore/AssertingOptional.h"
+
+namespace RaychelScript::Parser {
+
+    struct ScopeData
+    {
+        ConditionalConstructData parent; //TODO: make this a little smarter and support different parent nodes
     };
 
-} //namespace RaychelScript::TokenType
+    struct ParsingContext
+    {
+        std::stack<ScopeData, std::vector<ScopeData>> scopes;
+    };
 
-#endif //!RAYCHELSCRIPT_TOKEN_TYPE_H
+} //namespace RaychelScript::Parser
+
+#endif //!RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H

@@ -51,6 +51,10 @@ namespace RaychelScript {
                 return "DECLARATION";
             case TT::identifer:
                 return "IDENTIFIER";
+            case TT::conditional_header:
+                return "IF";
+            case TT::conditional_footer:
+                return "ENDIF";
             case TT::expression_:
             case TT::arith_op_:
                 RAYCHEL_TERMINATE("TokenType::expression_ and TokenType::arith_op_ cannot appear in this context!\n");
