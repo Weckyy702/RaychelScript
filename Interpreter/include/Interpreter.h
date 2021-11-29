@@ -46,7 +46,7 @@
 
 #include "AST/AST.h"
 #include "ExecutionErrorCode.h"
-#include "ExecutionState.h"
+#include "InterpreterState.h"
 #include "Parser.h"
 
 #include "RaychelCore/AssertingGet.h"
@@ -54,7 +54,7 @@
 namespace RaychelScript {
 
     template <typename T>
-    [[nodiscard]] std::string get_descriptor_identifier(const ExecutionState<T>& state, const DescriptorID& id) noexcept
+    [[nodiscard]] std::string get_descriptor_identifier(const Interpreter::InterpreterState<T>& state, const DescriptorID& id) noexcept
     {
         if (const auto it = std::find_if(
                 state._descriptor_table.begin(),
@@ -67,7 +67,7 @@ namespace RaychelScript {
     }
 
     template <typename T>
-    [[nodiscard]] std::optional<T> get_identifier_value(const ExecutionState<T>& state, std::string_view name) noexcept
+    [[nodiscard]] std::optional<T> get_identifier_value(const Interpreter::InterpreterState<T>& state, std::string_view name) noexcept
     {
         if (const auto it = state._descriptor_table.find(std::string{name}); it != state._descriptor_table.end()) {
             const auto [_, descriptor] = *it;
@@ -83,7 +83,7 @@ namespace RaychelScript {
     namespace Interpreter {
 
         template <std::floating_point T>
-        using ExecutionResult = std::variant<InterpreterErrorCode, ExecutionState<T>>;
+        using ExecutionResult = std::variant<InterpreterErrorCode, InterpreterState<T>>;
 
         template <std::floating_point T>
         using ParameterMap = std::map<std::string, T>;

@@ -1,7 +1,7 @@
 /**
-* \file ExecutionState.h
+* \file InterpreterState.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for ExecutionState class
+* \brief Header file for InterpreterState class
 * \date 2021-11-16
 * 
 * MIT License
@@ -25,8 +25,8 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_EXECUTION_STATE_H
-#define RAYCHELSCRIPT_EXECUTION_STATE_H
+#ifndef RAYCHELSCRIPT_INTERPRETER_STATE_H
+#define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
 #include <map>
 #include <string>
@@ -37,7 +37,7 @@
 
 #define RAYCHELSCRIPT_BIT(x) (1U << (x))
 
-namespace RaychelScript {
+namespace RaychelScript::Interpreter {
 
     enum class StateFlags : std::uint32_t {
         none = 0,
@@ -69,7 +69,7 @@ namespace RaychelScript {
     };
 
     template <std::floating_point T>
-    struct ExecutionState
+    struct InterpreterState
     {
         std::vector<ConstantDescriptor<T>> constants;
         std::vector<VariableDescriptor<T>> variables;
@@ -79,8 +79,8 @@ namespace RaychelScript {
         DescriptorID _current_descriptor;
         bool _load_references{false};
     };
-} //namespace RaychelScript
+} //namespace RaychelScript::Interpreter
 
 #undef RAYCHELSCRIPT_BIT
 
-#endif //!RAYCHELSCRIPT_EXECUTION_STATE_H
+#endif //!RAYCHELSCRIPT_INTERPRETER_STATE_H

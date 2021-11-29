@@ -3,7 +3,7 @@ find_package(RaychelMath REQUIRED)
 
 add_library(RaychelScriptInterpreter SHARED
     "include/ExecutionErrorCode.h"
-    "include/ExecutionState.h"
+    "include/InterpreterState.h"
     "include/Interpreter.h"
     "src/Interpreter.cpp"
 )
