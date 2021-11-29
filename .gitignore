@@ -8,7 +8,7 @@ cmake**
 Makefile
 
 #documentation files
-/doxy/
+/docs/
 
 #binary files
 *.a
