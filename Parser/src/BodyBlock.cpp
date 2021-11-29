@@ -47,7 +47,7 @@
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
 
-#define RAYCHELSCRIPT_PARSER_NOISY 1
+#define RAYCHELSCRIPT_PARSER_NOISY 0
 #define RAYCHELSCRIPT_PARSER_SILENT 0
 
 #if RAYCHELSCRIPT_PARSER_SILENT
