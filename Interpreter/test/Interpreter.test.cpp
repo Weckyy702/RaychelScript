@@ -20,10 +20,10 @@ int main()
     std::mutex mtx;
 
     std::uint64_t average_duration{0};
-    constexpr std::size_t iterations = 100;
+    constexpr std::size_t iterations = 1;
 
     for (std::size_t i = 0; i < iterations; i++) {
-        threads.emplace_back([&stop_var, &mtx, &done, &average_duration, i] {
+        /*threads.emplace_back(*/[&stop_var, &mtx, &done, &average_duration, i] {
             Logger::log("Thread number ", i + 1, '\n');
 
             //NOLINTBEGIN this is a very evil hacky solution
@@ -52,15 +52,15 @@ int main()
             average_duration += Logger::getTimer<std::chrono::microseconds>(label).count();
             Logger::logDuration<std::chrono::microseconds>(Logger::LogLevel::log, label);
 
-            std::unique_lock lck{mtx};
+            /*std::unique_lock lck{mtx};
 
-            stop_var.wait(lck, [&done] { return done; });
+            stop_var.wait(lck, [&done] { return done; });*/
 
             if (const auto* ec = std::get_if<RaychelScript::Interpreter::InterpreterErrorCode>(&state_or_error_code); ec) {
                 Logger::error(
                     "Error during execution! Reason: ", RaychelScript::Interpreter::error_code_to_reason_string(*ec), '\n');
             } else {
-                const auto state = Raychel::get<RaychelScript::ExecutionState<double>>(state_or_error_code);
+                const auto state = Raychel::get<RaychelScript::Interpreter::InterpreterState<double>>(state_or_error_code);
 
                 Logger::info(
                     "SUCCESS from thread ", i + 1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
@@ -82,7 +82,7 @@ int main()
                         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
                 }
             }
-        });
+        }/*)*/();
     }
 
     done = true;
