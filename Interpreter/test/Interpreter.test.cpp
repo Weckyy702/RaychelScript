@@ -10,7 +10,7 @@
 
 int main()
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::error);
+    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::vector<std::thread> threads;
 
@@ -44,6 +44,14 @@ int main()
             d2 *= d
             d2 *= 3.5
             c = d2
+
+            if c - 7
+                c = 14
+            endif
+
+            if b - 2
+                c = 0
+            endif
 
             #let fac = (a / 10)!
             )source_code",
