@@ -407,6 +407,28 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+    RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(conditional_construct)
+    {
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_conditional_construct()\n");
+
+        const auto data = node.to_node_data<ConditionalConstructData>();
+
+        state._load_references = true;
+        TRY(execute_node(state, data.condition_node));
+
+        if(!Raychel::equivalent<T>(state._registers.result, 0)) {
+            return InterpreterErrorCode::ok;
+        }
+
+        for(const auto& body_node : data.body) {
+            clear_value_registers(state);
+            clear_status_registers(state);
+            TRY(execute_node(state, body_node));
+        }
+
+        return InterpreterErrorCode::ok;
+    }
+
     template <typename T>
     [[nodiscard]] InterpreterErrorCode execute_node(InterpreterState<T>& state, const AST_Node& node) noexcept
     {
@@ -424,7 +446,7 @@ namespace RaychelScript::Interpreter {
             case NodeType::unary_operator:
                 return handle_unary_expression(state, node);
             case NodeType::conditional_construct:
-                RAYCHEL_TODO("conditional constructs");
+                return handle_conditional_construct(state, node);
         }
 
         return InterpreterErrorCode::invalid_node;
