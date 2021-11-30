@@ -9,11 +9,15 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
-#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 0
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
     [[nodiscard]] InterpreterErrorCode handle_##name(InterpreterState<T>& state, const AST_Node& node) noexcept
+
+#define TRY(expression) if(const auto ec = (expression); ec != InterpreterErrorCode::ok) { \
+                            return ec;  \
+                        }
 
 #if !RAYCHELSCRIPT_INTERPRETER_SILENT
     #define RAYCHELSCRIPT_INTERPRETER_DEBUG(...) Logger::debug(__VA_ARGS__)
@@ -174,7 +178,7 @@ namespace RaychelScript::Interpreter {
                 if (const auto it = input_identifiers.find(identifier); it != input_identifiers.end()) {
                     auto descriptor = ConstantDescriptor<T>{it->second};
                     RAYCHELSCRIPT_INTERPRETER_DEBUG(
-                        "Adding empty constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
+                        "Adding new constant descriptor with id=", descriptor.id(), ", value=", descriptor.value(), '\n');
 
                     state._descriptor_table.insert({identifier, descriptor.id()});
                     state.constants.push_back(std::move(descriptor));
@@ -240,15 +244,10 @@ namespace RaychelScript::Interpreter {
 
         //TODO: find a better way to solve this issue. handle_variable_reference has different meaning based on which side of the assignment expression the node is on
         state._load_references = true;
-        //We need to execute the rhs first in case it sets the descriptor index
-        if (const auto ec = execute_node(state, data.rhs); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(execute_node(state, data.rhs));
 
         state._load_references = false;
-        if (const auto ec = execute_node(state, data.lhs); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(execute_node(state, data.lhs));
 
         return do_assign(state);
     }
@@ -326,15 +325,11 @@ namespace RaychelScript::Interpreter {
 
         state._load_references = true;
 
-        if (const auto ec = execute_node(state, data.lhs); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(execute_node(state, data.lhs));
 
         state._registers.a = state._registers.result;
 
-        if (const auto ec = execute_node(state, data.rhs); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(execute_node(state, data.rhs));
 
         state._registers.b = state._registers.result;
 
@@ -388,9 +383,7 @@ namespace RaychelScript::Interpreter {
         const auto data = node.to_node_data<UnaryExpressionData>();
 
         state._load_references = true;
-        if (const auto ec = execute_node(state, data.value); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(execute_node(state, data.value));
 
         switch (data.operation) {
             case Op::minus:
@@ -447,27 +440,18 @@ namespace RaychelScript::Interpreter {
         DescriptorID::reset_id<ConstantDescriptor<double>>();
         DescriptorID::reset_id<VariableDescriptor<double>>();
 
-        if (const auto ec = populate_input_descriptors(state, ast, parameters); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(populate_input_descriptors(state, ast, parameters));
 
-        if (const auto ec = populate_output_descriptors(state, ast); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(populate_output_descriptors(state, ast));
 
-        if (const auto ec = handle_config_vars(state, ast); ec != InterpreterErrorCode::ok) {
-            return ec;
-        }
+        TRY(handle_config_vars(state, ast));
 
         for (const auto& node : ast.nodes) {
             clear_value_registers(state);
             clear_status_registers(state);
             state._load_references = true;
 
-            const auto ec = execute_node(state, node);
-            if (ec != InterpreterErrorCode::ok) {
-                return ec;
-            }
+            TRY(execute_node(state, node));
         }
 
         return state;
