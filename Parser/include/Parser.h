@@ -44,42 +44,9 @@
 #include <vector>
 #include "AST/AST.h"
 #include "Lexer.h"
+#include "ParserErrorCode.h"
 
 namespace RaychelScript::Parser {
-
-    enum class [[nodiscard]] ParserErrorCode : std::size_t{
-        ok,
-        no_input,
-        invalid_config,
-        invalid_construct,
-        invalid_declaration,
-        invalid_numeric_constant,
-        mismatched_conditional,
-    };
-
-    constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
-    {
-        using namespace std::string_view_literals;
-        using RaychelScript::Parser::ParserErrorCode;
-
-        switch (ec) {
-            case ParserErrorCode::ok:
-                return "Everything's fine :)"sv;
-            case ParserErrorCode::no_input:
-                return "No Input"sv;
-            case ParserErrorCode::invalid_config:
-                return "Error in configuration block"sv;
-            case ParserErrorCode::invalid_construct:
-                return "Invalid construct"sv;
-            case ParserErrorCode::invalid_declaration:
-                return "Invalid variable declaration"sv;
-            case ParserErrorCode::invalid_numeric_constant:
-                return "Invalid numeric constant"sv;
-            case ParserErrorCode::mismatched_conditional:
-                return "Mismatched if/endif"sv;
-        }
-        return "<Unknown reason>"sv;
-    }
 
     RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode>
     parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
