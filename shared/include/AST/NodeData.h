@@ -110,6 +110,12 @@ namespace RaychelScript {
         //TODO: else blocks
     };
 
+    struct LiteralTrueData : NodeDataBase<NodeType::literal_true, ValueType::boolean, true>
+    {};
+
+    struct LiteralFalseData : NodeDataBase<NodeType::literal_false, ValueType::boolean, true>
+    {};
+
 } // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_NODE_DATA_H

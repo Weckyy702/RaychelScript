@@ -37,6 +37,8 @@ namespace RaychelScript {
         numeric_constant,
         unary_operator,
         conditional_construct,
+        literal_true,
+        literal_false
     };
 } // namespace RaychelScript
 

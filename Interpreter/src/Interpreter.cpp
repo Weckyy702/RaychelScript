@@ -9,7 +9,7 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
-#define RAYCHELSCRIPT_INTERPRETER_SILENT 0
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
@@ -416,7 +416,7 @@ namespace RaychelScript::Interpreter {
         state._load_references = true;
         TRY(execute_node(state, data.condition_node));
 
-        if(!Raychel::equivalent<T>(state._registers.result, 0)) {
+        if(state._registers.flags & StateFlags::zero) {
             return InterpreterErrorCode::ok;
         }
 
@@ -447,6 +447,13 @@ namespace RaychelScript::Interpreter {
                 return handle_unary_expression(state, node);
             case NodeType::conditional_construct:
                 return handle_conditional_construct(state, node);
+            case NodeType::literal_true:
+                state._registers.result = 1;
+                return InterpreterErrorCode::ok;
+            case NodeType::literal_false:
+                state._registers.result = 0;
+                state._registers.flags |= StateFlags::zero;
+                return InterpreterErrorCode::ok;
         }
 
         return InterpreterErrorCode::invalid_node;

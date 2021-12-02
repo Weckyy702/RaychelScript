@@ -44,6 +44,8 @@ namespace RaychelScript::TokenType {
         declaration = '2',
         conditional_header = '3',
         conditional_footer = '4',
+        literal_true = '5',
+        literal_false = '6',
         plus = '+',
         minus = '-',
         star = '*',
