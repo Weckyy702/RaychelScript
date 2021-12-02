@@ -53,10 +53,15 @@ namespace RaychelScript::Interpreter {
         return lhs;
     }
 
-    inline StateFlags operator&(StateFlags lhs, StateFlags rhs) noexcept
+    inline bool operator&(StateFlags lhs, StateFlags rhs) noexcept
     {
         using T = std::underlying_type_t<StateFlags>;
-        return StateFlags{static_cast<T>(lhs) & static_cast<T>(rhs)};
+        return static_cast<T>(lhs) & static_cast<T>(rhs);
+    }
+
+    inline bool operator!(StateFlags flags) noexcept
+    {
+        return flags == StateFlags::none;
     }
 
     template <std::floating_point T>
