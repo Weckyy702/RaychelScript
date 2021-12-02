@@ -33,6 +33,7 @@
 #include <vector>
 #include "AST_Node.h"
 #include "NodeType.h"
+#include "ValueType.h"
 
 namespace RaychelScript {
 
@@ -46,10 +47,11 @@ namespace RaychelScript {
     * \tparam _type Type of the node
     * \tparam _is_value_ref If the node is a value reference (something that holds a value and is assignable)
     */
-    template <NodeType _type, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
+    template <NodeType _type, ValueType _value_type = ValueType::none, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
     struct NodeDataBase
     {
         static constexpr auto type = _type;
+        static constexpr auto value_type = _value_type;
         static constexpr auto is_value_ref = _is_value_ref;
     };
 
@@ -59,7 +61,7 @@ namespace RaychelScript {
         AST_Node rhs;
     };
 
-    struct ArithmeticExpressionData : NodeDataBase<NodeType::arithmetic_operator>
+    struct ArithmeticExpressionData : NodeDataBase<NodeType::arithmetic_operator, ValueType::number>
     {
         enum class Operation {
             add = 1,
@@ -73,23 +75,23 @@ namespace RaychelScript {
         Operation operation{};
     };
 
-    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, true>
+    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::none, true>
     {
         std::string name;
         bool is_const;
     };
 
-    struct VariableReferenceData : NodeDataBase<NodeType::variable_ref, true>
+    struct VariableReferenceData : NodeDataBase<NodeType::variable_ref, ValueType::number, true>
     {
         std::string name;
     };
 
-    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, true>
+    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, ValueType::number, true>
     {
         double value;
     };
 
-    struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator>
+    struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator, ValueType::number>
     {
         enum class Operation {
             minus,

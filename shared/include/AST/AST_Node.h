@@ -35,6 +35,7 @@
 #include "RaychelCore/Raychel_assert.h"
 
 #include "NodeType.h"
+#include "ValueType.h"
 
 namespace RaychelScript {
 
@@ -48,6 +49,9 @@ namespace RaychelScript {
 
         {T::type};
         std::is_same_v<std::remove_cvref_t<decltype(T::type)>, NodeType>;
+
+        {T::value_type};
+        std::is_same_v<std::remove_cvref_t<decltype(T::value_type)>, ValueType>;
 
         {T::is_value_ref};
         std::is_same_v<std::remove_cvref_t<decltype(T::is_value_ref)>, bool>;
@@ -65,7 +69,7 @@ namespace RaychelScript {
     public:
         template <NodeData T>
         explicit AST_Node(T&& data) //NOLINT(bugprone-forwarding-reference-overload): Our template parameter is constrained
-            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference_{T::is_value_ref}
+            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference_{T::is_value_ref}, value_type_{T::value_type}
         {}
 
         [[nodiscard]] NodeType type() const noexcept
@@ -85,11 +89,17 @@ namespace RaychelScript {
             return is_value_reference_;
         }
 
+        [[nodiscard]] ValueType value_type() const noexcept
+        {
+            return value_type_;
+        }
+
     private:
         NodeType type_;
         std::any data_;
 
         bool is_value_reference_;
+        ValueType value_type_;
     };
 
 } // namespace RaychelScript

@@ -48,7 +48,7 @@
 #include "RaychelCore/ClassMacros.h"
 
 #define RAYCHELSCRIPT_PARSER_NOISY 0
-#define RAYCHELSCRIPT_PARSER_SILENT 0
+#define RAYCHELSCRIPT_PARSER_SILENT 1
 
 #if RAYCHELSCRIPT_PARSER_SILENT
     #define RAYCHELSCRIPT_PARSER_DEBUG(...)
@@ -280,8 +280,7 @@ namespace RaychelScript::Parser {
         }
     }
 
-    template <NodeData T>
-    [[nodiscard]] static ParseResult handle_two_component_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
+    [[nodiscard]] static ParseResult handle_assignment_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseResult
     handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
@@ -354,7 +353,7 @@ namespace RaychelScript::Parser {
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found assignment expression at ", matches.at(1).front().location);
 
-            return handle_two_component_expression<AssignmentExpressionData>(matches.at(0), matches.at(2), ctx);
+            return handle_assignment_expression(matches.at(0), matches.at(2), ctx);
         }
 
         //Arithmetic operators
@@ -469,14 +468,26 @@ namespace RaychelScript::Parser {
         return ParserErrorCode::invalid_construct;
     }
 
-    template <NodeData T>
     [[nodiscard]] static ParseResult
-    handle_two_component_expression(LineView lhs_tokens, LineView rhs_tokens, ParsingContext& ctx) noexcept
+    handle_assignment_expression(LineView lhs_tokens, LineView rhs_tokens, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);
         TRY_GET_NODE(rhs);
 
-        return AST_Node{T{{}, lhs_node, rhs_node}};
+        if (!lhs_node.is_value_reference()) {
+            Logger::error("Trying to assign to non-value reference!\n");
+            return ParserErrorCode::assign_to_non_value_ref;
+        }
+
+        if (rhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Right-hand side of assignment expression does not have value type 'number', has '",
+                value_type_to_string(rhs_node.value_type()),
+                "' instead!\n");
+            return ParserErrorCode::assign_rhs_not_number_type;
+        }
+
+        return AST_Node{AssignmentExpressionData{{}, lhs_node, rhs_node}};
     }
 
     [[nodiscard]] static ParseResult
@@ -484,6 +495,23 @@ namespace RaychelScript::Parser {
     {
         TRY_GET_NODE(lhs);
         TRY_GET_NODE(rhs);
+
+        if (lhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Left-hand side of arithmetic operator does not have value type 'number', has '",
+                lhs_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::arith_op_not_number_type;
+        }
+
+        if (rhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Right-hand side of arithmetic operator does not have value type 'number', has '",
+                rhs_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::arith_op_not_number_type;
+        }
+
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
     }
 
@@ -498,6 +526,11 @@ namespace RaychelScript::Parser {
 
         TRY_GET_NODE(identifier);
 
+        if (identifier_node.type() != NodeType::variable_ref) {
+            Logger::error("Left-hand side of operator-assign expression is not an identifier!\n");
+            return ParserErrorCode::op_assign_lhs_not_identifier;
+        }
+
         auto operator_node = Raychel::get<AST_Node>(operator_node_or_error);
 
         return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
@@ -508,12 +541,25 @@ namespace RaychelScript::Parser {
     {
         TRY_GET_NODE(rhs);
 
+        if (rhs_node.value_type() != ValueType::number) {
+            Logger::error("Operand of unary operator does not have 'number' type, has '", rhs_node.value_type(), "' instead!\n");
+            return ParserErrorCode::unary_op_rhs_not_number_type;
+        }
+
         return AST_Node{UnaryExpressionData{{}, rhs_node, op}};
     }
 
     [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(condition);
+
+        if (condition_node.value_type() != ValueType::boolean) {
+            Logger::error(
+                "Condition expression of conditional construct does not have 'boolean' type, has '",
+                condition_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::conditional_construct_condition_not_boolean_type;
+        }
 
         ctx.scopes.emplace(ConditionalConstructData{{}, condition_node});
 
@@ -522,7 +568,7 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept
     {
-        if(ctx.scopes.empty()) {
+        if (ctx.scopes.empty()) {
             Logger::error("Mismatched if/endif: too many footers!\n");
             return ParserErrorCode::mismatched_conditional;
         }
@@ -538,7 +584,7 @@ namespace RaychelScript::Parser {
         ParserErrorCode ec{};
 
         std::for_each(source_tokens.begin(), source_tokens.end(), [&](const LineTokens& tokens) {
-            if(ec != ParserErrorCode::ok) {
+            if (ec != ParserErrorCode::ok) {
                 return;
             }
             auto top_node_or_error = parse_expression(tokens, ctx);
@@ -556,12 +602,12 @@ namespace RaychelScript::Parser {
             }
         });
 
-        if(!ctx.scopes.empty()) {
+        if (!ctx.scopes.empty()) {
             Logger::error("Mismatched if/endif: too many headers!\n");
             return ParserErrorCode::mismatched_conditional;
         }
 
-        if(ec != ParserErrorCode::ok) {
+        if (ec != ParserErrorCode::ok) {
             return ec;
         }
 
