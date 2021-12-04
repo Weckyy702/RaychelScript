@@ -26,9 +26,7 @@
 * 
 */
 
-#include "Interpreter.h"
-
-#include "Parser.h"
+#include "InterpreterPipe.h"
 
 #include <charconv>
 #include <condition_variable>
@@ -38,6 +36,7 @@
 
 int main()
 {
+    using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespaces)
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::vector<std::thread> threads;
@@ -51,7 +50,7 @@ int main()
     constexpr std::size_t iterations = 100;
 
     for (std::size_t i = 0; i < iterations; i++) {
-        threads.emplace_back([&stop_var, &mtx, &done, &average_duration, i] {
+        /*threads.emplace_back(*/[&stop_var, &mtx, &done, &average_duration, i] {
             Logger::log("Thread number ", i + 1, '\n');
 
             //NOLINTBEGIN this is a very evil hacky solution
@@ -60,15 +59,13 @@ int main()
             const auto label = Logger::startTimer({reinterpret_cast<char*>(name), sizeof(name)});
             //NOLINTEND
 
-            std::ifstream file{"../../../shared/test/conditionals.rsc"};
-            const auto state_or_error_code = RaychelScript::Interpreter::interpret(file, {{"_a", -1}, {"b", 1}});
+            const auto state_or_error_code = Lex{lex_file, "../../../shared/test/conditionals.rsc"} | Parse{} | Interpret<double>{{
+                {"_a", -1},
+                {"b", 1}
+            }};
 
             average_duration += Logger::getTimer<std::chrono::microseconds>(label).count();
             Logger::logDuration<std::chrono::microseconds>(Logger::LogLevel::log, label);
-
-            std::unique_lock lck{mtx};
-
-            stop_var.wait(lck, [&done] { return done; });
 
             if (const auto* ec = std::get_if<RaychelScript::Interpreter::InterpreterErrorCode>(&state_or_error_code); ec) {
                 Logger::error(
@@ -90,7 +87,7 @@ int main()
                         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
                 }
             }
-        });
+        }();//);
     }
 
     done = true;

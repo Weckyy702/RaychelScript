@@ -25,7 +25,7 @@
 * SOFTWARE.
 * 
 */
-#include "Parser.h"
+#include "ParserPipe.h"
 
 #include <RaychelCore/AssertingGet.h>
 #include <fstream>
@@ -237,10 +237,15 @@ static void pretty_print_ast(const std::vector<RaychelScript::AST_Node>& nodes) 
 [[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& filename) noexcept
 {
     Logger::info("Parsing file '", filename, "'\n");
-    std::ifstream in_file{"../../../shared/test/" + filename};
+    std::ifstream in_file{};
+    const auto file_path = "../../../shared/test/" + filename;
 
     const auto label = Logger::startTimer("parse time");
-    const auto res = RaychelScript::Parser::parse(in_file);
+
+
+    const auto res = RaychelScript::Pipes::Lex(RaychelScript::Pipes::lex_file, file_path) | RaychelScript::Pipes::Parse{};
+
+
     Logger::logDuration<std::chrono::microseconds>(label);
 
     if (const RaychelScript::AST* ast = std::get_if<RaychelScript::AST>(&res); ast) {
