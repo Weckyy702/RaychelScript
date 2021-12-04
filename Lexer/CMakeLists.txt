@@ -3,6 +3,8 @@ find_package(RaychelLogger REQUIRED)
 
 add_library(RaychelScriptLexer SHARED
     "include/Lexer.h"
+    "include/LexResult.h"
+    "include/LexerPipe.h"
     "src/Lexer.cpp"
 )
 

@@ -181,4 +181,9 @@ namespace RaychelScript::Lexer {
         return tokens;
     }
 
+    LexResult lex(std::istream& source_stream) noexcept
+    {
+        return combine_tokens_into_lines(_lex_raw(source_stream));
+    }
+
 } // namespace RaychelScript::Lexer
