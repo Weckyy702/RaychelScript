@@ -47,7 +47,7 @@
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
 
-#define RAYCHELSCRIPT_PARSER_NOISY 0
+#define RAYCHELSCRIPT_PARSER_NOISY 1
 #define RAYCHELSCRIPT_PARSER_SILENT 1
 
 #if RAYCHELSCRIPT_PARSER_SILENT
@@ -295,6 +295,9 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept;
 
+    [[nodiscard]] static ParseResult
+    handle_relational_operator(LineView lhs, LineView rhs, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept;
+
     [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
         namespace TT = TokenType;
@@ -302,7 +305,7 @@ namespace RaychelScript::Parser {
 
         IndentHandler handler;
 
-//With this option enabled, the parsing step will log every expression. Very noisy and slows down parsing quite a bit
+//With this option enabled, the parsing step will log every expression. Very noisy
 #if !RAYCHELSCRIPT_PARSER_SILENT && RAYCHELSCRIPT_PARSER_NOISY
         Logger::debug(handler.indent());
         for (const auto& token : expression_tokens) {
@@ -338,6 +341,35 @@ namespace RaychelScript::Parser {
             return handle_conditional_footer(ctx);
         }
 
+        //Logical operators
+        if (const auto matches =
+                match_token_pattern(expression_tokens, array{TT::expression_, TT::equal, TT::equal, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG("Found equals expression at ", matches.at(1).front().location);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::equals, ctx);
+        }
+
+        if (const auto matches =
+                match_token_pattern(expression_tokens, array{TT::expression_, TT::bang, TT::equal, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG("Found not-equals expression at ", matches.at(1).front().location);
+            return handle_relational_operator(
+                matches.front(), matches.back(), RelationalOperatorData::Operation::not_equals, ctx);
+        }
+
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::left_angle, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG("Found less-than expression at ", matches.at(1).front().location);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::less_than, ctx);
+        }
+
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::right_angle, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG("Found greater-than expression at ", matches.at(1).front().location);
+            return handle_relational_operator(
+                matches.front(), matches.back(), RelationalOperatorData::Operation::greater_than, ctx);
+        }
+
         //Operator-assign expressions
         if (const auto matches =
                 match_token_pattern(expression_tokens, array{TT::identifer, TT::arith_op_, TT::equal, TT::expression_});
@@ -355,21 +387,6 @@ namespace RaychelScript::Parser {
 
             return handle_assignment_expression(matches.at(0), matches.at(2), ctx);
         }
-
-        //Arithmetic operators
-        if (const auto op_it = find_arithmetic_operator(expression_tokens); op_it != expression_tokens.end()) {
-
-            RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found ", get_op_string_from_token_type(op_it->type), " expression at ", op_it->location);
-
-            const auto op = get_op_type_from_token_type(op_it->type);
-            const auto lhs = LineView{expression_tokens.begin(), op_it};
-            const auto rhs = LineView{std::next(op_it), expression_tokens.end()};
-
-            return handle_math_op(lhs, rhs, op, ctx);
-        }
-
-        //Logical operators
 
         //Misc
 
@@ -400,6 +417,19 @@ namespace RaychelScript::Parser {
                 handler.indent(), "Found unary magnitude expression at ", matches.front().front().location);
 
             return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude, ctx);
+        }
+
+        //Arithmetic operators
+        if (const auto op_it = find_arithmetic_operator(expression_tokens); op_it != expression_tokens.end()) {
+
+            RAYCHELSCRIPT_PARSER_DEBUG(
+                handler.indent(), "Found ", get_op_string_from_token_type(op_it->type), " expression at ", op_it->location);
+
+            const auto op = get_op_type_from_token_type(op_it->type);
+            const auto lhs = LineView{expression_tokens.begin(), op_it};
+            const auto rhs = LineView{std::next(op_it), expression_tokens.end()};
+
+            return handle_math_op(lhs, rhs, op, ctx);
         }
 
         //Leaf nodes
@@ -576,6 +606,31 @@ namespace RaychelScript::Parser {
         ctx.scopes.pop();
 
         return AST_Node{std::move(data)};
+    }
+
+    [[nodiscard]] static ParseResult handle_relational_operator(
+        LineView lhs_tokens, LineView rhs_tokens, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept
+    {
+        TRY_GET_NODE(lhs);
+        TRY_GET_NODE(rhs);
+
+        if (lhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Left-hand side of relational operator does not have 'number' type, has '",
+                lhs_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::relational_op_lhs_not_number_type;
+        }
+
+        if (rhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Right-hand side of relational operator does not have 'number' type, has '",
+                rhs_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::relational_op_rhs_not_number_type;
+        }
+
+        return AST_Node{RelationalOperatorData{{}, std::move(lhs_node), std::move(rhs_node), op}};
     }
 
     std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept

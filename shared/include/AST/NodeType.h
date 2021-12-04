@@ -38,7 +38,8 @@ namespace RaychelScript {
         unary_operator,
         conditional_construct,
         literal_true,
-        literal_false
+        literal_false,
+        relational_operator,
     };
 } // namespace RaychelScript
 

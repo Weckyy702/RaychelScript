@@ -146,6 +146,30 @@ static void handle_conditional_construct(const RaychelScript::ConditionalConstru
     }
 }
 
+static void handle_relational_operator(const RaychelScript::RelationalOperatorData data) noexcept
+{
+    using Op = RaychelScript::RelationalOperatorData::Operation;
+    switch (data.operation) {
+        case Op::equals:
+            Logger::log("EQUALS\n");
+            break;
+        case Op::not_equals:
+            Logger::log("NOT EQUALS\n");
+            break;
+        case Op::less_than:
+            Logger::log("LESS THAN\n");
+            break;
+        case Op::greater_than:
+            Logger::log("GREATER THAN\n");
+            break;
+        default:
+            RAYCHEL_ASSERT_NOT_REACHED;
+    }
+
+    print_node(data.lhs, "lhs=");
+    print_node(data.rhs, "rhs=");
+}
+
 static void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
 {
     namespace RS = RaychelScript;
@@ -181,6 +205,18 @@ static void print_node(const RaychelScript::AST_Node& node, std::string_view pre
 
         case RS::NodeType::conditional_construct:
             handle_conditional_construct(node.to_node_data<RS::ConditionalConstructData>());
+            break;
+
+        case RS::NodeType::literal_true:
+            Logger::log("TRUE\n");
+            break;
+
+        case RS::NodeType::literal_false:
+            Logger::log("False\n");
+            break;
+
+        case RS::NodeType::relational_operator:
+            handle_relational_operator(node.to_node_data<RS::RelationalOperatorData>());
             break;
     }
 }

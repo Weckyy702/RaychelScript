@@ -458,6 +458,42 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+    RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(relational_operator)
+    {
+        using Op = RelationalOperatorData::Operation;
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_relational_construct()\n");
+
+        const auto data = node.to_node_data<RelationalOperatorData>();
+
+        state._load_references = true;
+        TRY(execute_node(state, data.lhs));
+        state._registers.a = state._registers.result;
+
+        TRY(execute_node(state, data.rhs));
+        state._registers.b = state._registers.result;
+
+        switch (data.operation)
+        {
+        case Op::equals:
+            state._registers.result = Raychel::equivalent<T>(state._registers.a, state._registers.b);
+            break;
+        case Op::not_equals:
+            state._registers.result = !Raychel::equivalent<T>(state._registers.a, state._registers.b);
+            break;
+        case Op::less_than:
+            state._registers.result = state._registers.a < state._registers.b;
+            break;
+        case Op::greater_than:
+            state._registers.result = state._registers.a > state._registers.b;
+            break;
+        default:
+            return InterpreterErrorCode::invalid_relational_operation;
+        }
+
+        set_status_registers(state);
+        return InterpreterErrorCode::ok;
+    }
+
     template <typename T>
     [[nodiscard]] InterpreterErrorCode execute_node(InterpreterState<T>& state, const AST_Node& node) noexcept
     {
@@ -483,6 +519,8 @@ namespace RaychelScript::Interpreter {
                 state._registers.result = 0;
                 state._registers.flags |= StateFlags::zero;
                 return InterpreterErrorCode::ok;
+            case NodeType::relational_operator:
+                return handle_relational_operator(state, node);
         }
 
         return InterpreterErrorCode::invalid_node;

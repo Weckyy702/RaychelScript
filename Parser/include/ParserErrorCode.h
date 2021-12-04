@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_PARSER_ERROR_CODE_H
 #define RAYCHELSCRIPT_PARSER_ERROR_CODE_H
 
-#include <string_view>
 #include <ostream>
+#include <string_view>
 
 namespace RaychelScript::Parser {
 
@@ -52,7 +52,9 @@ namespace RaychelScript::Parser {
         arith_op_not_number_type,
         op_assign_lhs_not_identifier,
         unary_op_rhs_not_number_type,
-        conditional_construct_condition_not_boolean_type
+        conditional_construct_condition_not_boolean_type,
+        relational_op_lhs_not_number_type,
+        relational_op_rhs_not_number_type,
     };
 
     constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
@@ -87,6 +89,10 @@ namespace RaychelScript::Parser {
                 return "Operand of unary operator does not have 'number' type"sv;
             case ParserErrorCode::conditional_construct_condition_not_boolean_type:
                 return "Condition expression of conditional construct does not have 'boolean' type"sv;
+            case ParserErrorCode::relational_op_lhs_not_number_type:
+                return "Left-hand side of relational operator does not have 'number' type"sv;
+            case ParserErrorCode::relational_op_rhs_not_number_type:
+                return "Left-hand side of relational operator does not have 'number' type"sv;
         }
         return "<Unknown reason>"sv;
     }

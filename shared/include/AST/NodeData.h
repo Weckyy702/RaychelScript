@@ -47,7 +47,7 @@ namespace RaychelScript {
     * \tparam _type Type of the node
     * \tparam _is_value_ref If the node is a value reference (something that holds a value and is assignable)
     */
-    template <NodeType _type, ValueType _value_type = ValueType::none, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
+    template <NodeType _type, ValueType _value_type, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
     struct NodeDataBase
     {
         static constexpr auto type = _type;
@@ -55,7 +55,7 @@ namespace RaychelScript {
         static constexpr auto is_value_ref = _is_value_ref;
     };
 
-    struct AssignmentExpressionData : NodeDataBase<NodeType::assignment>
+    struct AssignmentExpressionData : NodeDataBase<NodeType::assignment, ValueType::none>
     {
         AST_Node lhs;
         AST_Node rhs;
@@ -94,7 +94,7 @@ namespace RaychelScript {
     struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator, ValueType::number>
     {
         enum class Operation {
-            minus,
+            minus=1,
             plus,
             factorial,
             magnitude,
@@ -104,7 +104,7 @@ namespace RaychelScript {
         Operation operation{};
     };
 
-    struct ConditionalConstructData : NodeDataBase<NodeType::conditional_construct>
+    struct ConditionalConstructData : NodeDataBase<NodeType::conditional_construct, ValueType::none>
     {
         AST_Node condition_node;
         std::vector<AST_Node> body{};
@@ -117,6 +117,20 @@ namespace RaychelScript {
 
     struct LiteralFalseData : NodeDataBase<NodeType::literal_false, ValueType::boolean, true>
     {};
+
+    struct RelationalOperatorData : NodeDataBase<NodeType::relational_operator, ValueType::boolean>
+    {
+        enum class Operation {
+            equals=1,
+            not_equals,
+            less_than,
+            greater_than
+        };
+
+        AST_Node lhs;
+        AST_Node rhs;
+        Operation operation{};
+    };
 
 } // namespace RaychelScript
 

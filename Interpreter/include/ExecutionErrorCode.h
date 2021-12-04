@@ -45,6 +45,7 @@ namespace RaychelScript::Interpreter {
         duplicate_name,
         unresolved_identifier,
         invalid_arithmetic_operation,
+        invalid_relational_operation,
     };
     inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
     {
@@ -74,6 +75,8 @@ namespace RaychelScript::Interpreter {
                 return "Unknown arithmetic operation in arithmetic expression node"sv;
             case EC::invalid_argument:
                 return "Invalid argument to function"sv;
+            case EC::invalid_relational_operation:
+                return "Unknown relational operator in relational expression node"sv;
         }
         return "<Unknown Reason>"sv;
     }
