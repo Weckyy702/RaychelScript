@@ -71,7 +71,7 @@ using LineView = const LineTokens&;
 #endif
 using SourceTokens = std::vector<LineTokens>;
 
-using ParseResult = std::variant<RaychelScript::Parser::ParserErrorCode, RaychelScript::AST_Node>;
+using _ParseResult = std::variant<RaychelScript::Parser::ParserErrorCode, RaychelScript::AST_Node>;
 
 namespace RaychelScript::Parser {
 
@@ -280,25 +280,25 @@ namespace RaychelScript::Parser {
         }
     }
 
-    [[nodiscard]] static ParseResult handle_assignment_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
+    [[nodiscard]] static _ParseResult handle_assignment_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult handle_op_assign_expression(
+    [[nodiscard]] static _ParseResult handle_op_assign_expression(
         LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept;
+    [[nodiscard]] static _ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_relational_operator(LineView lhs, LineView rhs, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
+    [[nodiscard]] static _ParseResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
         namespace TT = TokenType;
         using std::array;
@@ -498,7 +498,7 @@ namespace RaychelScript::Parser {
         return ParserErrorCode::invalid_construct;
     }
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_assignment_expression(LineView lhs_tokens, LineView rhs_tokens, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);
@@ -520,7 +520,7 @@ namespace RaychelScript::Parser {
         return AST_Node{AssignmentExpressionData{{}, lhs_node, rhs_node}};
     }
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);
@@ -545,7 +545,7 @@ namespace RaychelScript::Parser {
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
     }
 
-    [[nodiscard]] static ParseResult handle_op_assign_expression(
+    [[nodiscard]] static _ParseResult handle_op_assign_expression(
         LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         const auto operator_node_or_error = handle_math_op(identifier_tokens, rhs, op, ctx);
@@ -566,7 +566,7 @@ namespace RaychelScript::Parser {
         return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
     }
 
-    [[nodiscard]] static ParseResult
+    [[nodiscard]] static _ParseResult
     handle_unary_epression(LineView rhs_tokens, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(rhs);
@@ -596,7 +596,7 @@ namespace RaychelScript::Parser {
         return ParserErrorCode::ok;
     }
 
-    [[nodiscard]] static ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept
+    [[nodiscard]] static _ParseResult handle_conditional_footer(ParsingContext& ctx) noexcept
     {
         if (ctx.scopes.empty()) {
             Logger::error("Mismatched if/endif: too many footers!\n");
@@ -608,7 +608,7 @@ namespace RaychelScript::Parser {
         return AST_Node{std::move(data)};
     }
 
-    [[nodiscard]] static ParseResult handle_relational_operator(
+    [[nodiscard]] static _ParseResult handle_relational_operator(
         LineView lhs_tokens, LineView rhs_tokens, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(lhs);

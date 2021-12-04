@@ -51,6 +51,8 @@
 
 #include "RaychelCore/AssertingGet.h"
 
+#define RAYCHELSCRIPT_INTERPRETER_DEPRECATED RAYCHELSCRIPT_PARSER_DEPRECATED
+
 namespace RaychelScript {
 
     template <typename T>
@@ -91,7 +93,10 @@ namespace RaychelScript {
         RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<double>
         interpret(const AST& ast, const ParameterMap<double>& parameters) noexcept;
 
-        [[nodiscard]] inline ExecutionResult<double>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<double>
         interpret(std::istream& source_stream, const ParameterMap<double>& parameters) noexcept
         {
             const auto ast_or_error = Parser::parse(source_stream);
@@ -102,12 +107,14 @@ namespace RaychelScript {
             return interpret(Raychel::get<AST>(ast_or_error), parameters);
         }
 
-        [[nodiscard]] inline ExecutionResult<double>
+        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<double>
         interpret(const std::string& source_text, const ParameterMap<double>& parameters) noexcept
         {
             std::stringstream stream{source_text};
             return interpret(stream, parameters);
         }
+
+#pragma GCC diagnostic pop
     } // namespace Interpreter
 
 } // namespace RaychelScript

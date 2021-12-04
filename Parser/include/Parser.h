@@ -38,20 +38,24 @@
     #define RAYCHELSCRIPT_PARSER_API
 #endif
 
+#define RAYCHELSCRIPT_PARSER_DEPRECATED [[deprecated("Please consider using the pipes API")]]
+
 #include <istream>
 #include <string_view>
 #include <variant>
 #include <vector>
 #include "AST/AST.h"
-#include "Lexer.h"
+#include "LexerPipe.h"
 #include "ParserErrorCode.h"
 
 namespace RaychelScript::Parser {
 
-    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode>
+    using ParseResult = std::variant<AST, ParserErrorCode>;
+
+    RAYCHELSCRIPT_PARSER_API ParseResult
     parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
-    inline std::variant<AST, ParserErrorCode> parse(std::istream& source_stream) noexcept
+    RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(std::istream& source_stream) noexcept
     {
         const auto tokens = Lexer::lex(source_stream);
         if (!tokens.has_value()) {
@@ -60,11 +64,16 @@ namespace RaychelScript::Parser {
         return parse(*tokens);
     }
 
-    inline std::variant<AST, ParserErrorCode> parse(const std::string& source_text) noexcept
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
+    RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(const std::string& source_text) noexcept
     {
         std::stringstream stream{source_text};
         return parse(stream);
     }
+
+#pragma GCC diagnostic pop
 
     /**
     * \brief Parse the source tokens without checking for a valid config block
@@ -76,7 +85,7 @@ namespace RaychelScript::Parser {
     * \param source_tokens 
     * \return  
     */
-    RAYCHELSCRIPT_PARSER_API std::variant<AST, ParserErrorCode>
+    RAYCHELSCRIPT_PARSER_API ParseResult
     _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     /**
@@ -89,9 +98,9 @@ namespace RaychelScript::Parser {
     * \param source_text
     * \return  
     */
-    inline std::variant<AST, ParserErrorCode> _parse_no_config_check(const std::string& source_text) noexcept
+    inline ParseResult _parse_no_config_check(const std::string& source_text) noexcept
     {
-        const auto maybe_tokens = Lexer::lex(source_text);
+        const auto maybe_tokens = RaychelScript::Pipes::Lex{source_text}();
 
         if (!maybe_tokens.has_value()) {
             return ParserErrorCode::no_input;
