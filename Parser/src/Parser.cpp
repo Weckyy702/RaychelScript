@@ -1,8 +1,8 @@
 /**
 * \file Parser.cpp
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Implementation of RaychelScript parsing function
-* \date 2021-10-02
+* \brief Implementation file for Parsing functions
+* \date 2021-12-04
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -26,10 +26,11 @@
 * 
 */
 
-#include <variant>
-#include <vector>
 
 #include "Parser.h"
+
+#include <variant>
+#include <vector>
 
 using SourceTokens = std::vector<std::vector<RaychelScript::Token>>;
 using LineTokens = std::vector<RaychelScript::Token>;

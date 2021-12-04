@@ -1,8 +1,8 @@
 /**
 * \file Lexer.cpp
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Implementation of Lexing functions
-* \date 2021-09-29
+* \brief Implementation file for Lexing functions
+* \date 2021-12-04
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -26,8 +26,8 @@
 * 
 */
 
-#include "Lexer.h"
 
+#include "Lexer.h"
 #include "Lexing/Alphabet.h"
 #include "RaychelLogger/Logger.h"
 
