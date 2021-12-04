@@ -54,7 +54,7 @@ namespace RaychelScript::Parser {
                     return;
                 }
 
-                //every even token has to be an identifier
+                //every second token has to be an identifier
                 if (index % 2U == 0 && token.type != TokenType::identifer) {
                     Logger::error(token.location, ": invalid token in config entry!\n");
                     has_failed = true;
