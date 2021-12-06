@@ -45,17 +45,18 @@ namespace RaychelScript {
     * \refitem NodeData
     * 
     * \tparam _type Type of the node
-    * \tparam _is_value_ref If the node is a value reference (something that holds a value and is assignable)
+    * \tparam _is_lvalue If the node is an lvalue (something that is assignable)
     */
-    template <NodeType _type, ValueType _value_type, bool _is_value_ref = false, bool _is_constant = false, bool _has_known_value = false>
+    template <NodeType _type, ValueType _value_type, bool _is_lvalue = false, bool _has_side_effect = false>
     struct NodeDataBase
     {
         static constexpr auto type = _type;
         static constexpr auto value_type = _value_type;
-        static constexpr auto is_value_ref = _is_value_ref;
+        static constexpr auto is_lvalue = _is_lvalue;
+        static constexpr auto has_side_effect = _has_side_effect;
     };
 
-    struct AssignmentExpressionData : NodeDataBase<NodeType::assignment, ValueType::none>
+    struct AssignmentExpressionData : NodeDataBase<NodeType::assignment, ValueType::none, false, true>
     {
         AST_Node lhs;
         AST_Node rhs;
@@ -75,7 +76,7 @@ namespace RaychelScript {
         Operation operation{};
     };
 
-    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::none, true>
+    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::none, true, true>
     {
         std::string name;
         bool is_const;
@@ -94,7 +95,7 @@ namespace RaychelScript {
     struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator, ValueType::number>
     {
         enum class Operation {
-            minus=1,
+            minus = 1,
             plus,
             factorial,
             magnitude,
@@ -104,7 +105,7 @@ namespace RaychelScript {
         Operation operation{};
     };
 
-    struct ConditionalConstructData : NodeDataBase<NodeType::conditional_construct, ValueType::none>
+    struct ConditionalConstructData : NodeDataBase<NodeType::conditional_construct, ValueType::none, false, true>
     {
         AST_Node condition_node;
         std::vector<AST_Node> body{};
@@ -112,20 +113,15 @@ namespace RaychelScript {
         //TODO: else blocks
     };
 
-    struct LiteralTrueData : NodeDataBase<NodeType::literal_true, ValueType::boolean, true>
+    struct LiteralTrueData : NodeDataBase<NodeType::literal_true, ValueType::boolean>
     {};
 
-    struct LiteralFalseData : NodeDataBase<NodeType::literal_false, ValueType::boolean, true>
+    struct LiteralFalseData : NodeDataBase<NodeType::literal_false, ValueType::boolean>
     {};
 
     struct RelationalOperatorData : NodeDataBase<NodeType::relational_operator, ValueType::boolean>
     {
-        enum class Operation {
-            equals=1,
-            not_equals,
-            less_than,
-            greater_than
-        };
+        enum class Operation { equals = 1, not_equals, less_than, greater_than };
 
         AST_Node lhs;
         AST_Node rhs;

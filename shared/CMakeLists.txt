@@ -12,6 +12,7 @@ add_library(RaychelScriptBase INTERFACE
     "include/AST/AST_Node.h"
     "include/AST/ConfigBlock.h"
     "include/AST/NodeData.h"
+    "include/AST/NodeHasValue.h"
     "include/AST/NodeType.h"
 
     "include/Execution/ConstantDescriptor.h"
@@ -21,6 +22,9 @@ add_library(RaychelScriptBase INTERFACE
     "include/Lexing/Alphabet.h"
     "include/Lexing/Token.h"
     "include/Lexing/TokenType.h"
+
+    "include/Misc/PrintAST.h"
+    "include/Misc/WalkAST.h"
 )
 target_include_directories(RaychelScriptBase INTERFACE
     "include"

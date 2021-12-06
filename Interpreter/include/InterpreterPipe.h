@@ -55,7 +55,7 @@ namespace RaychelScript::Pipes {
     template <std::floating_point T>
     Interpreter::ExecutionResult<T> operator|(const Parser::ParseResult& input, const Interpret<T>& interpreter) noexcept
     {
-        if(const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
+        if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
             return Interpreter::InterpreterErrorCode::no_input; //TODO: better error handling for this
         }
         return interpreter(Raychel::get<AST>(input));

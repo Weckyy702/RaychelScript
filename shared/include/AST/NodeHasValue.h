@@ -1,8 +1,8 @@
 /**
-* \file ParserPipe.h
+* \file NodeHasValue.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for Parser pipe API
-* \date 2021-12-04
+* \brief Header file for node_has_value function
+* \date 2021-12-06
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,30 +25,25 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_PARSER_PIP_H
-#define RAYCHELSCRIPT_PARSER_PIP_H
+#ifndef RAYCHELSCRIPT_AST_NODE_HAS_VALUE_H
+#define RAYCHELSCRIPT_AST_NODE_HAS_VALUE_H
 
-#include "LexerPipe.h"
-#include "Parser.h"
+#include "AST_Node.h"
 
-namespace RaychelScript::Pipes {
+namespace RaychelScript {
 
-    struct Parse
+    [[nodiscard]] inline bool node_has_known_value(const AST_Node& node) noexcept
     {
-        Parser::ParseResult operator()(const Lexer::LexResult& input) const noexcept
-        {
-            if (!input.has_value()) {
-                return Parser::ParserErrorCode::no_input;
-            }
-            return Parser::parse(input.value());
+        switch (node.type()) {
+            case NodeType::literal_true:
+            case NodeType::literal_false:
+            case NodeType::numeric_constant:
+                return true;
+            default:
+                return false;
         }
-    };
-
-    inline Parser::ParseResult operator|(const Lex& lexer, const Parse& parser) noexcept
-    {
-        return parser(lexer());
     }
 
-} //namespace RaychelScript::Pipes
+} //namespace RaychelScript
 
-#endif //!RAYCHELSCRIPT_PARSER_PIP_H
+#endif //!RAYCHELSCRIPT_AST_NODE_HAS_VALUE_H

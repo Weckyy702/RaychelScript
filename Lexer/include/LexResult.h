@@ -38,6 +38,6 @@ namespace RaychelScript::Lexer {
     using SourceTokens = std::vector<std::vector<Token>>;
     using LexResult = std::optional<SourceTokens>;
 
-}//namespace RaychelScript::Lexer
+} //namespace RaychelScript::Lexer
 
 #endif //!RAYCHELSCRIPT_LEXRESULT_H

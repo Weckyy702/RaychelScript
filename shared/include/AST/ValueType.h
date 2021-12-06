@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_VALUE_TYPE_H
 #define RAYCHELSCRIPT_VALUE_TYPE_H
 
-#include <string_view>
 #include <ostream>
+#include <string_view>
 
 namespace RaychelScript {
 

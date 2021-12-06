@@ -36,33 +36,19 @@
 
 int main()
 {
-    using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespaces)
+    using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    std::vector<std::thread> threads;
+    std::int64_t average_duration{0};
+    constexpr std::int64_t iterations = 1;
 
-    bool done{false};
+    for (std::int64_t i = 0; i < iterations; i++) {
+        [&average_duration, i] {
+            const auto ast_or_error = Lex{lex_file, "../../../shared/test/optimizable.rsc"} | Parse{};
 
-    std::condition_variable stop_var;
-    std::mutex mtx;
+            const auto label = Logger::startTimer("Interpretation time");
 
-    std::uint64_t average_duration{0};
-    constexpr std::size_t iterations = 100;
-
-    for (std::size_t i = 0; i < iterations; i++) {
-        /*threads.emplace_back(*/[&stop_var, &mtx, &done, &average_duration, i] {
-            Logger::log("Thread number ", i + 1, '\n');
-
-            //NOLINTBEGIN this is a very evil hacky solution
-            char name[10] = {};
-            std::to_chars(std::begin(name), std::end(name), i + 1);
-            const auto label = Logger::startTimer({reinterpret_cast<char*>(name), sizeof(name)});
-            //NOLINTEND
-
-            const auto state_or_error_code = Lex{lex_file, "../../../shared/test/conditionals.rsc"} | Parse{} | Interpret<double>{{
-                {"_a", -1},
-                {"b", 1}
-            }};
+            const auto state_or_error_code = ast_or_error | Interpret<double>{{{"a", 1}, {"b", 1}}};
 
             average_duration += Logger::getTimer<std::chrono::microseconds>(label).count();
             Logger::logDuration<std::chrono::microseconds>(Logger::LogLevel::log, label);
@@ -87,14 +73,7 @@ int main()
                         '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
                 }
             }
-        }();//);
-    }
-
-    done = true;
-    stop_var.notify_all();
-
-    for (auto& thread : threads) {
-        thread.join();
+        }(); //);
     }
 
     Logger::log("Average duration: ", average_duration / iterations, "us\n");

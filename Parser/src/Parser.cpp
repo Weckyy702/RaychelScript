@@ -26,7 +26,6 @@
 * 
 */
 
-
 #include "Parser.h"
 
 #include <variant>
@@ -67,9 +66,10 @@ namespace RaychelScript::Parser {
             });
     }
 
+    //see BodyBlock.cpp for details
     std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept;
 
-    //see BodyBlock.cpp for details
+    //see ConfigBlock.cpp for details
     [[nodiscard]] bool parse_config_block(const SourceTokens& config_tokens, AST& ast) noexcept;
 
     [[nodiscard]] auto get_block_tokens(const SourceTokens& source_tokens) noexcept

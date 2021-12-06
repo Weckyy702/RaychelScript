@@ -55,7 +55,7 @@ int main(int /*unused*/, char** /*unused*/)
 
     for (const auto& line : *lines) {
         Logger::log(line_no, ": ");
-        for (const auto& [type, _, __] : line) {
+        for (const auto& [type, _1, _2] : line) {
             Logger::log(RaychelScript::token_type_to_string(type), ' ');
         }
         Logger::log('\n');

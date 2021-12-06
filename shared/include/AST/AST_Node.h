@@ -30,6 +30,7 @@
 
 #include <any>
 #include <concepts>
+#include <optional>
 #include <type_traits>
 
 #include "RaychelCore/Raychel_assert.h"
@@ -45,20 +46,23 @@ namespace RaychelScript {
     template <typename T>
     concept NodeData = requires()
     {
-        std::is_standard_layout_v<T>&& std::is_trivial_v<T>; //equivalent to the deprecated std::is_pod_v<>
+        std::is_standard_layout_v<T>&& std::is_trivial_v<T>; //equivalent to the deprecated std::is_pod_v
 
-        {T::type};
+        T::type;
         std::is_same_v<std::remove_cvref_t<decltype(T::type)>, NodeType>;
 
-        {T::value_type};
+        T::value_type;
         std::is_same_v<std::remove_cvref_t<decltype(T::value_type)>, ValueType>;
 
-        {T::is_value_ref};
-        std::is_same_v<std::remove_cvref_t<decltype(T::is_value_ref)>, bool>;
+        T::is_lvalue;
+        std::is_same_v<std::remove_cvref_t<decltype(T::is_lvalue)>, bool>;
+
+        T::has_side_effect;
+        std::is_same_v<std::remove_cvref_t<decltype(T::has_side_effect)>, bool>;
     };
 
     /**
-    * \brief Class for representing parsed AST nodes
+    * brief Class for representing parsed AST nodes
     * 
     * This class represents a single Node in the AST. All the actual AST structure is handled by the NodeData held inside this object
     * An AST_Node can hold a value of any type that satisfies NodeData. It also holds the type of the data it contains
@@ -69,7 +73,11 @@ namespace RaychelScript {
     public:
         template <NodeData T>
         explicit AST_Node(T&& data) //NOLINT(bugprone-forwarding-reference-overload): Our template parameter is constrained
-            : type_{T::type}, data_{std::forward<T>(data)}, is_value_reference_{T::is_value_ref}, value_type_{T::value_type}
+            : type_{T::type},
+              data_{std::forward<T>(data)},
+              value_type_{T::value_type},
+              is_lvalue_{T::is_lvalue},
+              has_side_effect_{T::has_side_effect}
         {}
 
         [[nodiscard]] NodeType type() const noexcept
@@ -84,22 +92,28 @@ namespace RaychelScript {
             return std::any_cast<T>(data_);
         }
 
-        [[nodiscard]] bool is_value_reference() const noexcept
-        {
-            return is_value_reference_;
-        }
-
         [[nodiscard]] ValueType value_type() const noexcept
         {
             return value_type_;
+        }
+
+        [[nodiscard]] bool is_lvalue() const noexcept
+        {
+            return is_lvalue_;
+        }
+
+        [[nodiscard]] bool has_side_effect() const noexcept
+        {
+            return has_side_effect_;
         }
 
     private:
         NodeType type_;
         std::any data_;
 
-        bool is_value_reference_;
         ValueType value_type_;
+        bool is_lvalue_;
+        bool has_side_effect_;
     };
 
 } // namespace RaychelScript

@@ -44,15 +44,13 @@
 
     const auto label = Logger::startTimer("parse time");
 
-
     const auto res = RaychelScript::Pipes::Lex(RaychelScript::Pipes::lex_file, file_path) | RaychelScript::Pipes::Parse{};
-
 
     Logger::logDuration<std::chrono::microseconds>(label);
 
     if (const RaychelScript::AST* ast = std::get_if<RaychelScript::AST>(&res); ast) {
         print_config_block(ast->config_block);
-        pretty_print_ast(ast->nodes);
+        pretty_print_ast(*ast);
     } else {
         Logger::log(
             "The following error occured during parsing: ",
@@ -63,6 +61,8 @@
 
 [[maybe_unused]] static void echo_AST_from_stdin() noexcept
 {
+    using namespace std::string_view_literals;
+
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     Logger::log(
         R"(Welcome to the interactive RaychelScript parser!
@@ -72,10 +72,24 @@ If you wish to exit this mode, type "exit")",
     std::string line;
 
     do {
+        line.clear();
         RaychelScript::IndentHandler::reset_indent();
 
-        std::cout << ">>";
-        std::getline(std::cin, line);
+        {
+            std::string _line;
+            do {
+                std::cout << (line.empty() ? ">>"sv : "->"sv);
+                std::getline(std::cin, _line);
+
+                if (_line.back() != '\\') {
+                    line += _line;
+                    break;
+                }
+                line += _line;
+                line.pop_back();
+                line.push_back('\n');
+            } while (true);
+        }
 
         if (line == "exit") {
             break;
@@ -90,7 +104,7 @@ If you wish to exit this mode, type "exit")",
 
         const auto ast = Raychel::get<RaychelScript::AST>(AST_or_error);
 
-        pretty_print_ast(ast.nodes);
+        pretty_print_ast(ast);
 
     } while (true);
 }
@@ -99,7 +113,9 @@ int main()
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    parse_file_and_print_debug_info("conditionals.rsc");
+    //parse_file_and_print_debug_info("conditionals.rsc");
+
+    echo_AST_from_stdin();
 
     return 0;
 }

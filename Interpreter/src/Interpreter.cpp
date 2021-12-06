@@ -26,7 +26,6 @@
 * 
 */
 
-
 #include "Interpreter.h"
 #include "AST/NodeData.h"
 
@@ -38,15 +37,16 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
-#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 0
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
     [[nodiscard]] InterpreterErrorCode handle_##name(InterpreterState<T>& state, const AST_Node& node) noexcept
 
-#define TRY(expression) if(const auto ec = (expression); ec != InterpreterErrorCode::ok) { \
-                            return ec;  \
-                        }
+#define TRY(expression)                                                                                                          \
+    if (const auto ec = (expression); ec != InterpreterErrorCode::ok) {                                                          \
+        return ec;                                                                                                               \
+    }
 
 #if !RAYCHELSCRIPT_INTERPRETER_SILENT
     #define RAYCHELSCRIPT_INTERPRETER_DEBUG(...) Logger::debug(__VA_ARGS__)
@@ -89,6 +89,7 @@ namespace RaychelScript::Interpreter {
     void clear_status_registers(InterpreterState<T>& state) noexcept
     {
         state._registers.flags = StateFlags::none;
+        state._current_descriptor = DescriptorID{};
     }
 
     template <typename T>
@@ -147,13 +148,13 @@ namespace RaychelScript::Interpreter {
             descriptor.value() = value;
         }
 
-        clear_value_registers(state);
+        set_status_registers(state);
 
         return InterpreterErrorCode::ok;
     }
 
     template <typename T>
-    InterpreterErrorCode do_factorial(InterpreterState<T>& state)
+    InterpreterErrorCode do_factorial(InterpreterState<T>& state) noexcept
     {
 
         const auto value = state._registers.result;
@@ -304,11 +305,6 @@ namespace RaychelScript::Interpreter {
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_assignment_node()\n");
         const auto data = node.to_node_data<AssignmentExpressionData>();
-
-        if (!data.lhs.is_value_reference()) {
-            Logger::error("Left hand side of assignment expression is not a value reference!\n");
-            return InterpreterErrorCode::invalid_node; //TODO: this should have its own error code
-        }
 
         //TODO: find a better way to solve this issue. handle_variable_reference has different meaning based on which side of the assignment expression the node is on
         state._load_references = true;
@@ -515,22 +511,21 @@ namespace RaychelScript::Interpreter {
         TRY(execute_node(state, data.rhs));
         state._registers.b = state._registers.result;
 
-        switch (data.operation)
-        {
-        case Op::equals:
-            state._registers.result = Raychel::equivalent<T>(state._registers.a, state._registers.b);
-            break;
-        case Op::not_equals:
-            state._registers.result = !Raychel::equivalent<T>(state._registers.a, state._registers.b);
-            break;
-        case Op::less_than:
-            state._registers.result = state._registers.a < state._registers.b;
-            break;
-        case Op::greater_than:
-            state._registers.result = state._registers.a > state._registers.b;
-            break;
-        default:
-            return InterpreterErrorCode::invalid_relational_operation;
+        switch (data.operation) {
+            case Op::equals:
+                state._registers.result = Raychel::equivalent<T>(state._registers.a, state._registers.b);
+                break;
+            case Op::not_equals:
+                state._registers.result = !Raychel::equivalent<T>(state._registers.a, state._registers.b);
+                break;
+            case Op::less_than:
+                state._registers.result = state._registers.a < state._registers.b;
+                break;
+            case Op::greater_than:
+                state._registers.result = state._registers.a > state._registers.b;
+                break;
+            default:
+                return InterpreterErrorCode::invalid_relational_operation;
         }
 
         set_status_registers(state);

@@ -92,7 +92,7 @@ namespace RaychelScript::Parser {
             case ParserErrorCode::relational_op_lhs_not_number_type:
                 return "Left-hand side of relational operator does not have 'number' type"sv;
             case ParserErrorCode::relational_op_rhs_not_number_type:
-                return "Left-hand side of relational operator does not have 'number' type"sv;
+                return "Right-hand side of relational operator does not have 'number' type"sv;
         }
         return "<Unknown reason>"sv;
     }

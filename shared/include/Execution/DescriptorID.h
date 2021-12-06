@@ -62,6 +62,11 @@ namespace RaychelScript {
                 return _instance().id_++;
             }
 
+            static void reset(std::size_t old_value) noexcept
+            {
+                _instance().id_ = old_value;
+            }
+
             static void reset() noexcept
             {
                 _instance().id_ = id_base();
@@ -104,6 +109,12 @@ namespace RaychelScript {
         static void reset_id() noexcept
         {
             details::IdHandler<T>::reset();
+        }
+
+        template <typename T>
+        static void reset_id(std::size_t old_value) noexcept
+        {
+            details::IdHandler<T>::reset(old_value);
         }
 
         [[nodiscard]] std::size_t id() const noexcept

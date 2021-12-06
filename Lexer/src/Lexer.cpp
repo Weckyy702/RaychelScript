@@ -26,7 +26,6 @@
 * 
 */
 
-
 #include "Lexer.h"
 #include "Lexing/Alphabet.h"
 #include "RaychelLogger/Logger.h"
@@ -48,10 +47,10 @@ namespace RaychelScript::Lexer {
         if (token == "endif") {
             return TokenType::conditional_footer;
         }
-        if(token == "true") {
+        if (token == "true") {
             return TokenType::literal_true;
         }
-        if(token == "false") {
+        if (token == "false") {
             return TokenType::literal_false;
         }
         return TokenType::identifer;

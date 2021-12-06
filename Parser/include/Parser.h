@@ -52,8 +52,7 @@ namespace RaychelScript::Parser {
 
     using ParseResult = std::variant<AST, ParserErrorCode>;
 
-    RAYCHELSCRIPT_PARSER_API ParseResult
-    parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API ParseResult parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(std::istream& source_stream) noexcept
     {
@@ -85,8 +84,7 @@ namespace RaychelScript::Parser {
     * \param source_tokens 
     * \return  
     */
-    RAYCHELSCRIPT_PARSER_API ParseResult
-    _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
+    RAYCHELSCRIPT_PARSER_API ParseResult _parse_no_config_check(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     /**
     * \brief Parse the source text without checking for a valid config block
