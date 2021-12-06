@@ -435,7 +435,7 @@ namespace RaychelScript::Interpreter {
 
         const auto data = node.to_node_data<NumericConstantData>();
 
-        state._registers.result = data.value;
+        state._registers.result = static_cast<T>(data.value);
 
         set_status_registers(state);
 
@@ -571,13 +571,13 @@ namespace RaychelScript::Interpreter {
 
     //Interpreter entry point
 
-    [[nodiscard]] Interpreter::ExecutionResult<double>
-    interpret(const AST& ast, const std::map<std::string, double>& parameters) noexcept
+    template <std::floating_point T>
+    [[nodiscard]] Interpreter::ExecutionResult<T> interpret(const AST& ast, const std::map<std::string, T>& parameters) noexcept
     {
-        InterpreterState<double> state;
+        InterpreterState<T> state;
 
-        DescriptorID::reset_id<ConstantDescriptor<double>>();
-        DescriptorID::reset_id<VariableDescriptor<double>>();
+        DescriptorID::reset_id<ConstantDescriptor<T>>();
+        DescriptorID::reset_id<VariableDescriptor<T>>();
 
         TRY(populate_input_descriptors(state, ast, parameters));
 
@@ -595,5 +595,18 @@ namespace RaychelScript::Interpreter {
 
         return state;
     }
+
+    namespace details {
+        /**
+        * \brief Very evil hack to instantiate the Interpreter entry points for all floating-point types
+        * 
+        */
+        void _instantiate_interpreter_entry_point()
+        {
+            [[maybe_unused]] auto _float = interpret<float>(AST{}, {});
+            [[maybe_unused]] auto _double = interpret<double>(AST{}, {});
+            [[maybe_unused]] auto _long_double = interpret<long double>(AST{}, {});
+        }
+    }; // namespace details
 
 } // namespace RaychelScript::Interpreter

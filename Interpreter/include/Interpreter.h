@@ -90,14 +90,16 @@ namespace RaychelScript {
         template <std::floating_point T>
         using ParameterMap = std::map<std::string, T>;
 
-        RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<double>
-        interpret(const AST& ast, const ParameterMap<double>& parameters) noexcept;
+        template <std::floating_point T>
+        RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<T>
+        interpret(const AST& ast, const ParameterMap<T>& parameters) noexcept;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<double>
-        interpret(std::istream& source_stream, const ParameterMap<double>& parameters) noexcept
+        template <std::floating_point T>
+        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<T>
+        interpret(std::istream& source_stream, const ParameterMap<T>& parameters) noexcept
         {
             const auto ast_or_error = Parser::parse(source_stream);
             if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&ast_or_error); ec) {
@@ -107,8 +109,9 @@ namespace RaychelScript {
             return interpret(Raychel::get<AST>(ast_or_error), parameters);
         }
 
-        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<double>
-        interpret(const std::string& source_text, const ParameterMap<double>& parameters) noexcept
+        template <std::floating_point T>
+        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<T>
+        interpret(const std::string& source_text, const ParameterMap<T>& parameters) noexcept
         {
             std::stringstream stream{source_text};
             return interpret(stream, parameters);

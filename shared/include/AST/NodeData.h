@@ -88,7 +88,7 @@ namespace RaychelScript {
 
     struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, ValueType::number, true>
     {
-        double value;
+        long double value;
     };
 
     struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator, ValueType::number>
