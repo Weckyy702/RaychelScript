@@ -32,7 +32,7 @@
 
 namespace RaychelScript::Interpreter {
 
-    enum class InterpreterErrorCode {
+    enum class [[nodiscard]] InterpreterErrorCode{
         ok,
         no_input,
         not_enough_input_identifiers,
@@ -46,8 +46,10 @@ namespace RaychelScript::Interpreter {
         unresolved_identifier,
         invalid_arithmetic_operation,
         invalid_relational_operation,
+        pop_empy_stack,
     };
-    inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
+
+    [[nodiscard]] inline std::string_view error_code_to_reason_string(InterpreterErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
         using EC = InterpreterErrorCode;
@@ -77,6 +79,8 @@ namespace RaychelScript::Interpreter {
                 return "Invalid argument to function"sv;
             case EC::invalid_relational_operation:
                 return "Unknown relational operator in relational expression node"sv;
+            case EC::pop_empy_stack:
+                return "Attempt to pop empty scope stack"sv;
         }
         return "<Unknown Reason>"sv;
     }

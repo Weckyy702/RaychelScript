@@ -173,6 +173,45 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+    template <typename T>
+    void push_state(InterpreterState<T>& state) noexcept
+    {
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("push_state()\n");
+        state._stack_snapshots.push({state.constants.size(), state.variables.size()});
+    }
+
+    template <typename Descriptor>
+    void do_descriptor_relocate(
+        std::vector<Descriptor>& descriptors, std::map<std::string, DescriptorID>& descriptor_table,
+        std::size_t descriptor_index) noexcept
+    {
+        for (std::size_t i = descriptor_index; i != descriptors.size(); i++) {
+            const auto& id = descriptors.at(i).id();
+            std::erase_if(descriptor_table, [&id](const auto& entry) { return entry.second == id; });
+        }
+
+        //NOLINTNEXTLINE(clang-diagnostic-sign-conversion): we can't change the STLs spec :(
+        descriptors.erase(descriptors.begin() + descriptor_index, descriptors.end());
+        DescriptorID::reset_id<Descriptor>(descriptors.back().id().id() + 1);
+    }
+
+    template <typename T>
+    InterpreterErrorCode pop_state(InterpreterState<T>& state) noexcept
+    {
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_state()\n");
+        if (state._stack_snapshots.empty()) {
+            Logger::error("Tried to pop empty stack!\n");
+            return InterpreterErrorCode::pop_empy_stack;
+        }
+
+        const auto [constant_index, variable_index] = state._stack_snapshots.top();
+
+        do_descriptor_relocate(state.constants, state._descriptor_table, constant_index);
+        do_descriptor_relocate(state.variables, state._descriptor_table, variable_index);
+
+        return InterpreterErrorCode::ok;
+    }
+
     //setup functions
 
     template <typename T>
@@ -445,15 +484,19 @@ namespace RaychelScript::Interpreter {
         state._load_references = true;
         TRY(execute_node(state, data.condition_node));
 
-        if(state._registers.flags & StateFlags::zero) {
+        if (state._registers.flags & StateFlags::zero) {
             return InterpreterErrorCode::ok;
         }
 
-        for(const auto& body_node : data.body) {
+        push_state(state);
+
+        for (const auto& body_node : data.body) {
             clear_value_registers(state);
             clear_status_registers(state);
             TRY(execute_node(state, body_node));
         }
+
+        TRY(pop_state(state));
 
         return InterpreterErrorCode::ok;
     }

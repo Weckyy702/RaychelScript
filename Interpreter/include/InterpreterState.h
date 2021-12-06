@@ -29,6 +29,7 @@
 #define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -76,12 +77,23 @@ namespace RaychelScript::Interpreter {
     template <std::floating_point T>
     struct InterpreterState
     {
-        std::vector<ConstantDescriptor<T>> constants;
-        std::vector<VariableDescriptor<T>> variables;
+        using ConstantContainer = std::vector<ConstantDescriptor<T>>;
+        using VariableContainer = std::vector<VariableDescriptor<T>>;
+        using DescriptorTable = std::map<std::string, DescriptorID>;
 
-        std::map<std::string, DescriptorID> _descriptor_table;
+        struct Snapshot
+        {
+            std::size_t end_of_outer_scope_constants;
+            std::size_t end_of_outer_scope_variables;
+        };
+
+        ConstantContainer constants;
+        VariableContainer variables;
+
+        DescriptorTable _descriptor_table;
         StateRegisters<T> _registers;
         DescriptorID _current_descriptor;
+        std::stack<Snapshot, std::vector<Snapshot>> _stack_snapshots;
         bool _load_references{false};
     };
 } //namespace RaychelScript::Interpreter
