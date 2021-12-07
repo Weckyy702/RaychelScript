@@ -62,12 +62,10 @@ namespace RaychelScript::Optimizer {
                 break;
             case OptimizationLevel::hard:
                 modules.push_back(std::make_unique<RemoveIfNoSideEffects>());
-                modules.push_back(std::make_unique<RemoveExpressionIfNoOutputDependency>());
                 modules.push_back(std::make_unique<OptimizeConditionalsLight>());
                 break;
             case OptimizationLevel::all:
                 modules.push_back(std::make_unique<RemoveIfNoSideEffects>());
-                modules.push_back(std::make_unique<RemoveExpressionIfNoOutputDependency>());
                 modules.push_back(std::make_unique<OptimizeConditionalsLight>());
                 break;
         }
