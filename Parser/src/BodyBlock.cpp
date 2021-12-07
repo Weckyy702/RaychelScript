@@ -46,6 +46,7 @@
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
+#include "RaychelCore/charconv.h"
 
 #define RAYCHELSCRIPT_PARSER_NOISY 1
 #define RAYCHELSCRIPT_PARSER_SILENT 1
@@ -447,8 +448,7 @@ namespace RaychelScript::Parser {
 
             double value{0};
             //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
-            if (const auto [_, ec] = std::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
-                ec != std::errc{}) {
+            if (const auto [_, ec] = Raychel::from_chars(value_str.c_str(), value_str.c_str()+value_str.size(), value); ec != std::errc{}) {
                 Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!\n");
                 return ParserErrorCode::invalid_numeric_constant;
             }
@@ -591,7 +591,7 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::conditional_construct_condition_not_boolean_type;
         }
 
-        ctx.scopes.emplace(ConditionalConstructData{{}, condition_node});
+        ctx.scopes.emplace(ScopeData{ConditionalConstructData{{}, condition_node}});
 
         return ParserErrorCode::ok;
     }
