@@ -45,6 +45,8 @@
 #include <variant>
 
 #include "AST/AST.h"
+#include "Execution/ConstantDescriptor.h"
+#include "Execution/VariableDescriptor.h"
 #include "InterpreterErrorCode.h"
 #include "InterpreterState.h"
 #include "Parser.h"
@@ -55,9 +57,9 @@
 
 namespace RaychelScript {
 
-    template <typename T>
+    template <Interpreter::Descriptor CD, Interpreter::Descriptor VD>
     [[nodiscard]] std::string
-    get_descriptor_identifier(const Interpreter::InterpreterState<T>& state, const DescriptorID& id) noexcept
+    get_descriptor_identifier(const Interpreter::InterpreterState<CD, VD>& state, const DescriptorID& id) noexcept
     {
         if (const auto it = std::find_if(
                 state._descriptor_table.begin(),
@@ -69,9 +71,9 @@ namespace RaychelScript {
         return "<Descriptor not found>";
     }
 
-    template <typename T>
-    [[nodiscard]] std::optional<T>
-    get_identifier_value(const Interpreter::InterpreterState<T>& state, std::string_view name) noexcept
+    template <Interpreter::Descriptor CD, Interpreter::Descriptor VD>
+    [[nodiscard]] auto get_identifier_value(const Interpreter::InterpreterState<CD, VD>& state, std::string_view name) noexcept
+        -> Raychel::AssertingOptional<typename Interpreter::InterpreterState<CD, VD>::RegisterType>
     {
         if (const auto it = state._descriptor_table.find(std::string{name}); it != state._descriptor_table.end()) {
             const auto [_, descriptor] = *it;
@@ -87,7 +89,8 @@ namespace RaychelScript {
     namespace Interpreter {
 
         template <std::floating_point T>
-        using ExecutionResult = std::variant<InterpreterErrorCode, InterpreterState<T>>;
+        using ExecutionResult =
+            std::variant<InterpreterErrorCode, InterpreterState<ConstantDescriptor<T>, VariableDescriptor<T>>>;
 
         template <std::floating_point T>
         using ParameterMap = std::map<std::string, T>;
@@ -95,31 +98,6 @@ namespace RaychelScript {
         template <std::floating_point T>
         RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<T>
         interpret(const AST& ast, const ParameterMap<T>& parameters) noexcept;
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
-        template <std::floating_point T>
-        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<T>
-        interpret(std::istream& source_stream, const ParameterMap<T>& parameters) noexcept
-        {
-            const auto ast_or_error = Parser::parse(source_stream);
-            if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&ast_or_error); ec) {
-                return InterpreterErrorCode::no_input;
-            }
-
-            return interpret(Raychel::get<AST>(ast_or_error), parameters);
-        }
-
-        template <std::floating_point T>
-        RAYCHELSCRIPT_INTERPRETER_DEPRECATED [[nodiscard]] inline ExecutionResult<T>
-        interpret(const std::string& source_text, const ParameterMap<T>& parameters) noexcept
-        {
-            std::stringstream stream{source_text};
-            return interpret(stream, parameters);
-        }
-
-#pragma GCC diagnostic pop
     } // namespace Interpreter
 
 } // namespace RaychelScript

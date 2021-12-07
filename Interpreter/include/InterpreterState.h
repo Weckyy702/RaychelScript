@@ -33,53 +33,29 @@
 #include <string>
 #include <vector>
 
-#include "Execution/ConstantDescriptor.h"
-#include "Execution/VariableDescriptor.h"
-
-#define RAYCHELSCRIPT_BIT(x) (1U << (x))
+#include "Concepts.h"
+#include "StateFlags.h"
 
 namespace RaychelScript::Interpreter {
 
-    enum class StateFlags : std::uint32_t {
-        none = 0,
-        zero = RAYCHELSCRIPT_BIT(1U),
-        negative = RAYCHELSCRIPT_BIT(2U),
-    };
-
-    inline StateFlags& operator|=(StateFlags& lhs, StateFlags rhs) noexcept
-    {
-        using T = std::underlying_type_t<StateFlags>;
-
-        lhs = StateFlags{static_cast<T>(lhs) | static_cast<T>(rhs)};
-        return lhs;
-    }
-
-    inline bool operator&(StateFlags lhs, StateFlags rhs) noexcept
-    {
-        using T = std::underlying_type_t<StateFlags>;
-        return (static_cast<T>(lhs) & static_cast<T>(rhs)) != 0U;
-    }
-
-    inline bool operator!(StateFlags flags) noexcept
-    {
-        return flags == StateFlags::none;
-    }
-
-    template <std::floating_point T>
-    struct StateRegisters
-    {
-        T a{}, b{};
-        T result{};
-
-        StateFlags flags{StateFlags::none};
-    };
-
-    template <std::floating_point T>
+    template <Descriptor ConstantT, Descriptor VariableT>
     struct InterpreterState
     {
-        using ConstantContainer = std::vector<ConstantDescriptor<T>>;
-        using VariableContainer = std::vector<VariableDescriptor<T>>;
+
+        static_assert(std::is_same_v<typename ConstantT::value_type, typename VariableT::value_type>, "Constant value type and descriptor value type need to be the same!");
+
+        using RegisterType = typename ConstantT::value_type;
+        using ConstantContainer = std::vector<ConstantT>;
+        using VariableContainer = std::vector<VariableT>;
         using DescriptorTable = std::map<std::string, DescriptorID>;
+
+        struct Registers
+        {
+            RegisterType a{}, b{};
+            RegisterType result{};
+
+            StateFlags flags{StateFlags::none};
+        };
 
         struct Snapshot
         {
@@ -89,15 +65,13 @@ namespace RaychelScript::Interpreter {
 
         ConstantContainer constants;
         VariableContainer variables;
+        Registers registers;
 
         DescriptorTable _descriptor_table;
-        StateRegisters<T> _registers;
         DescriptorID _current_descriptor;
         std::stack<Snapshot, std::vector<Snapshot>> _stack_snapshots;
         bool _load_references{false};
     };
 } //namespace RaychelScript::Interpreter
-
-#undef RAYCHELSCRIPT_BIT
 
 #endif //!RAYCHELSCRIPT_INTERPRETER_STATE_H

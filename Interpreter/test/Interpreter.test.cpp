@@ -37,6 +37,7 @@
 int main()
 {
     using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
+    using State = RaychelScript::Interpreter::InterpreterState<RaychelScript::ConstantDescriptor<double>, RaychelScript::VariableDescriptor<double>>;
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::int64_t average_duration{0};
@@ -57,7 +58,7 @@ int main()
                 Logger::error(
                     "Error during execution! Reason: ", RaychelScript::Interpreter::error_code_to_reason_string(*ec), '\n');
             } else {
-                const auto state = Raychel::get<RaychelScript::Interpreter::InterpreterState<double>>(state_or_error_code);
+                const auto state = Raychel::get<State>(state_or_error_code);
 
                 Logger::info(
                     "SUCCESS from thread ", i + 1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');

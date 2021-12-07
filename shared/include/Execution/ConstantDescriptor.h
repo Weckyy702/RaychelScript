@@ -39,6 +39,8 @@ namespace RaychelScript {
     {
 
     public:
+        using value_type = std::remove_cvref_t<T>;
+
         ConstantDescriptor() = default;
 
         explicit ConstantDescriptor(T value) : has_value_set_{true}, value_{value}
@@ -54,7 +56,7 @@ namespace RaychelScript {
             return value_;
         }
 
-        [[nodiscard]] bool has_value() const noexcept
+        [[nodiscard]] bool has_value_set() const noexcept
         {
             return has_value_set_;
         }

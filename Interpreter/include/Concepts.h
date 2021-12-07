@@ -1,8 +1,8 @@
 /**
-* \file VariableDescriptor.h
+* \file Concepts.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for VariableDescriptor class
-* \date 2021-11-16
+* \brief Header file for Interpreter Concepts
+* \date 2021-12-07
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,47 +25,27 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
-#define RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#ifndef RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H
+#define RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H
 
 #include <concepts>
 
-#include "DescriptorID.h"
+#include "Execution/DescriptorID.h"
 
-namespace RaychelScript {
+namespace RaychelScript::Interpreter {
 
-    template <std::floating_point T>
-    class VariableDescriptor
-    {
-    public:
+    template<typename T>
+    concept Descriptor = requires(const T& obj){
+        std::is_standard_layout_v<T> && std::is_trivial_v<T>;
 
-        using value_type = std::remove_cvref_t<T>;
+        typename T::value_type;
 
-        VariableDescriptor() = default;
-
-        explicit VariableDescriptor(T value) : value_{value}
-        {}
-
-        [[nodiscard]] auto id() const noexcept
-        {
-            return id_;
-        }
-
-        [[nodiscard]] T& value() noexcept
-        {
-            return value_;
-        }
-
-        [[nodiscard]] const T& value() const noexcept
-        {
-            return value_;
-        }
-
-    private:
-        DescriptorID id_{this};
-        T value_{};
+        {obj.id()} -> std::same_as<DescriptorID>;
+        obj.value();
     };
 
-} //namespace RaychelScript
+    //TODO: implement concepts that allow using the interpreter on any type
 
-#endif //!RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+}//namespace RaychelScript::Interpreter
+
+#endif //!RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H

@@ -38,6 +38,10 @@ namespace RaychelScript {
     template <std::floating_point T>
     class ConstantDescriptor;
 
+    namespace Optimizer {
+        class Constant;
+    } //namespace Optimizer
+
     namespace details {
 
         constexpr std::size_t id_base()
@@ -103,6 +107,10 @@ namespace RaychelScript {
         template <typename T>
         explicit DescriptorID([[maybe_unused]] ConstantDescriptor<T>* /*unused*/)
             : id_{_get_id<ConstantDescriptor<T>>()}, is_constant_{true}
+        {}
+
+        explicit DescriptorID([[maybe_unused]] Optimizer::Constant* /*unused*/)
+            : id_{_get_id<Optimizer::Constant>()}, is_constant_{true}
         {}
 
         template <typename T>

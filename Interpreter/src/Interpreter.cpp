@@ -41,7 +41,7 @@
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
-    [[nodiscard]] InterpreterErrorCode handle_##name(InterpreterState<T>& state, const AST_Node& node) noexcept
+    [[nodiscard]] InterpreterErrorCode handle_##name(State<T>& state, const AST_Node& node) noexcept
 
 #define TRY(expression)                                                                                                          \
     if (const auto ec = (expression); ec != InterpreterErrorCode::ok) {                                                          \
@@ -56,63 +56,65 @@
 
 namespace RaychelScript::Interpreter {
 
-    //helper functions
-
     template <typename T>
-    [[nodiscard]] bool has_identifier(const InterpreterState<T>& state, const std::string& name) noexcept
+    using State = InterpreterState<ConstantDescriptor<T>, VariableDescriptor<T>>;
+
+    //helper functions
+    template <typename T>
+    [[nodiscard]] bool has_identifier(const State<T>& state, const std::string& name) noexcept
     {
         return state._descriptor_table.find(name) != state._descriptor_table.end();
     }
 
     template <typename T>
-    void add_constant(InterpreterState<T>& state, ConstantDescriptor<T>&& descriptor, const std::string& name) noexcept
+    void add_constant(State<T>& state, ConstantDescriptor<T>&& descriptor, const std::string& name) noexcept
     {
         state._descriptor_table.insert({name, descriptor.id()});
         state.constants.push_back(std::move(descriptor));
     }
 
     template <typename T>
-    void add_variable(InterpreterState<T>& state, VariableDescriptor<T>&& descriptor, const std::string& name) noexcept
+    void add_variable(State<T>& state, VariableDescriptor<T>&& descriptor, const std::string& name) noexcept
     {
         state._descriptor_table.insert({name, descriptor.id()});
         state.variables.push_back(std::move(descriptor));
     }
 
     template <typename T>
-    void clear_value_registers(InterpreterState<T>& state) noexcept
+    void clear_value_registers(State<T>& state) noexcept
     {
-        state._registers.a = state._registers.b = 0;
-        state._registers.result = 0;
+        state.registers.a = state.registers.b = 0;
+        state.registers.result = 0;
     }
 
     template <typename T>
-    void clear_status_registers(InterpreterState<T>& state) noexcept
+    void clear_status_registers(State<T>& state) noexcept
     {
-        state._registers.flags = StateFlags::none;
+        state.registers.flags = StateFlags::none;
         state._current_descriptor = DescriptorID{};
     }
 
     template <typename T>
-    void set_status_registers(InterpreterState<T>& state) noexcept
+    void set_status_registers(State<T>& state) noexcept
     {
         clear_status_registers(state);
-        if (Raychel::equivalent<T>(state._registers.result, 0)) {
-            state._registers.flags |= StateFlags::zero;
+        if (Raychel::equivalent<T>(state.registers.result, 0)) {
+            state.registers.flags |= StateFlags::zero;
         }
 
-        if (state._registers.result < 0) {
-            state._registers.flags |= StateFlags::negative;
+        if (state.registers.result < 0) {
+            state.registers.flags |= StateFlags::negative;
         }
     }
 
     template <typename T>
-    void set_descriptor_index(InterpreterState<T>& state, const DescriptorID& id) noexcept
+    void set_descriptor_index(State<T>& state, const DescriptorID& id) noexcept
     {
         state._current_descriptor = id;
     }
 
     template <typename T>
-    std::pair<bool, std::size_t> get_descriptor_index(InterpreterState<T>& state, const std::string& name) noexcept
+    std::pair<bool, std::size_t> get_descriptor_index(State<T>& state, const std::string& name) noexcept
     {
         const auto id = state._descriptor_table.at(name);
 
@@ -120,9 +122,9 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    InterpreterErrorCode do_assign(InterpreterState<T>& state) noexcept
+    InterpreterErrorCode do_assign(State<T>& state) noexcept
     {
-        const auto value = state._registers.result;
+        const auto value = state.registers.result;
 
         RAYCHELSCRIPT_INTERPRETER_DEBUG(
             "Assigning value ",
@@ -136,7 +138,7 @@ namespace RaychelScript::Interpreter {
         if (state._current_descriptor.is_constant()) {
             auto& descriptor = state.constants.at(state._current_descriptor.index());
 
-            if (descriptor.has_value()) {
+            if (descriptor.has_value_set()) {
                 Logger::error("Assigning to already-initialized constant!\n");
                 return InterpreterErrorCode::constant_reassign;
             }
@@ -154,10 +156,10 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    InterpreterErrorCode do_factorial(InterpreterState<T>& state) noexcept
+    InterpreterErrorCode do_factorial(State<T>& state) noexcept
     {
 
-        const auto value = state._registers.result;
+        const auto value = state.registers.result;
 
         if (Raychel::is_integer(value) && value < 0) {
             Logger::error("Cannot compute factorial of negative integer value!\n");
@@ -165,9 +167,9 @@ namespace RaychelScript::Interpreter {
         }
 
         if (Raychel::equivalent<T>(value, 0)) {
-            state._registers.result = 1;
+            state.registers.result = 1;
         } else {
-            state._registers.result = std::tgamma(value + 1);
+            state.registers.result = std::tgamma(value + 1);
         }
         set_status_registers(state);
 
@@ -175,7 +177,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    void push_state(InterpreterState<T>& state) noexcept
+    void push_state(State<T>& state) noexcept
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("push_state()\n");
         state._stack_snapshots.push({state.constants.size(), state.variables.size()});
@@ -197,7 +199,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    InterpreterErrorCode pop_state(InterpreterState<T>& state) noexcept
+    InterpreterErrorCode pop_state(State<T>& state) noexcept
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_state()\n");
         if (state._stack_snapshots.empty()) {
@@ -216,8 +218,8 @@ namespace RaychelScript::Interpreter {
     //setup functions
 
     template <typename T>
-    [[nodiscard]] InterpreterErrorCode populate_input_descriptors(
-        InterpreterState<T>& state, const AST& ast, const std::map<std::string, T>& input_identifiers) noexcept
+    [[nodiscard]] InterpreterErrorCode
+    populate_input_descriptors(State<T>& state, const AST& ast, const std::map<std::string, T>& input_identifiers) noexcept
     {
         if (ast.config_block.input_identifiers.size() != input_identifiers.size()) {
             Logger::error(
@@ -261,7 +263,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    [[nodiscard]] InterpreterErrorCode populate_output_descriptors(InterpreterState<T>& state, const AST& ast) noexcept
+    [[nodiscard]] InterpreterErrorCode populate_output_descriptors(State<T>& state, const AST& ast) noexcept
     {
         for (const auto& name : ast.config_block.output_identifiers) {
 
@@ -281,7 +283,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    [[nodiscard]] InterpreterErrorCode handle_config_vars(InterpreterState<T>& state, const AST& ast) noexcept
+    [[nodiscard]] InterpreterErrorCode handle_config_vars(State<T>& state, const AST& ast) noexcept
     {
         //TODO: parse configuration variables and change  state flags if needed
         (void)state;
@@ -299,14 +301,13 @@ namespace RaychelScript::Interpreter {
     //handler functions and main interpreter loop
 
     template <typename T>
-    [[nodiscard]] InterpreterErrorCode execute_node(InterpreterState<T>& state, const AST_Node& node) noexcept;
+    [[nodiscard]] InterpreterErrorCode execute_node(State<T>& state, const AST_Node& node) noexcept;
 
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(assignment_node)
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_assignment_node()\n");
         const auto data = node.to_node_data<AssignmentExpressionData>();
 
-        //TODO: find a better way to solve this issue. handle_variable_reference has different meaning based on which side of the assignment expression the node is on
         state._load_references = true;
         TRY(execute_node(state, data.rhs));
 
@@ -335,15 +336,16 @@ namespace RaychelScript::Interpreter {
 
             set_descriptor_index(state, descriptor.id());
             add_constant(state, std::move(descriptor), data.name);
-        } else {
-            auto descriptor = VariableDescriptor<T>{};
 
-            RAYCHELSCRIPT_INTERPRETER_DEBUG(
-                "Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
-
-            set_descriptor_index(state, descriptor.id());
-            add_variable(state, std::move(descriptor), data.name);
+            return InterpreterErrorCode::ok;
         }
+        auto descriptor = VariableDescriptor<T>{};
+
+        RAYCHELSCRIPT_INTERPRETER_DEBUG(
+            "Adding new variable descriptor with name '", data.name, "' and id ", descriptor.id(), '\n');
+
+        set_descriptor_index(state, descriptor.id());
+        add_variable(state, std::move(descriptor), data.name);
 
         return InterpreterErrorCode::ok;
     }
@@ -370,9 +372,9 @@ namespace RaychelScript::Interpreter {
         const auto [is_constant, index] = get_descriptor_index(state, data.name);
 
         if (is_constant) {
-            state._registers.result = state.constants.at(index).value();
+            state.registers.result = state.constants.at(index).value();
         } else {
-            state._registers.result = state.variables.at(index).value();
+            state.registers.result = state.variables.at(index).value();
         }
 
         set_status_registers(state);
@@ -391,30 +393,30 @@ namespace RaychelScript::Interpreter {
 
         TRY(execute_node(state, data.lhs));
 
-        state._registers.a = state._registers.result;
+        state.registers.a = state.registers.result;
 
         TRY(execute_node(state, data.rhs));
 
-        state._registers.b = state._registers.result;
+        state.registers.b = state.registers.result;
 
         switch (data.operation) {
             case Op::add:
-                state._registers.result = state._registers.a + state._registers.b;
+                state.registers.result = state.registers.a + state.registers.b;
                 break;
             case Op::subtract:
-                state._registers.result = state._registers.a - state._registers.b;
+                state.registers.result = state.registers.a - state.registers.b;
                 break;
             case Op::multiply:
-                state._registers.result = state._registers.a * state._registers.b;
+                state.registers.result = state.registers.a * state.registers.b;
                 break;
             case Op::divide:
-                if (Raychel::equivalent<T>(state._registers.b, 0)) {
+                if (Raychel::equivalent<T>(state.registers.b, 0)) {
                     return InterpreterErrorCode::divide_by_zero;
                 }
-                state._registers.result = state._registers.a / state._registers.b;
+                state.registers.result = state.registers.a / state.registers.b;
                 break;
             case Op::power:
-                state._registers.result = std::pow(state._registers.a, state._registers.b);
+                state.registers.result = std::pow(state.registers.a, state.registers.b);
                 break;
             default:
                 return InterpreterErrorCode::invalid_arithmetic_operation;
@@ -431,7 +433,7 @@ namespace RaychelScript::Interpreter {
 
         const auto data = node.to_node_data<NumericConstantData>();
 
-        state._registers.result = static_cast<T>(data.value);
+        state.registers.result = static_cast<T>(data.value);
 
         set_status_registers(state);
 
@@ -451,16 +453,15 @@ namespace RaychelScript::Interpreter {
 
         switch (data.operation) {
             case Op::minus:
-                state._registers.result = -state._registers.result;
+                state.registers.result = -state.registers.result;
                 break;
             case Op::plus:
                 //do nothing
                 break;
             case Op::factorial:
                 return do_factorial(state);
-                break;
             case Op::magnitude:
-                state._registers.result = std::abs(state._registers.result);
+                state.registers.result = std::abs(state.registers.result);
                 break;
             default:
                 return InterpreterErrorCode::invalid_arithmetic_operation;
@@ -480,7 +481,7 @@ namespace RaychelScript::Interpreter {
         state._load_references = true;
         TRY(execute_node(state, data.condition_node));
 
-        if (state._registers.flags & StateFlags::zero) {
+        if (state.registers.flags & StateFlags::zero) {
             return InterpreterErrorCode::ok;
         }
 
@@ -506,23 +507,23 @@ namespace RaychelScript::Interpreter {
 
         state._load_references = true;
         TRY(execute_node(state, data.lhs));
-        state._registers.a = state._registers.result;
+        state.registers.a = state.registers.result;
 
         TRY(execute_node(state, data.rhs));
-        state._registers.b = state._registers.result;
+        state.registers.b = state.registers.result;
 
         switch (data.operation) {
             case Op::equals:
-                state._registers.result = Raychel::equivalent<T>(state._registers.a, state._registers.b);
+                state.registers.result = Raychel::equivalent<T>(state.registers.a, state.registers.b);
                 break;
             case Op::not_equals:
-                state._registers.result = !Raychel::equivalent<T>(state._registers.a, state._registers.b);
+                state.registers.result = !Raychel::equivalent<T>(state.registers.a, state.registers.b);
                 break;
             case Op::less_than:
-                state._registers.result = state._registers.a < state._registers.b;
+                state.registers.result = state.registers.a < state.registers.b;
                 break;
             case Op::greater_than:
-                state._registers.result = state._registers.a > state._registers.b;
+                state.registers.result = state.registers.a > state.registers.b;
                 break;
             default:
                 return InterpreterErrorCode::invalid_relational_operation;
@@ -533,7 +534,7 @@ namespace RaychelScript::Interpreter {
     }
 
     template <typename T>
-    [[nodiscard]] InterpreterErrorCode execute_node(InterpreterState<T>& state, const AST_Node& node) noexcept
+    [[nodiscard]] InterpreterErrorCode execute_node(State<T>& state, const AST_Node& node) noexcept
     {
         switch (node.type()) {
             case NodeType::assignment:
@@ -551,14 +552,19 @@ namespace RaychelScript::Interpreter {
             case NodeType::conditional_construct:
                 return handle_conditional_construct(state, node);
             case NodeType::literal_true:
-                state._registers.result = 1;
+                state.registers.result = 1;
                 return InterpreterErrorCode::ok;
             case NodeType::literal_false:
-                state._registers.result = 0;
-                state._registers.flags |= StateFlags::zero;
+                state.registers.result = 0;
+                state.registers.flags |= StateFlags::zero;
                 return InterpreterErrorCode::ok;
             case NodeType::relational_operator:
                 return handle_relational_operator(state, node);
+            case NodeType::inline_state_push:
+                push_state(state);
+                return InterpreterErrorCode::ok;
+            case NodeType::inline_state_pop:
+                return pop_state(state);
         }
 
         return InterpreterErrorCode::invalid_node;
@@ -569,7 +575,7 @@ namespace RaychelScript::Interpreter {
     template <std::floating_point T>
     [[nodiscard]] Interpreter::ExecutionResult<T> interpret(const AST& ast, const std::map<std::string, T>& parameters) noexcept
     {
-        InterpreterState<T> state;
+        State<T> state;
 
         DescriptorID::reset_id<ConstantDescriptor<T>>();
         DescriptorID::reset_id<VariableDescriptor<T>>();

@@ -2,11 +2,13 @@ find_package(RaychelLogger REQUIRED)
 find_package(RaychelMath REQUIRED)
 
 add_library(RaychelScriptInterpreter SHARED
-    "include/ExecutionErrorCode.h"
-    "include/InterpreterState.h"
+    "include/Concepts.h"
     "include/Interpreter.h"
     "include/InterpreterErrorCode.h"
     "include/InterpreterPipe.h"
+    "include/InterpreterState.h"
+    "include/StateFlags.h"
+    
     "src/Interpreter.cpp"
 )
 

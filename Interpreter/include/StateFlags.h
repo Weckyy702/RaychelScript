@@ -1,8 +1,8 @@
 /**
-* \file VariableDescriptor.h
+* \file StateFlags.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for VariableDescriptor class
-* \date 2021-11-16
+* \brief Header file for StateFlags enum
+* \date 2021-12-07
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,47 +25,37 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
-#define RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+#ifndef RAYCHELSCRIPT_OPTIMIZER_STATE_FLAGS_H
+#define RAYCHELSCRIPT_OPTIMIZER_STATE_FLAGS_H
 
-#include <concepts>
+#include <cstdint>
+#include <type_traits>
 
-#include "DescriptorID.h"
-
-namespace RaychelScript {
-
-    template <std::floating_point T>
-    class VariableDescriptor
-    {
-    public:
-
-        using value_type = std::remove_cvref_t<T>;
-
-        VariableDescriptor() = default;
-
-        explicit VariableDescriptor(T value) : value_{value}
-        {}
-
-        [[nodiscard]] auto id() const noexcept
-        {
-            return id_;
-        }
-
-        [[nodiscard]] T& value() noexcept
-        {
-            return value_;
-        }
-
-        [[nodiscard]] const T& value() const noexcept
-        {
-            return value_;
-        }
-
-    private:
-        DescriptorID id_{this};
-        T value_{};
+namespace RaychelScript::Interpreter {
+    enum class StateFlags : std::uint32_t {
+        none = 0,
+        zero = 1,
+        negative = 2,
     };
 
-} //namespace RaychelScript
+    inline StateFlags& operator|=(StateFlags& lhs, StateFlags rhs) noexcept
+    {
+        using T = std::underlying_type_t<StateFlags>;
 
-#endif //!RAYCHELSCRIPT_VARIABLE_DESCRIPTOR_H
+        lhs = StateFlags{static_cast<T>(lhs) | static_cast<T>(rhs)};
+        return lhs;
+    }
+
+    inline bool operator&(StateFlags lhs, StateFlags rhs) noexcept
+    {
+        using T = std::underlying_type_t<StateFlags>;
+        return (static_cast<T>(lhs) & static_cast<T>(rhs)) != 0U;
+    }
+
+    inline bool operator!(StateFlags flags) noexcept
+    {
+        return flags == StateFlags::none;
+    }
+} //namespace RaychelScript::Interpreter
+
+#endif //!RAYCHELSCRIPT_OPTIMIZER_STATE_FLAGS_H
