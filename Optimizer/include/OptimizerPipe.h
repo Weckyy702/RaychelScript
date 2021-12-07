@@ -63,6 +63,18 @@ namespace RaychelScript::Pipes {
         return optimizer(input);
     }
 
+    //You can also use individual modules in the pipes API :)
+    inline Parser::ParseResult operator|(const Parser::ParseResult& input, const Optimizer::OptimizerModule& module) noexcept
+    {
+        if(const auto ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
+            return *ec;
+        }
+
+        AST ast = Raychel::get<AST>(input);
+        module(ast);
+        return ast;
+    }
+
 } //namespace RaychelScript::Pipes
 
 #endif //!RAYCHELSCRIPT_PIPE_OPTIMIZER_H
