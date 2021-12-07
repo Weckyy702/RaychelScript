@@ -28,6 +28,10 @@
 
 #include "Misc/PrintAST.h"
 #include "OptimizerPipe.h"
+#include "InterpreterPipe.h"
+
+#include "modules/ConditionalsLight.h"
+#include "modules/RemoveIfNoSideEffects.h"
 
 /**
 * \brief Very dumb algorithm to estimate the complexity of an AST
@@ -42,23 +46,27 @@ static std::size_t estimate_ast_complexity(const RaychelScript::AST& ast) noexce
     //Currently, we count the number of children to make up an estimate for the complexity of the AST
 
     RaychelScript::for_each_node(ast, [&complexity_score](const RaychelScript::AST_Node& node) {
+        using NT = RaychelScript::NodeType;
+
+
         switch (node.type()) {
-            case RaychelScript::NodeType::assignment:
-            case RaychelScript::NodeType::arithmetic_operator:
-            case RaychelScript::NodeType::relational_operator:
+            case NT::assignment:
+            case NT::arithmetic_operator:
+            case NT::relational_operator:
                 complexity_score += 3;
                 break;
-            case RaychelScript::NodeType::variable_decl:
-            case RaychelScript::NodeType::variable_ref:
-            case RaychelScript::NodeType::numeric_constant:
-            case RaychelScript::NodeType::literal_true:
-            case RaychelScript::NodeType::literal_false:
-                complexity_score++;
-                break;
-
-            case RaychelScript::NodeType::unary_operator:
-            case RaychelScript::NodeType::conditional_construct:
+            case NT::unary_operator:
+            case NT::conditional_construct:
                 complexity_score += 2;
+                break;
+            case NT::variable_decl:
+            case NT::variable_ref:
+            case NT::numeric_constant:
+            case NT::literal_true:
+            case NT::literal_false:
+            case NT::inline_state_push:
+            case NT::inline_state_pop:
+                complexity_score++;
                 break;
         }
     });
@@ -70,10 +78,11 @@ int main()
 {
     using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
 
-    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
+    Logger::setMinimumLogLevel(Logger::LogLevel::info);
 
     const auto ast_or_error = Lex{lex_file, "../../../shared/test/optimizable.rsc"} | Parse{};
-    const auto optimized_ast_or_error = ast_or_error | Optimize{RaychelScript::Optimizer::OptimizationLevel::all};
+    const auto optimized_ast_or_error =
+        ast_or_error | RaychelScript::Pipes::Optimize{RaychelScript::Optimizer::OptimizationLevel::all};
 
     if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&ast_or_error); ec) {
         Logger::log("Error during parsing: ", RaychelScript::Parser::error_code_to_reason_string(*ec), '\n');
@@ -93,4 +102,18 @@ int main()
 
     Logger::info("Optimized (complexity=", estimate_ast_complexity(optimized_ast), "):\n");
     RaychelScript::pretty_print_ast(optimized_ast);
+
+
+    auto label = Logger::startTimer("unoptimized");
+    const auto state_or_error = ast_or_error | RaychelScript::Pipes::Interpret<double>{{
+        {"a", 1},
+        {"b", 1}
+    }};
+    Logger::logDuration<std::chrono::microseconds>(label);
+    label = Logger::startTimer("optimized");
+    const auto optimized_state_or_error = optimized_ast_or_error | RaychelScript::Pipes::Interpret<double>{{
+        {"a", 1},
+        {"b", 1}
+    }};
+    Logger::logDuration<std::chrono::microseconds>(label);
 }

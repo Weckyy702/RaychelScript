@@ -128,6 +128,12 @@ namespace RaychelScript {
         Operation operation{};
     };
 
+    struct InlinePushData : NodeDataBase<NodeType::inline_state_push, ValueType::none, false, true>
+    {};
+
+    struct InlinePopData : NodeDataBase<NodeType::inline_state_pop, ValueType::none, false, true>
+    {};
+
 } // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_NODE_DATA_H

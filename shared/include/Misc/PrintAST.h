@@ -217,11 +217,19 @@ namespace RaychelScript {
                 break;
 
             case RS::NodeType::literal_false:
-                Logger::log("False\n");
+                Logger::log("FALSE\n");
                 break;
 
             case RS::NodeType::relational_operator:
                 details::handle_relational_operator(node.to_node_data<RS::RelationalOperatorData>());
+                break;
+
+            case RS::NodeType::inline_state_push:
+                Logger::log("INLINE STATE PUSH\n");
+                break;
+
+            case RS::NodeType::inline_state_pop:
+                Logger::log("INLINE STATE POP\n");
                 break;
         }
     }

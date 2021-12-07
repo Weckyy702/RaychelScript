@@ -106,10 +106,16 @@ namespace RaychelScript::Optimizer {
             //save where we left our condition node (we can't use iterators because they are invalidated by insert())
             const auto condition_index = std::distance(nodes.begin(), it);
 
+            //Because conditionals push the state, we need to do the same
+            it = nodes.insert(std::next(it), AST_Node{InlinePushData{{}}});
+
             //insert all body nodes behind our condition node
             for (auto& node : data.body) {
                 it = nodes.insert(std::next(it), std::move(node));
             }
+
+            //Because conditionals pop the state, we need to do the same
+            it = nodes.insert(std::next(it), AST_Node{InlinePopData{{}}});
 
             //remove the condition node
             const auto conditon_iterator = nodes.begin() + condition_index;

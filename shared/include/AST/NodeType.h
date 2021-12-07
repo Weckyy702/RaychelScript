@@ -40,6 +40,8 @@ namespace RaychelScript {
         literal_true,
         literal_false,
         relational_operator,
+        inline_state_push,
+        inline_state_pop,
     };
 } // namespace RaychelScript
 

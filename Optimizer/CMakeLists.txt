@@ -36,6 +36,7 @@ endif()
 target_link_libraries(RaychelScriptOptimizer PUBLIC
     RaychelScriptBase
     RaychelScriptParser
+    RaychelScriptInterpreter
     RaychelLogger
 )
 
