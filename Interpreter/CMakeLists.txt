@@ -5,6 +5,7 @@ add_library(RaychelScriptInterpreter SHARED
     "include/ExecutionErrorCode.h"
     "include/InterpreterState.h"
     "include/Interpreter.h"
+    "include/InterpreterErrorCode.h"
     "include/InterpreterPipe.h"
     "src/Interpreter.cpp"
 )

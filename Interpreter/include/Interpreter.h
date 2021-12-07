@@ -45,7 +45,7 @@
 #include <variant>
 
 #include "AST/AST.h"
-#include "ExecutionErrorCode.h"
+#include "InterpreterErrorCode.h"
 #include "InterpreterState.h"
 #include "Parser.h"
 

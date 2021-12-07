@@ -1,7 +1,7 @@
 /**
-* \file ExecutionErrorCode.h
+* \file InterpreterErrorCode.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for execution error codes
+* \brief Header file for interpreter error codes
 * \date 2021-11-15
 * 
 * MIT License
