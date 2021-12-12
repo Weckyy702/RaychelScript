@@ -31,12 +31,33 @@ else()
         -Wconversion
         -Werror
     )
+    if(${RAYCHELSCRIPT_ENABLE_ASAN})
+        target_compile_options(RaychelScriptLexer PUBLIC
+            -fsanitize=address
+        )
+    endif()
+    if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+        target_compile_options(RaychelScriptLexer PUBLIC
+            -fsanitize=undefined
+        )
+    endif()
 endif()
 
 target_link_libraries(RaychelScriptParser PUBLIC 
     RaychelScriptLexer
     RaychelLogger
 )
+
+if(${RAYCHELSCRIPT_ENABLE_ASAN})
+    target_link_options(RaychelScriptLexer PUBLIC
+        -fsanitize=address
+    )
+endif()
+if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+    target_link_options(RaychelScriptLexer PUBLIC
+        -fsanitize=undefined
+    )
+endif()
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})
     add_subdirectory(test)

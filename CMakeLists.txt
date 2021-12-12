@@ -11,6 +11,9 @@ option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" OFF)
 
 option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
 
+option(RAYCHELSCRIPT_ENABLE_ASAN "Enable ASAN instrumentation" OFF)
+option(RAYCHELSCRIPT_ENABLE_UBSAN "Enable UBSAN instrumentation" ON)
+
 option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" OFF)
 
 if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
@@ -20,6 +23,14 @@ if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
     set(RAYCHELSCRIPT_BUILD_INTERPRETER ON)
     set(RAYCHELSCRIPT_BUILD_ASSEMBLER ON)
     set(RAYCHELSCRIPT_BUILD_VM ON)
+endif()
+
+if(${RAYCHELSCRIPT_ENABLE_ASAN})
+    message(STATUS "Enabled ASAN instrumentation")
+endif()
+
+if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+    message(STATUS "Enabled UBSAN instrumentation")
 endif()
 
 add_subdirectory(shared)
