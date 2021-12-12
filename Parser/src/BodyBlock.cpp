@@ -292,12 +292,16 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
+    [[nodiscard]] static ParseExpressionResult handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_footer(ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
     handle_relational_operator(LineView lhs, LineView rhs, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseExpressionResult handle_loop_header(LineView condition, ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseExpressionResult handle_loop_footer(ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
@@ -333,13 +337,25 @@ namespace RaychelScript::Parser {
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::conditional_header, TT::expression_});
             !matches.empty()) {
 
-            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found conditional header at", matches.front().front().location);
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found conditional header at ", matches.front().front().location);
             return handle_conditional_header(matches.at(1), ctx);
         }
 
         //conditional footer
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::conditional_footer}); !matches.empty()) {
             return handle_conditional_footer(ctx);
+        }
+
+        //loop header
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::loop_header, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found loop header at ", matches.front().front().location);
+            return handle_loop_header(matches.at(1), ctx);
+        }
+
+        //loop footer
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::loop_footer}); !matches.empty()) {
+            return handle_loop_footer(ctx);
         }
 
         //Logical operators
@@ -448,7 +464,8 @@ namespace RaychelScript::Parser {
 
             double value{0};
             //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
-            if (const auto [_, ec] = Raychel::from_chars(value_str.c_str(), value_str.c_str()+value_str.size(), value); ec != std::errc{}) {
+            if (const auto [_, ec] = Raychel::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
+                ec != std::errc{}) {
                 Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!\n");
                 return ParserErrorCode::invalid_numeric_constant;
             }
@@ -579,7 +596,7 @@ namespace RaychelScript::Parser {
         return AST_Node{UnaryExpressionData{{}, rhs_node, op}};
     }
 
-    [[nodiscard]] static ParserErrorCode handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept
+    [[nodiscard]] static ParseExpressionResult handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept
     {
         TRY_GET_NODE(condition);
 
@@ -591,7 +608,7 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::conditional_construct_condition_not_boolean_type;
         }
 
-        ctx.scopes.emplace(ScopeData{ConditionalConstructData{{}, condition_node}});
+        ctx.scopes.emplace(ConditionalConstructData{{}, std::move(condition_node)});
 
         return ParserErrorCode::ok;
     }
@@ -602,10 +619,16 @@ namespace RaychelScript::Parser {
             Logger::error("Mismatched if/endif: too many footers!\n");
             return ParserErrorCode::mismatched_conditional;
         }
-        auto data = std::move(ctx.scopes.top().parent);
+
+        if (ctx.scopes.top().type() != NodeType::conditional_construct) {
+            Logger::error("Mismatched header/footer type: should have 'conditional' type!\n");
+            return ParserErrorCode::mismatched_header_footer_type;
+        }
+
+        auto node = ctx.scopes.top();
         ctx.scopes.pop();
 
-        return AST_Node{std::move(data)};
+        return node;
     }
 
     [[nodiscard]] static ParseExpressionResult handle_relational_operator(
@@ -633,6 +656,69 @@ namespace RaychelScript::Parser {
         return AST_Node{RelationalOperatorData{{}, std::move(lhs_node), std::move(rhs_node), op}};
     }
 
+    [[nodiscard]] static ParseExpressionResult handle_loop_header(LineView condition_tokens, ParsingContext& ctx) noexcept
+    {
+        TRY_GET_NODE(condition);
+
+        if (condition_node.value_type() != ValueType::boolean) {
+            Logger::error(
+                "Condition of while loop does not have 'boolean' type, has type '", condition_node.value_type(), "' instead!\n");
+            return ParserErrorCode::loop_condition_not_boolean_type;
+        }
+        ctx.scopes.emplace(LoopData{{}, condition_node});
+
+        return ParserErrorCode::ok;
+    }
+
+    [[nodiscard]] static ParseExpressionResult handle_loop_footer(ParsingContext& ctx) noexcept
+    {
+        if (ctx.scopes.empty()) {
+            Logger::error("Mismatched while/endwhile: too many footers!\n");
+            return ParserErrorCode::mismatched_loop;
+        }
+
+        if (ctx.scopes.top().type() != NodeType::loop) {
+            Logger::error("Mismatched header/footer type: should have 'loop' type!\n");
+            return ParserErrorCode::mismatched_header_footer_type;
+        }
+
+        auto node = ctx.scopes.top();
+        ctx.scopes.pop();
+
+        return node;
+    }
+
+    static void push_node(AST_Node&& node, AST& ast, ParsingContext& ctx) noexcept
+    {
+        if (ctx.scopes.empty()) {
+            ast.nodes.emplace_back(std::move(node));
+            return;
+        }
+
+        //TODO: make this more efficent (if it starts causing slowdowns)
+        //we copy the data just to move it back, that is really silly
+        
+        auto& parent_node = ctx.scopes.top();
+        switch (parent_node.type()) {
+            case NodeType::conditional_construct:
+            {
+                auto data = parent_node.to_node_data<ConditionalConstructData>();
+                data.body.emplace_back(std::move(node));
+                parent_node = AST_Node{std::move(data)};
+                break;
+            }
+            case NodeType::loop:
+            {
+                auto data = parent_node.to_node_data<LoopData>();
+                data.body.emplace_back(std::move(node));
+                parent_node = AST_Node{std::move(data)};
+                break;
+            }
+            default:
+                RAYCHEL_ASSERT_NOT_REACHED;
+        }
+    }
+
     std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
     {
         ParsingContext ctx;
@@ -648,22 +734,16 @@ namespace RaychelScript::Parser {
                 ec = *error_code;
                 return;
             }
-            auto node = Raychel::get<AST_Node>(top_node_or_error);
-
-            if (ctx.scopes.empty()) {
-                ast.nodes.emplace_back(std::move(node));
-            } else {
-                ctx.scopes.top().parent.body.emplace_back(std::move(node));
-            }
+            push_node(Raychel::get<AST_Node>(std::move(top_node_or_error)), ast, ctx);
         });
-
-        if (!ctx.scopes.empty()) {
-            Logger::error("Mismatched if/endif: too many headers!\n");
-            return ParserErrorCode::mismatched_conditional;
-        }
 
         if (ec != ParserErrorCode::ok) {
             return ec;
+        }
+
+        if (!ctx.scopes.empty()) {
+            Logger::error("Mismatched header/footer constructs: too many headers!\n");
+            return ParserErrorCode::mismatched_conditional;
         }
 
         return ast;

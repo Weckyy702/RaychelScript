@@ -53,6 +53,12 @@ namespace RaychelScript::Lexer {
         if (token == "false") {
             return TokenType::literal_false;
         }
+        if(token == "while") {
+            return TokenType::loop_header;
+        }
+        if(token == "endwhile") {
+            return TokenType::loop_footer;
+        }
         return TokenType::identifer;
     }
 
@@ -85,7 +91,6 @@ namespace RaychelScript::Lexer {
             const bool is_digit = is_number_char(c);
             const bool is_dot_in_number = c == '.' && is_number_char(current_token.back());
             const bool number_already_has_dot = current_token.find('.') != std::string::npos;
-
             return is_digit || (is_dot_in_number && !number_already_has_dot);
         };
 

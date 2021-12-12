@@ -45,7 +45,7 @@ int main()
 
     for (std::int64_t i = 0; i < iterations; i++) {
         [&average_duration, i] {
-            const auto ast_or_error = Lex{lex_file, "../../../shared/test/optimizable.rsc"} | Parse{};
+            const auto ast_or_error = Lex{lex_file, "../../../shared/test/loops.rsc"} | Parse{};
 
             const auto label = Logger::startTimer("Interpretation time");
 

@@ -114,7 +114,7 @@ int main()
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     //parse_file_and_print_debug_info("conditionals.rsc");
-
+    parse_file_and_print_debug_info("loops.rsc");
     echo_AST_from_stdin();
 
     return 0;

@@ -55,6 +55,9 @@ namespace RaychelScript::Parser {
         conditional_construct_condition_not_boolean_type,
         relational_op_lhs_not_number_type,
         relational_op_rhs_not_number_type,
+        loop_condition_not_boolean_type,
+        mismatched_loop,
+        mismatched_header_footer_type,
     };
 
     constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
@@ -93,6 +96,12 @@ namespace RaychelScript::Parser {
                 return "Left-hand side of relational operator does not have 'number' type"sv;
             case ParserErrorCode::relational_op_rhs_not_number_type:
                 return "Right-hand side of relational operator does not have 'number' type"sv;
+            case ParserErrorCode::loop_condition_not_boolean_type:
+                return "Condition of loop does not have 'boolean' type"sv;
+            case ParserErrorCode::mismatched_loop:
+                return "Mismatched while/endwhile"sv;
+            case ParserErrorCode::mismatched_header_footer_type:
+                return "Type of construct header does not match type of construct footer"sv;
         }
         return "<Unknown reason>"sv;
     }

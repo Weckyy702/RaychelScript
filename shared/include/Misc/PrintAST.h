@@ -145,6 +145,16 @@ namespace RaychelScript {
             print_node(data.rhs, "rhs=");
         }
 
+        inline void handle_loop(const LoopData& data) noexcept
+        {
+            Logger::log("LOOP\n");
+            print_node(data.condition_node, "condition=");
+
+            for(const auto& body_node : data.body) {
+                print_node(body_node, "body=");
+            }
+        }
+
     } // namespace details
 
     inline void print_config_block(const RaychelScript::ConfigBlock& config_block) noexcept
@@ -231,6 +241,9 @@ namespace RaychelScript {
             case RS::NodeType::inline_state_pop:
                 Logger::log("INLINE STATE POP\n");
                 break;
+
+            case RS::NodeType::loop:
+                details::handle_loop(node.to_node_data<LoopData>());
         }
     }
 

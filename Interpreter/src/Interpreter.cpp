@@ -34,6 +34,8 @@
 #include <cfenv>
 #include <cmath>
 
+#include "RaychelCore/ClassMacros.h"
+
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
@@ -214,6 +216,32 @@ namespace RaychelScript::Interpreter {
 
         return InterpreterErrorCode::ok;
     }
+
+    namespace details {
+        /**
+        * \brief RAII wrapper around the push/pop_state functions
+        */
+        template <std::floating_point T>
+        class PushState
+        {
+
+            RAYCHEL_MAKE_NONCOPY_NONMOVE(PushState);
+
+        public:
+            explicit PushState(State<T>& state) : state_{state}
+            {
+                push_state(state_);
+            }
+
+            ~PushState() noexcept
+            {
+                RAYCHEL_ANON_VAR pop_state(state_);
+            }
+
+        private:
+            State<T>& state_;
+        };
+    } // namespace details
 
     //setup functions
 
@@ -533,6 +561,29 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+    RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(loop)
+    {
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_loop()\n");
+
+        const auto data = node.to_node_data<LoopData>();
+
+        while (true) {
+            TRY(execute_node(state, data.condition_node));
+
+            if (state.registers.flags & StateFlags::zero) {
+                return InterpreterErrorCode::ok;
+            }
+
+            RAYCHEL_ANON_VAR details::PushState{state};
+
+            for (const auto& body_node : data.body) {
+                clear_value_registers(state);
+                clear_status_registers(state);
+                TRY(execute_node(state, body_node));
+            }
+        }
+    }
+
     template <typename T>
     [[nodiscard]] InterpreterErrorCode execute_node(State<T>& state, const AST_Node& node) noexcept
     {
@@ -565,6 +616,8 @@ namespace RaychelScript::Interpreter {
                 return InterpreterErrorCode::ok;
             case NodeType::inline_state_pop:
                 return pop_state(state);
+            case NodeType::loop:
+                return handle_loop(state, node);
         }
 
         return InterpreterErrorCode::invalid_node;

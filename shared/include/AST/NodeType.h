@@ -42,6 +42,7 @@ namespace RaychelScript {
         relational_operator,
         inline_state_push,
         inline_state_pop,
+        loop,
     };
 } // namespace RaychelScript
 

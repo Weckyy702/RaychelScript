@@ -38,14 +38,9 @@
 
 namespace RaychelScript::Parser {
 
-    struct ScopeData
-    {
-        ConditionalConstructData parent; //TODO: make this a little smarter and support different parent nodes
-    };
-
     struct ParsingContext
     {
-        std::stack<ScopeData, std::vector<ScopeData>> scopes;
+        std::stack<AST_Node, std::vector<AST_Node>> scopes;
     };
 
 } //namespace RaychelScript::Parser

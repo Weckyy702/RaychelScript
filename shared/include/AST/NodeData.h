@@ -134,6 +134,12 @@ namespace RaychelScript {
     struct InlinePopData : NodeDataBase<NodeType::inline_state_pop, ValueType::none, false, true>
     {};
 
+    struct LoopData : NodeDataBase<NodeType::loop, ValueType::none, false, true>
+    {
+        AST_Node condition_node;
+        std::vector<AST_Node> body{};
+    };
+
 } // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_NODE_DATA_H
