@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_INTERPRETER_STATE_H
 #define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
-#include <map>
+#include <unordered_map>
 #include <stack>
 #include <string>
 #include <vector>
@@ -47,7 +47,7 @@ namespace RaychelScript::Interpreter {
         using RegisterType = typename ConstantT::value_type;
         using ConstantContainer = std::vector<ConstantT>;
         using VariableContainer = std::vector<VariableT>;
-        using DescriptorTable = std::map<std::string, DescriptorID>;
+        using DescriptorTable = std::unordered_map<std::string, DescriptorID>;
 
         struct Registers
         {

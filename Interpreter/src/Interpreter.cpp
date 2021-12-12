@@ -39,7 +39,7 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
-#define RAYCHELSCRIPT_INTERPRETER_SILENT 0
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     template <typename T>                                                                                                        \
@@ -185,9 +185,9 @@ namespace RaychelScript::Interpreter {
         state._stack_snapshots.push({state.constants.size(), state.variables.size()});
     }
 
-    template <typename Descriptor>
+    template <Descriptor Desc>
     void do_descriptor_relocate(
-        std::vector<Descriptor>& descriptors, std::map<std::string, DescriptorID>& descriptor_table,
+        std::vector<Desc>& descriptors, std::unordered_map<std::string, DescriptorID>& descriptor_table,
         std::size_t descriptor_index) noexcept
     {
         for (std::size_t i = descriptor_index; i != descriptors.size(); i++) {
@@ -197,7 +197,7 @@ namespace RaychelScript::Interpreter {
 
         //NOLINTNEXTLINE(clang-diagnostic-sign-conversion): we can't change the STLs spec :(
         descriptors.erase(descriptors.begin() + descriptor_index, descriptors.end());
-        DescriptorID::reset_id<Descriptor>(descriptors.back().id().id() + 1);
+        DescriptorID::reset_id<Desc>(descriptors.back().id().id() + 1);
     }
 
     template <typename T>
