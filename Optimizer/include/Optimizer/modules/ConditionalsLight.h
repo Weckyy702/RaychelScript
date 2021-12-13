@@ -28,9 +28,9 @@
 #ifndef RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_CONDTION_IS_KNOWN_H
 #define RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_CONDTION_IS_KNOWN_H
 
-#include "AST/AST.h"
-#include "AST/NodeData.h"
-#include "AST/NodeHasValue.h"
+#include "shared/AST/AST.h"
+#include "shared/AST/NodeData.h"
+#include "shared/AST/NodeHasValue.h"
 #include "OptimizerModule.h"
 
 #include <iterator>

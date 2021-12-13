@@ -44,8 +44,8 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-#include "AST/AST.h"
-#include "LexerPipe.h"
+#include "shared/AST/AST.h"
+#include "Lexer/LexerPipe.h"
 #include "ParserErrorCode.h"
 
 namespace RaychelScript::Parser {

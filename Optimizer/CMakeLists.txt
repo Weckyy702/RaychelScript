@@ -3,11 +3,15 @@ cmake_minimum_required(VERSION 3.14)
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
 
-file(GLOB RAYCHELSCRIPT_OPTIMIZER_MODULE_HEADERS "include/modules/*.h")
+set(RAYCHELSCRIPT_OPTIMIZER_INCLUDE_DIR 
+    "include/Optimizer"
+)
+
+file(GLOB RAYCHELSCRIPT_OPTIMIZER_MODULE_HEADERS "${RAYCHELSCRIPT_OPTIMIZER_INCLUDE_DIR}modules/*.h")
 
 add_library(RaychelScriptOptimizer SHARED
-    "include/Optimizer.h"
-    "include/OptimizerPipe.h"
+    "${RAYCHELSCRIPT_OPTIMIZER_INCLUDE_DIR}/Optimizer.h"
+    "${RAYCHELSCRIPT_OPTIMIZER_INCLUDE_DIR}/OptimizerPipe.h"
     ${RAYCHELSCRIPT_OPTIMIZER_MODULE_HEADERS}
     "src/Optimizer.cpp"
 )

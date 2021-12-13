@@ -26,8 +26,10 @@
 * 
 */
 
-#include "Lexer.h"
+#include "Lexer/Lexer.h"
+
 #include <fstream>
+
 #include "RaychelLogger/Logger.h"
 int main(int /*unused*/, char** /*unused*/)
 {

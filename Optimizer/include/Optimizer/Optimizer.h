@@ -1,8 +1,8 @@
 /**
-* \file Concepts.h
+* \file Optimizer.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for Interpreter Concepts
-* \date 2021-12-07
+* \brief Header file for RaychelScript optimization functions
+* \date 2021-12-04
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,27 +25,28 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H
-#define RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H
+#ifndef RAYCHELSCRIPT_OPTIMIZER_H
+#define RAYCHELSCRIPT_OPTIMIZER_H
 
-#include <concepts>
+#include "modules/OptimizerModule.h"
 
-#include "Execution/DescriptorID.h"
+#include <vector>
 
-namespace RaychelScript::Interpreter {
+#include "shared/AST/AST.h"
 
-    template<typename T>
-    concept Descriptor = requires(const T& obj){
-        std::is_standard_layout_v<T> && std::is_trivial_v<T>;
+namespace RaychelScript::Optimizer {
 
-        typename T::value_type;
+    enum class OptimizationLevel { none, light, hard, all };
 
-        {obj.id()} -> std::same_as<DescriptorID>;
-        obj.value();
-    };
+    [[nodiscard]] std::vector<OptimizerModule_p> get_optimization_modules_for_level(OptimizationLevel level) noexcept;
 
-    //TODO: implement concepts that allow using the interpreter on any type
+    [[nodiscard]] AST optimize(const AST& ast, const std::vector<OptimizerModule_p>& modules) noexcept;
 
-}//namespace RaychelScript::Interpreter
+    [[nodiscard]] inline AST optimize(const AST& ast, OptimizationLevel level) noexcept
+    {
+        return optimize(ast, get_optimization_modules_for_level(level));
+    }
 
-#endif //!RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H
+} //namespace RaychelScript::Optimizer
+
+#endif //!RAYCHELSCRIPT_OPTIMIZER_H

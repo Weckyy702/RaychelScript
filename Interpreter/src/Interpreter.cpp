@@ -26,8 +26,8 @@
 * 
 */
 
-#include "Interpreter.h"
-#include "AST/NodeData.h"
+#include "Interpreter/Interpreter.h"
+#include "shared/AST/NodeData.h"
 
 #include <algorithm>
 #include <cerrno>

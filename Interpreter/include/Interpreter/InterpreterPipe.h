@@ -1,8 +1,8 @@
 /**
-* \file ParsingContext.h
+* \file InterpreterPipe.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for ParsingContext class
-* \date 2021-11-26
+* \brief Header file for Interpreter pipe API
+* \date 2021-12-04
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,24 +25,42 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
-#define RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
+#ifndef RAYCHELSCRIPT_INTERPRETER_PIPE_H
+#define RAYCHELSCRIPT_INTERPRETER_PIPE_H
 
-#include <cstdint>
-#include <stack>
-#include <vector>
+#include "Interpreter.h"
 
-#include "AST/NodeData.h"
+#include <map>
 
-#include "RaychelCore/AssertingOptional.h"
+#include "Parser/ParserPipe.h"
 
-namespace RaychelScript::Parser {
+namespace RaychelScript::Pipes {
 
-    struct ParsingContext
+    template <std::floating_point T = double>
+    class Interpret
     {
-        std::stack<AST_Node, std::vector<AST_Node>> scopes;
+    public:
+        explicit Interpret(const Interpreter::ParameterMap<T>& parameters) : parameters_{parameters}
+        {}
+
+        Interpreter::ExecutionResult<T> operator()(const AST& ast) const noexcept
+        {
+            return Interpreter::interpret(ast, parameters_);
+        }
+
+    private:
+        Interpreter::ParameterMap<T> parameters_;
     };
 
-} //namespace RaychelScript::Parser
+    template <std::floating_point T>
+    Interpreter::ExecutionResult<T> operator|(const Parser::ParseResult& input, const Interpret<T>& interpreter) noexcept
+    {
+        if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
+            return Interpreter::InterpreterErrorCode::no_input; //TODO: better error handling for this
+        }
+        return interpreter(Raychel::get<AST>(input));
+    }
 
-#endif //!RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
+} //namespace RaychelScript::Pipes
+
+#endif //!RAYCHELSCRIPT_INTERPRETER_PIPE_H

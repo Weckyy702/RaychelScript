@@ -1,7 +1,7 @@
 /**
-* \file LexResult.h
+* \file ParserPipe.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for LexResult class
+* \brief Header file for Parser pipe API
 * \date 2021-12-04
 * 
 * MIT License
@@ -25,19 +25,30 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_LEXRESULT_H
-#define RAYCHELSCRIPT_LEXRESULT_H
+#ifndef RAYCHELSCRIPT_PARSER_PIP_H
+#define RAYCHELSCRIPT_PARSER_PIP_H
 
-#include "Lexing/Token.h"
+#include "Lexer/LexerPipe.h"
+#include "Parser/Parser.h"
 
-#include <optional>
-#include <vector>
+namespace RaychelScript::Pipes {
 
-namespace RaychelScript::Lexer {
+    struct Parse
+    {
+        Parser::ParseResult operator()(const Lexer::LexResult& input) const noexcept
+        {
+            if (!input.has_value()) {
+                return Parser::ParserErrorCode::no_input;
+            }
+            return Parser::parse(input.value());
+        }
+    };
 
-    using SourceTokens = std::vector<std::vector<Token>>;
-    using LexResult = std::optional<SourceTokens>;
+    inline Parser::ParseResult operator|(const Lex& lexer, const Parse& parser) noexcept
+    {
+        return parser(lexer());
+    }
 
-} //namespace RaychelScript::Lexer
+} //namespace RaychelScript::Pipes
 
-#endif //!RAYCHELSCRIPT_LEXRESULT_H
+#endif //!RAYCHELSCRIPT_PARSER_PIP_H

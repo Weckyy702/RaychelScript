@@ -5,7 +5,7 @@
 #include <RaychelCore/AssertingOptional.h>
 #include <string>
 
-#include "SourceLocation.h"
+#include "shared/SourceLocation.h"
 #include "TokenType.h"
 
 namespace RaychelScript {

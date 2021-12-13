@@ -1,8 +1,8 @@
 /**
-* \file ParserPipe.h
+* \file ParsingContext.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for Parser pipe API
-* \date 2021-12-04
+* \brief Header file for ParsingContext class
+* \date 2021-11-26
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,30 +25,24 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_PARSER_PIP_H
-#define RAYCHELSCRIPT_PARSER_PIP_H
+#ifndef RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
+#define RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H
 
-#include "LexerPipe.h"
-#include "Parser.h"
+#include <cstdint>
+#include <stack>
+#include <vector>
 
-namespace RaychelScript::Pipes {
+#include "shared/AST/NodeData.h"
 
-    struct Parse
+#include "RaychelCore/AssertingOptional.h"
+
+namespace RaychelScript::Parser {
+
+    struct ParsingContext
     {
-        Parser::ParseResult operator()(const Lexer::LexResult& input) const noexcept
-        {
-            if (!input.has_value()) {
-                return Parser::ParserErrorCode::no_input;
-            }
-            return Parser::parse(input.value());
-        }
+        std::stack<AST_Node, std::vector<AST_Node>> scopes;
     };
 
-    inline Parser::ParseResult operator|(const Lex& lexer, const Parse& parser) noexcept
-    {
-        return parser(lexer());
-    }
+} //namespace RaychelScript::Parser
 
-} //namespace RaychelScript::Pipes
-
-#endif //!RAYCHELSCRIPT_PARSER_PIP_H
+#endif //!RAYCHELSCRIPT_PARSER_PARSING_CONTEXT_H

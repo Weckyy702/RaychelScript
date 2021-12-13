@@ -37,12 +37,12 @@
 #include <variant>
 #include <vector>
 
-#include "AST/NodeData.h"
-#include "IndentHandler.h"
-#include "Lexing/Alphabet.h"
-#include "Lexing/Token.h"
-#include "Parser.h"
-#include "ParsingContext.h"
+#include "shared/AST/NodeData.h"
+#include "shared/IndentHandler.h"
+#include "shared/Lexing/Alphabet.h"
+#include "shared/Lexing/Token.h"
+#include "Parser/Parser.h"
+#include "Parser/ParsingContext.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"

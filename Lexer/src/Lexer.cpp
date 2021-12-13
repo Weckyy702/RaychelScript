@@ -26,8 +26,9 @@
 * 
 */
 
-#include "Lexer.h"
-#include "Lexing/Alphabet.h"
+#include "shared/Lexing/Alphabet.h"
+
+#include "Lexer/Lexer.h"
 #include "RaychelLogger/Logger.h"
 
 namespace RaychelScript::Lexer {

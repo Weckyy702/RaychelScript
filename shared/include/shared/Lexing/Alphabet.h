@@ -5,7 +5,7 @@
 #include <array>
 #include <cctype>
 
-#include "Lexing/TokenType.h"
+#include "shared/Lexing/TokenType.h"
 
 namespace RaychelScript {
 

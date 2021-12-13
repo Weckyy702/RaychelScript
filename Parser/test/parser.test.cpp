@@ -25,16 +25,16 @@
 * SOFTWARE.
 * 
 */
-#include "ParserPipe.h"
+#include "Parser/ParserPipe.h"
 
 #include <RaychelCore/AssertingGet.h>
 #include <fstream>
 #include <string_view>
 #include <vector>
 
-#include "AST/NodeData.h"
-#include "IndentHandler.h"
-#include "Misc/PrintAST.h"
+#include "shared/AST/NodeData.h"
+#include "shared/IndentHandler.h"
+#include "shared/Misc/PrintAST.h"
 
 [[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& filename) noexcept
 {

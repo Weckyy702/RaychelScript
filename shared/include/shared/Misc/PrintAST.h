@@ -28,11 +28,11 @@
 #ifndef RAYCHELSCRIPT_PRINT_AST_H
 #define RAYCHELSCRIPT_PRINT_AST_H
 
-#include "AST/AST.h"
-#include "AST/NodeData.h"
-#include "WalkAST.h"
+#include "shared/AST/AST.h"
+#include "shared/AST/NodeData.h"
+#include "shared/IndentHandler.h"
 
-#include "IndentHandler.h"
+#include "WalkAST.h"
 
 namespace RaychelScript {
 

@@ -28,9 +28,9 @@
 #ifndef RAYCHELSCRIPT_PIPE_OPTIMIZER_H
 #define RAYCHELSCRIPT_PIPE_OPTIMIZER_H
 
-#include "AST/AST.h"
+#include "shared/AST/AST.h"
 #include "Optimizer.h"
-#include "ParserPipe.h"
+#include "Parser/ParserPipe.h"
 
 #include "RaychelCore/AssertingGet.h"
 

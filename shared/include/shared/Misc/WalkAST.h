@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_WALK_AST_H
 #define RAYCHELSCRIPT_WALK_AST_H
 
-#include "AST/AST.h"
-#include "AST/NodeData.h"
+#include "shared/AST/AST.h"
+#include "shared/AST/NodeData.h"
 
 #include <concepts>
 

@@ -26,12 +26,12 @@
 * 
 */
 
-#include "Misc/PrintAST.h"
-#include "OptimizerPipe.h"
-#include "InterpreterPipe.h"
+#include "shared/Misc/PrintAST.h"
+#include "Optimizer/OptimizerPipe.h"
+#include "Interpreter/InterpreterPipe.h"
 
-#include "modules/ConditionalsLight.h"
-#include "modules/RemoveIfNoSideEffects.h"
+#include "Optimizer/modules/ConditionalsLight.h"
+#include "Optimizer/modules/RemoveIfNoSideEffects.h"
 
 /**
 * \brief Very dumb algorithm to estimate the complexity of an AST

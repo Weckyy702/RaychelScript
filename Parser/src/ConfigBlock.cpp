@@ -29,8 +29,8 @@
 #include <array>
 #include <vector>
 
-#include "AST//AST.h"
-#include "Lexing/Token.h"
+#include "shared/AST/AST.h"
+#include "shared/Lexing/Token.h"
 
 using SourceTokens = std::vector<std::vector<RaychelScript::Token>>;
 using LineTokens = std::vector<RaychelScript::Token>;

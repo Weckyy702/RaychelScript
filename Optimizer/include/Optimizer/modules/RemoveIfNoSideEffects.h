@@ -28,7 +28,6 @@
 #ifndef RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_NO_SIDEEFFECTS_H
 #define RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_NO_SIDEEFFECTS_H
 
-#include "Misc/WalkAST.h"
 #include "OptimizerModule.h"
 
 namespace RaychelScript::Optimizer {

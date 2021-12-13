@@ -7,7 +7,7 @@
 #include <string>
 
 #include "LexResult.h"
-#include "Lexing/Token.h"
+#include "shared/Lexing/Token.h"
 
 #ifdef _WIN32
     #ifdef RaychelScriptLexer_EXPORTS

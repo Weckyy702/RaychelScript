@@ -1,13 +1,17 @@
 find_package(RaychelLogger REQUIRED)
 find_package(RaychelMath REQUIRED)
 
+set(RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR
+    "include/Interpreter"
+)
+
 add_library(RaychelScriptInterpreter SHARED
-    "include/Concepts.h"
-    "include/Interpreter.h"
-    "include/InterpreterErrorCode.h"
-    "include/InterpreterPipe.h"
-    "include/InterpreterState.h"
-    "include/StateFlags.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/Concepts.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/Interpreter.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterErrorCode.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterPipe.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterState.h"
+    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/StateFlags.h"
     
     "src/Interpreter.cpp"
 )

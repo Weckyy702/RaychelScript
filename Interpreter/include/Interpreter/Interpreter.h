@@ -38,18 +38,19 @@
     #define RAYCHELSCRIPT_INTERPRETER_API
 #endif
 
+#include "InterpreterErrorCode.h"
+#include "InterpreterState.h"
+
 #include <concepts>
 #include <map>
 #include <optional>
 #include <string>
 #include <variant>
 
-#include "AST/AST.h"
-#include "Execution/ConstantDescriptor.h"
-#include "Execution/VariableDescriptor.h"
-#include "InterpreterErrorCode.h"
-#include "InterpreterState.h"
-#include "Parser.h"
+#include "shared/AST/AST.h"
+#include "shared/Execution/ConstantDescriptor.h"
+#include "shared/Execution/VariableDescriptor.h"
+#include "Parser/Parser.h"
 
 #include "RaychelCore/AssertingGet.h"
 

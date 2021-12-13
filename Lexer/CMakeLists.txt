@@ -1,10 +1,15 @@
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
 
+set(RAYCHELSCRIPT_LEXER_INCLUDE_DIR
+    "include/Lexer"
+)
+
 add_library(RaychelScriptLexer SHARED
-    "include/Lexer.h"
-    "include/LexResult.h"
-    "include/LexerPipe.h"
+    "${RAYCHELSCRIPT_LEXER_INCLUDE_DIR}/Lexer.h"
+    "${RAYCHELSCRIPT_LEXER_INCLUDE_DIR}/LexResult.h"
+    "${RAYCHELSCRIPT_LEXER_INCLUDE_DIR}/LexerPipe.h"
+    
     "src/Lexer.cpp"
 )
 

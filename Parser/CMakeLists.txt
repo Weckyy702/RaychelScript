@@ -3,10 +3,14 @@ cmake_minimum_required(VERSION 3.14)
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
 
+set(RAYCHELSCRIPT_PARSER_INCLUDE_DIR
+    "include/Parser/"
+)
+
 add_library(RaychelScriptParser SHARED
-    "include/Parser.h"
-    "include/ParsingContext.h"
-    "include/ParserPipe.h"
+    "${RAYCHELSCRIPT_PARSER_INCLUDE_DIR}/Parser.h"
+    "${RAYCHELSCRIPT_PARSER_INCLUDE_DIR}/ParsingContext.h"
+    "${RAYCHELSCRIPT_PARSER_INCLUDE_DIR}/ParserPipe.h"
     "src/Parser.cpp"
     "src/ConfigBlock.cpp"
     "src/BodyBlock.cpp"

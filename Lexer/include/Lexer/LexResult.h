@@ -1,7 +1,7 @@
 /**
-* \file InterpreterPipe.h
+* \file LexResult.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for Interpreter pipe API
+* \brief Header file for LexResult class
 * \date 2021-12-04
 * 
 * MIT License
@@ -25,42 +25,19 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_INTERPRETER_PIPE_H
-#define RAYCHELSCRIPT_INTERPRETER_PIPE_H
+#ifndef RAYCHELSCRIPT_LEXRESULT_H
+#define RAYCHELSCRIPT_LEXRESULT_H
 
-#include "Interpreter.h"
+#include "shared/Lexing/Token.h"
 
-#include <map>
+#include <optional>
+#include <vector>
 
-#include "ParserPipe.h"
+namespace RaychelScript::Lexer {
 
-namespace RaychelScript::Pipes {
+    using SourceTokens = std::vector<std::vector<Token>>;
+    using LexResult = std::optional<SourceTokens>;
 
-    template <std::floating_point T = double>
-    class Interpret
-    {
-    public:
-        explicit Interpret(const Interpreter::ParameterMap<T>& parameters) : parameters_{parameters}
-        {}
+} //namespace RaychelScript::Lexer
 
-        Interpreter::ExecutionResult<T> operator()(const AST& ast) const noexcept
-        {
-            return Interpreter::interpret(ast, parameters_);
-        }
-
-    private:
-        Interpreter::ParameterMap<T> parameters_;
-    };
-
-    template <std::floating_point T>
-    Interpreter::ExecutionResult<T> operator|(const Parser::ParseResult& input, const Interpret<T>& interpreter) noexcept
-    {
-        if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
-            return Interpreter::InterpreterErrorCode::no_input; //TODO: better error handling for this
-        }
-        return interpreter(Raychel::get<AST>(input));
-    }
-
-} //namespace RaychelScript::Pipes
-
-#endif //!RAYCHELSCRIPT_INTERPRETER_PIPE_H
+#endif //!RAYCHELSCRIPT_LEXRESULT_H
