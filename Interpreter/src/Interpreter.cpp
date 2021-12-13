@@ -163,12 +163,12 @@ namespace RaychelScript::Interpreter {
 
         const auto value = state.registers.result;
 
-        if (Raychel::is_integer(value) && value < 0) {
+        if (state.registers.flags & StateFlags::negative && Raychel::is_integer(value)) {
             Logger::error("Cannot compute factorial of negative integer value!\n");
             return InterpreterErrorCode::invalid_argument;
         }
 
-        if (Raychel::equivalent<T>(value, 0)) {
+        if (state.registers.flags & StateFlags::zero) {
             state.registers.result = 1;
         } else {
             state.registers.result = std::tgamma(value + 1);
@@ -225,7 +225,7 @@ namespace RaychelScript::Interpreter {
         class PushState
         {
 
-            RAYCHEL_MAKE_NONCOPY_NONMOVE(PushState);
+            RAYCHEL_MAKE_NONCOPY_NONMOVE(PushState)
 
         public:
             explicit PushState(State<T>& state) : state_{state}
@@ -438,7 +438,7 @@ namespace RaychelScript::Interpreter {
                 state.registers.result = state.registers.a * state.registers.b;
                 break;
             case Op::divide:
-                if (Raychel::equivalent<T>(state.registers.b, 0)) {
+                if (state.registers.flags & StateFlags::zero) {
                     return InterpreterErrorCode::divide_by_zero;
                 }
                 state.registers.result = state.registers.a / state.registers.b;
