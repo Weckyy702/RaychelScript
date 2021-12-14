@@ -99,6 +99,15 @@ namespace RaychelScript {
         template <std::floating_point T>
         RAYCHELSCRIPT_INTERPRETER_API [[nodiscard]] ExecutionResult<T>
         interpret(const AST& ast, const ParameterMap<T>& parameters) noexcept;
+
+        namespace details {
+            inline void _instantiate_entry_points_header() noexcept
+            {
+                [[maybe_unused]] auto _float = interpret<float>(AST{}, {});
+                [[maybe_unused]] auto _double = interpret<double>(AST{}, {});
+                [[maybe_unused]] auto _long_double = interpret<long double>(AST{}, {});
+            }
+        }
     } // namespace Interpreter
 
 } // namespace RaychelScript
