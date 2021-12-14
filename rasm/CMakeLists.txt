@@ -37,7 +37,3 @@ target_link_libraries(RaychelScriptAssembly INTERFACE
     RaychelLogger
     RaychelScriptBase
 )
-
-if(${RAYCHELSCRIPT_BUILD_TESTS})
-    add_subdirectory(test)
-endif()
