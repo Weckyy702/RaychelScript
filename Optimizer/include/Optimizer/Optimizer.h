@@ -34,13 +34,23 @@
 
 #include "shared/AST/AST.h"
 
+#ifdef _WIN32
+    #ifdef RaychelScriptParser_EXPORTS
+        #define RAYCHELSCRIPT_OPTIMIZER_API __declspec(dllexport)
+    #else
+        #define RAYCHELSCRIPT_OPTIMIZER_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_OPTIMIZER_API
+#endif
+
 namespace RaychelScript::Optimizer {
 
     enum class OptimizationLevel { none, light, hard, all };
 
-    [[nodiscard]] std::vector<OptimizerModule_p> get_optimization_modules_for_level(OptimizationLevel level) noexcept;
+    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] std::vector<OptimizerModule_p> get_optimization_modules_for_level(OptimizationLevel level) noexcept;
 
-    [[nodiscard]] AST optimize(const AST& ast, const std::vector<OptimizerModule_p>& modules) noexcept;
+    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] AST optimize(const AST& ast, const std::vector<OptimizerModule_p>& modules) noexcept;
 
     [[nodiscard]] inline AST optimize(const AST& ast, OptimizationLevel level) noexcept
     {
