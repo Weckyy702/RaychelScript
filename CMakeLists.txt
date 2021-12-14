@@ -27,6 +27,13 @@ if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
     set(RAYCHELSCRIPT_BUILD_VM ON)
 endif()
 
+if(${MSVC})
+    if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+        message(STATUS "MSVC does not support UBSAN :(")
+        set(RAYCHELSCRIPT_ENABLE_UBSAN OFF)
+    endif()
+endif()
+
 if(${RAYCHELSCRIPT_ENABLE_ASAN})
     message(STATUS "Enabled ASAN instrumentation")
 endif()
