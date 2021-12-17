@@ -28,46 +28,96 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 #define RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 
+#include "InstructionData.h"
 #include "OpCode.h"
+
+#include <optional>
+#include <ostream>
 
 namespace RaychelScript::Assembly {
 
     class Instruction
     {
-        //this struct exclusively exists to make clang-tidy happy
-        struct IOData
-        {
-            explicit IOData(std::uint8_t);
-
-            std::uint8_t input{0}, output{0};
-        };
-
     public:
-        explicit Instruction(OpCode code, IOData io_data) : code_{code}, input_{io_data.input}, output_{io_data.output}
+        explicit Instruction(OpCode code, InstructionData data1 = {}, InstructionData data2 = {})
+            : code_{code}, data1_{data1}, data2_{data2}
         {}
 
-        std::uint32_t to_binary() noexcept
+        static std::optional<Instruction> from_binary(std::uint32_t data) noexcept
+        {
+            const auto op_code = static_cast<OpCode>((data >> 24U) & 0xFFU);
+            if (op_code >= OpCode::num_op_codes) {
+                return std::nullopt;
+            }
+
+            InstructionData data1;
+            {
+                auto index = static_cast<std::uint32_t>((data >> 16U) & 0xFFU);
+                if (index & 0x80U) {
+                    index &= ~0x80U;
+                    if ((index) > static_cast<std::uint32_t>(Register::num_registers)) {
+                        return std::nullopt;
+                    }
+                    data1 = InstructionData{static_cast<Register>(index)};
+                } else {
+                    data1 = InstructionData{operator ""_mi(index)};
+                }
+            }
+
+            InstructionData data2;
+            {
+                const auto index = static_cast<std::uint32_t>((data >> 8U) & 0xFFU);
+                if (index & 0x80U) {
+                    if ((index & ~0x80U) > static_cast<std::uint32_t>(Register::num_registers)) {
+                        return std::nullopt;
+                    }
+                    data2 = InstructionData{static_cast<Register>(index & ~0x80U)};
+                } else {
+                    data1 = InstructionData{operator ""_mi(index)};
+                }
+            }
+
+            return Instruction{op_code, data1, data2};
+        }
+
+        std::uint32_t to_binary() const noexcept
         {
             /*
             Instruction layout:
             |........|........|........|........|
-            OpCode    input    output   reserved
+             OpCode   DATA1    DATA2    reserved
             */
 
             std::uint32_t instr = 0U;
 
-            instr |= static_cast<std::uint32_t>(code_) << 24U;
-            instr |= static_cast<std::uint32_t>(input_) << 16U;
-            instr |= static_cast<std::uint32_t>(output_) << 8U;
+            instr |= (static_cast<std::uint32_t>(code_) & 0xFFU) << 24U;
+            instr |= (data1_.to_binary() & 0xFFU) << 16U;
+            instr |= (data2_.to_binary() & 0xFFU) << 8U;
 
             return instr;
         }
 
+        friend std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept;
+
     private:
         OpCode code_;
-        std::uint8_t input_;
-        std::uint8_t output_;
+        InstructionData data1_;
+        InstructionData data2_;
     };
+
+    inline std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept
+    {
+        auto num_args = number_of_arguments(instr.code_);
+
+        os << instr.code_;
+        if (num_args > 0) {
+            os << ' ' << instr.data1_;
+        }
+        if (num_args > 1) {
+            os << ' ' << instr.data2_;
+        }
+        return os;
+    }
 
 } //namespace RaychelScript::Assembly
 

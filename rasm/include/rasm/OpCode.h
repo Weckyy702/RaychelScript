@@ -29,29 +29,30 @@
 #define RAYCHELSCRIPT_ASSEMBLY_OPCODE_H
 
 #include <cstdint>
+#include <ostream>
 #include <string_view>
+
+#include "RaychelCore/Raychel_assert.h"
 
 namespace RaychelScript::Assembly {
 
     enum class OpCode : std::uint8_t {
-        mov, //move
-        ldi, //load immediate
+        mov=1, //move values around
         add, //add b to a
         sub, //subtract b from a
         mul, //multiply a by b
         div, //divide a by b
-        abs, //take the absolute value of a
+        mag, //take the magnitude of a
         fac, //compute the factorial of a
+
+        num_op_codes
     };
 
-    std::string_view to_mnemonic(OpCode code) noexcept
+    [[nodiscard]] constexpr std::string_view to_mnemonic(OpCode code) noexcept
     {
-
         switch (code) {
             case OpCode::mov:
                 return "MOV";
-            case OpCode::ldi:
-                return "LDI";
             case OpCode::add:
                 return "ADD";
             case OpCode::sub:
@@ -60,12 +61,36 @@ namespace RaychelScript::Assembly {
                 return "MUL";
             case OpCode::div:
                 return "DIV";
-            case OpCode::abs:
-                return "ABS";
+            case OpCode::mag:
+                return "MAG";
             case OpCode::fac:
                 return "FAC";
+            case OpCode::num_op_codes:
+                break;
         }
         return "<unknown>";
+    }
+
+    [[nodiscard]] constexpr std::size_t number_of_arguments(OpCode code) noexcept
+    {
+        switch (code) {
+            case OpCode::mov:
+                return 2;
+            case OpCode::add:
+            case OpCode::sub:
+            case OpCode::mul:
+            case OpCode::div:
+            case OpCode::mag:
+            case OpCode::fac:
+            case OpCode::num_op_codes:
+                return 0;
+        }
+        RAYCHEL_ASSERT_NOT_REACHED;
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, OpCode code) noexcept
+    {
+        return os << to_mnemonic(code);
     }
 
 } //namespace RaychelScript::Assembly
