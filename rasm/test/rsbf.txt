@@ -1,0 +1,25 @@
+#Array::
+#u32 size of the array
+#array data
+#Syntax [ type ]
+
+#String::
+# [ u8 ]
+
+u32 magic word
+
+u32 version number
+
+#I/O section
+u32 number of input identifiers
+[ String input identifiers ]
+u32 number of output identifiers
+[ String output identifiers ]
+
+#Function section (not implemented)
+u32 number of function hashes
+[ u32 hash of function names ]
+
+#Text section
+u32 number of instrucions
+[ u32 instrucion data ]
