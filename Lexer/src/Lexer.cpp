@@ -25,10 +25,10 @@
 * SOFTWARE.
 * 
 */
-
+#include "Lexer/Lexer.h"
 #include "shared/Lexing/Alphabet.h"
 
-#include "Lexer/Lexer.h"
+#include "RaychelCore/AssertingGet.h"
 #include "RaychelLogger/Logger.h"
 
 namespace RaychelScript::Lexer {
@@ -64,7 +64,7 @@ namespace RaychelScript::Lexer {
     }
 
     //TODO: make this code less awful
-    std::optional<std::vector<Token>> _lex_raw(std::istream& source_stream) noexcept
+    std::variant<std::vector<Token>, LexerErrorCode> _lex_raw(std::istream& source_stream) noexcept
     {
         std::vector<Token> tokens{};
         std::string current_token{};
@@ -147,7 +147,7 @@ namespace RaychelScript::Lexer {
                 tokens.emplace_back(static_cast<TokenType::TokenType>(c), SourceLocation{line_number, column_number});
             } else {
                 if (!handle_regular_char(c)) {
-                    return {};
+                    return LexerErrorCode::invalid_token;
                 }
             }
         }
@@ -156,14 +156,8 @@ namespace RaychelScript::Lexer {
         return tokens;
     }
 
-    std::optional<std::vector<std::vector<Token>>>
-    combine_tokens_into_lines(const std::optional<std::vector<Token>>& _raw_tokens) noexcept
+    std::vector<std::vector<Token>> combine_tokens_into_lines(const std::vector<Token>& raw_tokens) noexcept
     {
-        if (!_raw_tokens.has_value()) {
-            return {};
-        }
-
-        const auto& raw_tokens = *_raw_tokens;
         std::vector<std::vector<Token>> tokens;
         std::vector<Token> current_line;
 
@@ -188,7 +182,11 @@ namespace RaychelScript::Lexer {
 
     LexResult lex(std::istream& source_stream) noexcept
     {
-        return combine_tokens_into_lines(_lex_raw(source_stream));
+        const auto tokens_or_error = _lex_raw(source_stream);
+        if (const auto* ec = std::get_if<LexerErrorCode>(&tokens_or_error); ec) {
+            return *ec;
+        }
+        return combine_tokens_into_lines(Raychel::get<std::vector<Token>>(tokens_or_error));
     }
 
 } // namespace RaychelScript::Lexer

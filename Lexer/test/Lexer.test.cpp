@@ -30,32 +30,23 @@
 
 #include <fstream>
 
+#include "RaychelCore/AssertingGet.h"
 #include "RaychelLogger/Logger.h"
+
 int main(int /*unused*/, char** /*unused*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    // RaychelScript::lex(R"(
-    //     [[config]]
-    //     name alsdkjfsdaklj
-    //     input x, y, z, r
-    //     output d
-
-    //     [[body]]
-    //     d = sqrt(x^2 + y^2 + z^2) - 2
-    //)");
-
-    // Logger::setLogColor(Logger::LogLevel::debug, "\033[31;m");
 
     std::ifstream in_file{"../../../shared/test/conditionals.rsc"};
-    const auto lines = RaychelScript::Lexer::lex(in_file);
+    const auto lines_or_error = RaychelScript::Lexer::lex(in_file);
 
-    if (!lines.has_value()) {
-        return EXIT_FAILURE;
+    if (const auto* ec = std::get_if<RaychelScript::Lexer::LexerErrorCode>(&lines_or_error); ec) {
+        return 1;
     }
 
     std::size_t line_no = 1U;
 
-    for (const auto& line : *lines) {
+    for (const auto& line : Raychel::get<RaychelScript::Lexer::SourceTokens>(lines_or_error)) {
         Logger::log(line_no, ": ");
         for (const auto& [type, _1, _2] : line) {
             Logger::log(RaychelScript::token_type_to_string(type), ' ');

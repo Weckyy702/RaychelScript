@@ -66,7 +66,7 @@ namespace RaychelScript::Pipes {
         Lexer::LexResult operator()() const noexcept
         {
             if (!source_stream_) {
-                return {};
+                return Lexer::LexerErrorCode::no_input;
             }
 
             return Lexer::lex(*source_stream_);

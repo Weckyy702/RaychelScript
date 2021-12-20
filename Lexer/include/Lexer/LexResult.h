@@ -30,13 +30,48 @@
 
 #include "shared/Lexing/Token.h"
 
-#include <optional>
+#include <ostream>
+#include <string_view>
+#include <variant>
 #include <vector>
 
 namespace RaychelScript::Lexer {
 
+    enum class [[nodiscard]] LexerErrorCode{
+        ok,
+        no_input,
+        invalid_number,
+        invalid_token,
+        reserved_identifier,
+        unmatched_parenthesis,
+    };
+
+    constexpr std::string_view error_code_to_reason_string(LexerErrorCode error_code) noexcept
+    {
+        switch (error_code) {
+            case LexerErrorCode::ok:
+                return "No error :)";
+            case LexerErrorCode::no_input:
+                return "No Input";
+            case LexerErrorCode::invalid_number:
+                return "Invalid Number";
+            case LexerErrorCode::invalid_token:
+                return "Invalid Token";
+            case LexerErrorCode::reserved_identifier:
+                return "Use of Reserved Identifier";
+            case LexerErrorCode::unmatched_parenthesis:
+                return "Unmatched Parenthesis";
+        }
+        return "<unknown error>";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, LexerErrorCode ec)
+    {
+        return os << error_code_to_reason_string(ec);
+    }
+
     using SourceTokens = std::vector<std::vector<Token>>;
-    using LexResult = std::optional<SourceTokens>;
+    using LexResult = std::variant<SourceTokens, LexerErrorCode>;
 
 } //namespace RaychelScript::Lexer
 
