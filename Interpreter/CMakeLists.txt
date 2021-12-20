@@ -36,12 +36,12 @@ else()
         -Werror
     )
     if(${RAYCHELSCRIPT_ENABLE_ASAN})
-        target_compile_options(RaychelScriptLexer PUBLIC
+        target_compile_options(RaychelScriptInterpreter PUBLIC
             -fsanitize=address
         )
     endif()
     if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-        target_compile_options(RaychelScriptLexer PUBLIC
+        target_compile_options(RaychelScriptInterpreter PUBLIC
             -fsanitize=undefined
         )
     endif()
@@ -54,12 +54,12 @@ target_link_libraries(RaychelScriptInterpreter PUBLIC
 )
 
 if(${RAYCHELSCRIPT_ENABLE_ASAN})
-    target_link_options(RaychelScriptLexer PUBLIC
+    target_link_options(RaychelScriptInterpreter PUBLIC
         -fsanitize=address
     )
 endif()
 if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-    target_link_options(RaychelScriptLexer PUBLIC
+    target_link_options(RaychelScriptInterpreter PUBLIC
         -fsanitize=undefined
     )
 endif()
