@@ -28,11 +28,12 @@
 #ifndef RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H
 #define RAYCHELSCRIPT_EXECUTION_ERROR_CODE_H
 
+#include <ostream>
 #include <string_view>
 
 namespace RaychelScript::Interpreter {
 
-    enum class [[nodiscard]] InterpreterErrorCode{
+    enum class InterpreterErrorCode {
         ok,
         no_input,
         not_enough_input_identifiers,
@@ -83,6 +84,11 @@ namespace RaychelScript::Interpreter {
                 return "Attempt to pop empty scope stack"sv;
         }
         return "<Unknown Reason>"sv;
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, InterpreterErrorCode ec)
+    {
+        return os << error_code_to_reason_string(ec);
     }
 
 } // namespace RaychelScript::Interpreter
