@@ -44,7 +44,6 @@ namespace RaychelScript::Assembly {
         std::vector<Instruction> instructions;
     };
 
-
-}//namespace RaychelScript
+} // namespace RaychelScript::Assembly
 
 #endif //!RAYCHELSCRIPT_VM_DATA_H

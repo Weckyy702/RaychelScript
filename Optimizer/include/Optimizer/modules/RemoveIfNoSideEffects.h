@@ -29,6 +29,8 @@
 #define RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_NO_SIDEEFFECTS_H
 
 #include "OptimizerModule.h"
+#include "shared/AST/AST.h"
+#include "shared/AST/NodeData.h"
 
 namespace RaychelScript::Optimizer {
 
@@ -53,7 +55,7 @@ namespace RaychelScript::Optimizer {
         ~RemoveIfNoSideEffects() override = default;
 
     private:
-        void _remove_children_if_no_side_effect(std::vector<AST_Node>& nodes) const noexcept
+        static void _remove_children_if_no_side_effect(std::vector<AST_Node>& nodes) noexcept
         {
             for (auto it = nodes.begin(); it != nodes.end();) {
                 if (it->type() == NodeType::conditional_construct) {
@@ -67,7 +69,7 @@ namespace RaychelScript::Optimizer {
             }
         }
 
-        void _handle_conditional_children(std::vector<AST_Node>::iterator it) const noexcept
+        static void _handle_conditional_children(std::vector<AST_Node>::iterator it) noexcept
         {
             auto data = it->to_node_data<ConditionalConstructData>();
             _remove_children_if_no_side_effect(data.body);

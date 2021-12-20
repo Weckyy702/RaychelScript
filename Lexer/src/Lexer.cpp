@@ -54,10 +54,10 @@ namespace RaychelScript::Lexer {
         if (token == "false") {
             return TokenType::literal_false;
         }
-        if(token == "while") {
+        if (token == "while") {
             return TokenType::loop_header;
         }
-        if(token == "endwhile") {
+        if (token == "endwhile") {
             return TokenType::loop_footer;
         }
         return TokenType::identifer;

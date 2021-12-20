@@ -34,18 +34,21 @@
 
 namespace RaychelScript::Interpreter {
 
-    template<typename T>
-    concept Descriptor = requires(const T& obj){
-        std::is_standard_layout_v<T> && std::is_trivial_v<T>;
+    template <typename T>
+    concept Descriptor = requires(const T& obj)
+    {
+        std::is_standard_layout_v<T>&& std::is_trivial_v<T>;
 
         typename T::value_type;
 
-        {obj.id()} -> std::same_as<DescriptorID>;
+        {
+            obj.id()
+        } -> std::same_as<DescriptorID>;
         obj.value();
     };
 
     //TODO: implement concepts that allow using the interpreter on any type
 
-}//namespace RaychelScript::Interpreter
+} //namespace RaychelScript::Interpreter
 
 #endif //!RAYCHELSCRIPT_INTERPRETER_CONCEPTS_H

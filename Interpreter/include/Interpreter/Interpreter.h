@@ -47,10 +47,10 @@
 #include <string>
 #include <variant>
 
+#include "Parser/Parser.h"
 #include "shared/AST/AST.h"
 #include "shared/Execution/ConstantDescriptor.h"
 #include "shared/Execution/VariableDescriptor.h"
-#include "Parser/Parser.h"
 
 #include "RaychelCore/AssertingGet.h"
 
@@ -107,8 +107,8 @@ namespace RaychelScript {
                 [[maybe_unused]] auto _double = interpret<double>(AST{}, {});
                 [[maybe_unused]] auto _long_double = interpret<long double>(AST{}, {});
             }
-        }
-    } // namespace Interpreter
+        } // namespace details
+    }     // namespace Interpreter
 
 } // namespace RaychelScript
 

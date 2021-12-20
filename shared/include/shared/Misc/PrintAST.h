@@ -150,7 +150,7 @@ namespace RaychelScript {
             Logger::log("LOOP\n");
             print_node(data.condition_node, "condition=");
 
-            for(const auto& body_node : data.body) {
+            for (const auto& body_node : data.body) {
                 print_node(body_node, "body=");
             }
         }

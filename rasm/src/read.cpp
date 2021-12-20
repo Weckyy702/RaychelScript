@@ -28,6 +28,7 @@
 
 #include "rasm/read.h"
 
+#include <array>
 #include <concepts>
 #include <cstring>
 #include <optional>
@@ -39,7 +40,7 @@
     if (const auto maybe_value = details::read<out_type>(stream); !maybe_value.has_value()) {                                    \
         return error_return;                                                                                                     \
     } else { /*NOLINT*/                                                                                                          \
-        out_name = maybe_value.value();                                                                                          \
+        (out_name) = maybe_value.value();                                                                                        \
     }
 
 namespace RaychelScript::Assembly {
@@ -53,16 +54,16 @@ namespace RaychelScript::Assembly {
         std::optional<T> read(std::istream& stream) noexcept
         {
             constexpr auto byte_size = sizeof(T);
-            char byte_data[byte_size]{};
+            std::array<char, byte_size> bytes{};
 
-            stream.read(byte_data, byte_size);
+            stream.read(bytes.data(), byte_size);
 
             if (!stream.good()) {
                 return std::nullopt;
             }
 
             T obj{};
-            std::memcpy(&obj, byte_data, byte_size);
+            std::memcpy(&obj, bytes.data(), byte_size);
 
             return obj;
         }
@@ -76,14 +77,14 @@ namespace RaychelScript::Assembly {
             obj.reserve(string_size);
 
             for (std::uint32_t i = 0; i < string_size; i++) {
-                TRY_READ(char, c, std::nullopt)
-                obj.push_back(c);
+                TRY_READ(char, next_char, std::nullopt)
+                obj.push_back(next_char);
             }
 
             return obj;
         }
 
-        template<>
+        template <>
         std::optional<Instruction> read<Instruction>(std::istream& stream) noexcept
         {
             TRY_READ(std::uint32_t, data, std::nullopt)
@@ -99,9 +100,9 @@ namespace RaychelScript::Assembly {
             std::vector<T> obj{};
             obj.reserve(vector_size);
 
-            for(std::uint32_t i = 0; i <  vector_size; i++) {
-                TRY_READ(T, t, std::nullopt)
-                obj.emplace_back(std::move(t));
+            for (std::uint32_t i = 0; i < vector_size; i++) {
+                TRY_READ(T, elem, std::nullopt)
+                obj.emplace_back(std::move(elem));
             }
 
             return obj;
@@ -130,12 +131,12 @@ namespace RaychelScript::Assembly {
         }
 
         auto maybe_input_identifiers = details::read_vector<std::string>(stream);
-        if(!maybe_input_identifiers.has_value()) {
+        if (!maybe_input_identifiers.has_value()) {
             return ReadingErrorCode::reading_failure;
         }
 
         auto maybe_output_identifiers = details::read_vector<std::string>(stream);
-        if(!maybe_output_identifiers.has_value()) {
+        if (!maybe_output_identifiers.has_value()) {
             return ReadingErrorCode::reading_failure;
         }
 
@@ -143,9 +144,9 @@ namespace RaychelScript::Assembly {
         std::vector<Instruction> instructions;
         instructions.reserve(num_instructions);
 
-        for(std::size_t i = 0; i < num_instructions; i++) {
+        for (std::size_t i = 0; i < num_instructions; i++) {
             auto maybe_instruction = details::read<Instruction>(stream);
-            if(!maybe_instruction.has_value()) {
+            if (!maybe_instruction.has_value()) {
                 return ReadingErrorCode::reading_failure;
             }
             instructions.emplace_back(maybe_instruction.value());

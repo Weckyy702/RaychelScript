@@ -47,15 +47,7 @@ int main()
     Instruction mag{OpCode::mag};
     Instruction fac{OpCode::fac};
 
-    std::vector<Instruction> instructions{
-        mov,
-        add,
-        div,
-        Instruction{OpCode::mov, 0_mi, Register::a},
-        sub,
-        add,
-        mov
-    };
+    std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, Register::a}, sub, add, mov};
 
     if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, instructions})) {
         Logger::error("Writing failed!\n");

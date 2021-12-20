@@ -87,7 +87,7 @@ namespace RaychelScript {
         std::string name;
     };
 
-    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, ValueType::number, true>
+    struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, ValueType::number, false>
     {
         long double value;
     };

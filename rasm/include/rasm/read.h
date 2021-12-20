@@ -31,11 +31,11 @@
 #include "VMData.h"
 #include "magic.h"
 
-#include <variant>
-#include <istream>
 #include <fstream>
+#include <istream>
 #include <string>
 #include <string_view>
+#include <variant>
 
 namespace RaychelScript::Assembly {
 
@@ -55,6 +55,6 @@ namespace RaychelScript::Assembly {
         return read_rsbf(stream);
     }
 
-}//namespace RaychelScript::Assembly
+} //namespace RaychelScript::Assembly
 
 #endif //!RAYCHELSCRIPT_ASSEMBLY_READ  _H

@@ -28,6 +28,7 @@
 
 #include "rasm/write.h"
 
+#include <array>
 #include <bit>
 #include <concepts>
 #include <cstring>
@@ -46,11 +47,11 @@ namespace RaychelScript::Assembly {
     bool write(std::ostream& stream, T data) noexcept
     {
         constexpr auto byte_size = sizeof(T);
-        char byte_data[byte_size]{};
+        std::array<char, byte_size> bytes{};
 
-        std::memcpy(byte_data, &data, byte_size); //non-UB reinterpret_cast
+        std::memcpy(bytes.data(), &data, byte_size); //non-UB reinterpret_cast
 
-        stream.write(byte_data, byte_size);
+        stream.write(bytes.data(), byte_size);
 
         return stream.good();
     }
@@ -76,8 +77,7 @@ namespace RaychelScript::Assembly {
         return true;
     }
 
-    [[nodiscard]] bool write_rsbf(
-        std::ostream& stream, const VMData& data) noexcept
+    [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept
     {
         if (!stream) {
             return false;

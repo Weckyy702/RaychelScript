@@ -35,4 +35,4 @@ namespace RaychelScript::Assembly {
         return 0x1;
     }
 
-}//namespace RaychelScript::Assembly
+} //namespace RaychelScript::Assembly

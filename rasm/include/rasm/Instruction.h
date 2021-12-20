@@ -53,34 +53,34 @@ namespace RaychelScript::Assembly {
             InstructionData data1;
             {
                 auto index = static_cast<std::uint32_t>((data >> 16U) & 0xFFU);
-                if (index & 0x80U) {
+                if ((index & 0x80U) != 0U) {
                     index &= ~0x80U;
                     if ((index) > static_cast<std::uint32_t>(Register::num_registers)) {
                         return std::nullopt;
                     }
                     data1 = InstructionData{static_cast<Register>(index)};
                 } else {
-                    data1 = InstructionData{operator ""_mi(index)};
+                    data1 = InstructionData{make_memory_index(index)};
                 }
             }
 
             InstructionData data2;
             {
                 const auto index = static_cast<std::uint32_t>((data >> 8U) & 0xFFU);
-                if (index & 0x80U) {
+                if ((index & 0x80U) != 0U) {
                     if ((index & ~0x80U) > static_cast<std::uint32_t>(Register::num_registers)) {
                         return std::nullopt;
                     }
                     data2 = InstructionData{static_cast<Register>(index & ~0x80U)};
                 } else {
-                    data1 = InstructionData{operator ""_mi(index)};
+                    data1 = InstructionData{make_memory_index(index)};
                 }
             }
 
             return Instruction{op_code, data1, data2};
         }
 
-        std::uint32_t to_binary() const noexcept
+        [[nodiscard]] std::uint32_t to_binary() const noexcept
         {
             /*
             Instruction layout:

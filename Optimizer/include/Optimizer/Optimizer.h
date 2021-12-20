@@ -48,9 +48,11 @@ namespace RaychelScript::Optimizer {
 
     enum class OptimizationLevel { none, light, hard, all };
 
-    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] std::vector<OptimizerModule_p> get_optimization_modules_for_level(OptimizationLevel level) noexcept;
+    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] std::vector<OptimizerModule_p>
+    get_optimization_modules_for_level(OptimizationLevel level) noexcept;
 
-    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] AST optimize(const AST& ast, const std::vector<OptimizerModule_p>& modules) noexcept;
+    RAYCHELSCRIPT_OPTIMIZER_API [[nodiscard]] AST
+    optimize(const AST& ast, const std::vector<OptimizerModule_p>& modules) noexcept;
 
     [[nodiscard]] inline AST optimize(const AST& ast, OptimizationLevel level) noexcept
     {

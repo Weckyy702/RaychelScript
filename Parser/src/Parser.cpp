@@ -67,7 +67,7 @@ namespace RaychelScript::Parser {
     }
 
     //see BodyBlock.cpp for details
-    std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept;
+    ParseResult parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept;
 
     //see ConfigBlock.cpp for details
     [[nodiscard]] bool parse_config_block(const SourceTokens& config_tokens, AST& ast) noexcept;
@@ -104,7 +104,7 @@ namespace RaychelScript::Parser {
         return std::make_pair(std::move(config_tokens), std::move(body_tokens));
     }
 
-    std::variant<AST, ParserErrorCode> parse(const SourceTokens& source_tokens) noexcept
+    ParseResult parse(const SourceTokens& source_tokens) noexcept
     {
         if (source_tokens.empty()) {
             Logger::error("got empty token list!\n");
@@ -138,7 +138,7 @@ namespace RaychelScript::Parser {
         return parse_body_block(body_tokens, ast);
     }
 
-    std::variant<AST, ParserErrorCode> _parse_no_config_check(const SourceTokens& source_tokens) noexcept
+    ParseResult _parse_no_config_check(const SourceTokens& source_tokens) noexcept
     {
         AST ast;
         return parse_body_block(source_tokens, ast);

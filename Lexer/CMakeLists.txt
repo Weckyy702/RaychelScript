@@ -32,6 +32,7 @@ else()
         -Wconversion
         -Werror
     )
+
     if(${RAYCHELSCRIPT_ENABLE_ASAN})
         target_compile_options(RaychelScriptLexer PUBLIC
             -fsanitize=address

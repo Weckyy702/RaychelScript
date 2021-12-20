@@ -39,7 +39,7 @@
 #include "ValueType.h"
 
 namespace RaychelScript {
-    
+
     /**
     * \brief Specifies that a type has all members needed to use it inside an AST_Node object
     */
@@ -108,7 +108,6 @@ namespace RaychelScript {
         }
 
     private:
-
         NodeType type_;
         std::any data_;
 

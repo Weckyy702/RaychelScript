@@ -39,7 +39,6 @@ namespace RaychelScript::Assembly {
     enum class Register : std::uint8_t {
         a,
         b,
-        ip,
 
         num_registers,
     };
@@ -57,15 +56,22 @@ namespace RaychelScript::Assembly {
         constexpr explicit MemoryIndex(std::uint8_t value) : index_{value}
         {}
 
-        friend constexpr MemoryIndex operator""_mi(unsigned long long index); //NOLINT(google-runtime-int): the standard forced my hand
+        template <std::integral T>
+        friend constexpr MemoryIndex make_memory_index(T index);
 
         std::uint8_t index_{};
     };
 
+    template <std::integral T>
+    constexpr MemoryIndex make_memory_index(T index)
+    {
+        RAYCHEL_ASSERT(index < T{0x80});
+        return MemoryIndex{static_cast<std::uint8_t>(index)};
+    }
+
     constexpr MemoryIndex operator""_mi(unsigned long long index) //NOLINT(google-runtime-int): the standard forced my hand
     {
-        RAYCHEL_ASSERT(index < 0x80ULL);
-        return MemoryIndex{static_cast<std::uint8_t>(index)};
+        return make_memory_index(index);
     }
 
     class InstructionData
@@ -73,10 +79,11 @@ namespace RaychelScript::Assembly {
     public:
         InstructionData() = default;
 
-        /*implicit*/ InstructionData(MemoryIndex memory_index) : data_{memory_index.value()}
+        InstructionData(MemoryIndex memory_index) : data_{memory_index.value()} //NOLINT we want this constructor to be implicit
         {}
 
-        /*implicit*/ InstructionData(Register _register) : is_register_{true}, data_{static_cast<std::uint8_t>(_register)}
+        InstructionData(Register _register)
+            : is_register_{true}, data_{static_cast<std::uint8_t>(_register)} //NOLINT we want this constructor to be implicit
         {
             //Accessing out of bounds registers would lead to mayhem
             RAYCHEL_ASSERT(_register < Register::num_registers);

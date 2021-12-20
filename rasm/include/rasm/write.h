@@ -38,11 +38,9 @@
 
 namespace RaychelScript::Assembly {
 
-    [[nodiscard]] bool
-    write_rsbf(std::ostream& stream, const VMData& data) noexcept;
+    [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept;
 
-    [[nodiscard]] inline bool
-    write_rsbf(std::string_view path, const VMData& data) noexcept
+    [[nodiscard]] inline bool write_rsbf(std::string_view path, const VMData& data) noexcept
     {
         std::ofstream stream{std::string{path}, std::ios::out | std::ios::binary};
         return write_rsbf(stream, data);

@@ -38,7 +38,6 @@ namespace RaychelScript {
     class VariableDescriptor
     {
     public:
-
         using value_type = std::remove_cvref_t<T>;
 
         VariableDescriptor() = default;

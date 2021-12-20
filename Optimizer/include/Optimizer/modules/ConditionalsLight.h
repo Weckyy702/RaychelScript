@@ -28,10 +28,10 @@
 #ifndef RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_CONDTION_IS_KNOWN_H
 #define RAYCHELSCRIPT_OPTIMIZER_REMOVE_IF_CONDTION_IS_KNOWN_H
 
+#include "OptimizerModule.h"
 #include "shared/AST/AST.h"
 #include "shared/AST/NodeData.h"
 #include "shared/AST/NodeHasValue.h"
-#include "OptimizerModule.h"
 
 #include <iterator>
 

@@ -37,12 +37,12 @@
 #include <variant>
 #include <vector>
 
+#include "Parser/Parser.h"
+#include "Parser/ParsingContext.h"
 #include "shared/AST/NodeData.h"
 #include "shared/IndentHandler.h"
 #include "shared/Lexing/Alphabet.h"
 #include "shared/Lexing/Token.h"
-#include "Parser/Parser.h"
-#include "Parser/ParsingContext.h"
 
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelCore/ClassMacros.h"
@@ -697,7 +697,7 @@ namespace RaychelScript::Parser {
 
         //TODO: make this more efficent (if it starts causing slowdowns)
         //we copy the data just to move it back, that is really silly
-        
+
         auto& parent_node = ctx.scopes.top();
         switch (parent_node.type()) {
             case NodeType::conditional_construct:
@@ -719,7 +719,7 @@ namespace RaychelScript::Parser {
         }
     }
 
-    std::variant<AST, ParserErrorCode> parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
+    ParseResult parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
     {
         ParsingContext ctx;
         ParserErrorCode ec{};

@@ -28,9 +28,9 @@
 #ifndef RAYCHELSCRIPT_INTERPRETER_STATE_H
 #define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
-#include <unordered_map>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Concepts.h"
@@ -42,7 +42,9 @@ namespace RaychelScript::Interpreter {
     struct InterpreterState
     {
 
-        static_assert(std::is_same_v<typename ConstantT::value_type, typename VariableT::value_type>, "Constant value type and descriptor value type need to be the same!");
+        static_assert(
+            std::is_same_v<typename ConstantT::value_type, typename VariableT::value_type>,
+            "Constant value type and descriptor value type need to be the same!");
 
         using RegisterType = typename ConstantT::value_type;
         using ConstantContainer = std::vector<ConstantT>;

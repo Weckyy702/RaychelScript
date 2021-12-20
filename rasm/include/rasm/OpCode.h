@@ -37,13 +37,13 @@
 namespace RaychelScript::Assembly {
 
     enum class OpCode : std::uint8_t {
-        mov=1, //move values around
-        add, //add b to a
-        sub, //subtract b from a
-        mul, //multiply a by b
-        div, //divide a by b
-        mag, //take the magnitude of a
-        fac, //compute the factorial of a
+        mov = 1, //move values around
+        add,     //add b to a
+        sub,     //subtract b from a
+        mul,     //multiply a by b
+        div,     //divide a by b
+        mag,     //take the magnitude of a
+        fac,     //compute the factorial of a
 
         num_op_codes
     };
