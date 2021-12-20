@@ -132,6 +132,11 @@ namespace RaychelScript::Lexer {
                 continue;
             }
 
+            if (c == '_' && source_stream.peek() == '_') {
+                Logger::error("Invalid character sequence! Any sequence starting with two underscores (__*) is reserved!\n");
+                return LexerErrorCode::reserved_identifier;
+            }
+
             if (is_opening_parenthesis(static_cast<TokenType::TokenType>(c))) {
                 line_paren_depth++;
             } else if (is_closing_parenthesis(static_cast<TokenType::TokenType>(c))) {
