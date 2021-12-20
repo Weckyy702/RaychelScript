@@ -32,8 +32,46 @@
 #include "shared/AST/NodeData.h"
 
 #include <concepts>
+#include <functional>
 
 namespace RaychelScript {
+
+    struct NodeHandlers
+    {
+        template <typename T>
+        using Handler = std::function<void(const T&)>;
+
+        template <typename F>
+        explicit NodeHandlers(F f)
+            : handle_assignment{std::forward<F>(f)},
+              handle_variable_decl{std::forward<F>(f)},
+              handle_variable_ref{std::forward<F>(f)},
+              handle_arithmetic_operator{std::forward<F>(f)},
+              handle_numeric_constant{std::forward<F>(f)},
+              handle_unary_operator{std::forward<F>(f)},
+              handle_conditional_construct{std::forward<F>(f)},
+              handle_literal_true{std::forward<F>(f)},
+              handle_literal_false{std::forward<F>(f)},
+              handle_relational_operator{std::forward<F>(f)},
+              handle_inline_state_push{std::forward<F>(f)},
+              handle_inline_state_pop{std::forward<F>(f)},
+              handle_loop{std::forward<F>(f)}
+        {}
+
+        Handler<AssignmentExpressionData> handle_assignment;
+        Handler<VariableDeclarationData> handle_variable_decl;
+        Handler<VariableReferenceData> handle_variable_ref;
+        Handler<ArithmeticExpressionData> handle_arithmetic_operator;
+        Handler<NumericConstantData> handle_numeric_constant;
+        Handler<UnaryExpressionData> handle_unary_operator;
+        Handler<ConditionalConstructData> handle_conditional_construct;
+        Handler<LiteralTrueData> handle_literal_true;
+        Handler<LiteralFalseData> handle_literal_false;
+        Handler<RelationalOperatorData> handle_relational_operator;
+        Handler<InlinePushData> handle_inline_state_push;
+        Handler<InlinePopData> handle_inline_state_pop;
+        Handler<LoopData> handle_loop;
+    };
 
     namespace details {
 
@@ -116,6 +154,45 @@ namespace RaychelScript {
     {
         for (const auto& node : ast.nodes) {
             f(node);
+        }
+    }
+
+    inline void apply_handler(const AST_Node& node, const NodeHandlers& handlers) noexcept
+    {
+        switch (node.type()) {
+            case NodeType::assignment:
+                return handlers.handle_assignment(node.to_node_data<AssignmentExpressionData>());
+            case NodeType::variable_decl:
+                return handlers.handle_variable_decl(node.to_node_data<VariableDeclarationData>());
+            case NodeType::variable_ref:
+                return handlers.handle_variable_ref(node.to_node_data<VariableReferenceData>());
+            case NodeType::arithmetic_operator:
+                return handlers.handle_arithmetic_operator(node.to_node_data<ArithmeticExpressionData>());
+            case NodeType::numeric_constant:
+                return handlers.handle_numeric_constant(node.to_node_data<NumericConstantData>());
+            case NodeType::unary_operator:
+                return handlers.handle_unary_operator(node.to_node_data<UnaryExpressionData>());
+            case NodeType::conditional_construct:
+                return handlers.handle_conditional_construct(node.to_node_data<ConditionalConstructData>());
+            case NodeType::literal_true:
+                return handlers.handle_literal_true(node.to_node_data<LiteralTrueData>());
+            case NodeType::literal_false:
+                return handlers.handle_literal_false(node.to_node_data<LiteralFalseData>());
+            case NodeType::relational_operator:
+                return handlers.handle_relational_operator(node.to_node_data<RelationalOperatorData>());
+            case NodeType::inline_state_push:
+                return handlers.handle_inline_state_push(node.to_node_data<InlinePushData>());
+            case NodeType::inline_state_pop:
+                return handlers.handle_inline_state_pop(node.to_node_data<InlinePopData>());
+            case NodeType::loop:
+                return handlers.handle_loop(node.to_node_data<LoopData>());
+        }
+    }
+
+    inline void for_each_top_node(const AST& ast, const NodeHandlers& handlers) noexcept
+    {
+        for (const auto& node : ast.nodes) {
+            apply_handler(node, handlers);
         }
     }
 
