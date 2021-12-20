@@ -28,9 +28,10 @@
 #ifndef RAYCHELSCRIPT_PIPE_OPTIMIZER_H
 #define RAYCHELSCRIPT_PIPE_OPTIMIZER_H
 
-#include "shared/AST/AST.h"
 #include "Optimizer.h"
 #include "Parser/ParserPipe.h"
+#include "shared/AST/AST.h"
+#include "shared/Pipes/PipeResult.h"
 
 #include "RaychelCore/AssertingGet.h"
 
@@ -58,19 +59,22 @@ namespace RaychelScript::Pipes {
         std::vector<Optimizer::OptimizerModule_p> modules_;
     };
 
-    inline Parser::ParseResult operator|(const Parser::ParseResult& input, const Optimize& optimizer) noexcept
+    inline PipeResult<AST> operator|(const PipeResult<AST>& input, const Optimize& optimizer) noexcept
     {
-        return optimizer(input);
+        if (input.is_error()) {
+            return input;
+        }
+        return optimizer(input.value());
     }
 
     //You can also use individual modules in the pipes API :)
-    inline Parser::ParseResult operator|(const Parser::ParseResult& input, const Optimizer::OptimizerModule& module) noexcept
+    inline PipeResult<AST> operator|(const PipeResult<AST>& input, const Optimizer::OptimizerModule& module) noexcept
     {
-        if(const auto ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
-            return *ec;
+        if (input.is_error()) {
+            return input;
         }
 
-        AST ast = Raychel::get<AST>(input);
+        AST ast = input.value();
         module(ast);
         return ast;
     }

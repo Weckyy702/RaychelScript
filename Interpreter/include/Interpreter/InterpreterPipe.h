@@ -33,6 +33,7 @@
 #include <map>
 
 #include "Parser/ParserPipe.h"
+#include "shared/Pipes/PipeResult.h"
 
 namespace RaychelScript::Pipes {
 
@@ -53,12 +54,11 @@ namespace RaychelScript::Pipes {
     };
 
     template <std::floating_point T>
-    Interpreter::ExecutionResult<T> operator|(const Parser::ParseResult& input, const Interpret<T>& interpreter) noexcept
+    PipeResult<Interpreter::InterpreterState<ConstantDescriptor<T>, VariableDescriptor<T>>>
+    operator|(const PipeResult<AST>& input, const Interpret<T>& interpreter) noexcept
     {
-        if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
-            return Interpreter::InterpreterErrorCode::no_input; //TODO: better error handling for this
-        }
-        return interpreter(Raychel::get<AST>(input));
+        RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
+        return interpreter(input.value());
     }
 
 } //namespace RaychelScript::Pipes

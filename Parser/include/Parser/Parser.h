@@ -44,20 +44,21 @@
 #include <string_view>
 #include <variant>
 #include <vector>
-#include "shared/AST/AST.h"
 #include "Lexer/LexerPipe.h"
 #include "ParserErrorCode.h"
+#include "shared/AST/AST.h"
 
 namespace RaychelScript::Parser {
 
-    using ParseResult = std::variant<AST, ParserErrorCode>;
+    using ParseResult = std::variant<ParserErrorCode, AST>;
 
     RAYCHELSCRIPT_PARSER_API ParseResult parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
     RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(std::istream& source_stream) noexcept
     {
-        const auto tokens = Lexer::lex(source_stream);
-        if (!tokens.has_value()) {
+        const auto tokens_or_error = Lexer::lex(source_stream);
+        const auto* tokens = std::get_if<Lexer::SourceTokens>(&tokens_or_error);
+        if (tokens == nullptr) {
             return ParserErrorCode::no_input;
         }
         return parse(*tokens);
@@ -98,13 +99,13 @@ namespace RaychelScript::Parser {
     */
     inline ParseResult _parse_no_config_check(const std::string& source_text) noexcept
     {
-        const auto maybe_tokens = RaychelScript::Pipes::Lex{source_text}();
-
-        if (!maybe_tokens.has_value()) {
+        const auto tokens_or_error = Pipes::Lex{source_text}();
+        const auto* tokens = std::get_if<Lexer::SourceTokens>(&tokens_or_error);
+        if (tokens == nullptr) {
             return ParserErrorCode::no_input;
         }
 
-        return _parse_no_config_check(*maybe_tokens);
+        return _parse_no_config_check(*tokens);
     }
 } // namespace RaychelScript::Parser
 

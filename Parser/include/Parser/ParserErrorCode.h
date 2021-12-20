@@ -33,7 +33,7 @@
 
 namespace RaychelScript::Parser {
 
-    enum class [[nodiscard]] ParserErrorCode : std::size_t{
+    enum class [[nodiscard]] ParserErrorCode{
         ok,
         no_input,
 

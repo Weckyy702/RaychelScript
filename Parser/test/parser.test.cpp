@@ -48,15 +48,11 @@
 
     Logger::logDuration<std::chrono::microseconds>(label);
 
-    if (const RaychelScript::AST* ast = std::get_if<RaychelScript::AST>(&res); ast) {
-        print_config_block(ast->config_block);
-        pretty_print_ast(*ast);
-    } else {
-        Logger::log(
-            "The following error occured during parsing: ",
-            error_code_to_reason_string(Raychel::get<RaychelScript::Parser::ParserErrorCode>(res)),
-            '\n');
+    if (log_if_error(res)) {
+        return;
     }
+    const auto ast = res.value();
+    RaychelScript::pretty_print_ast(ast);
 }
 
 [[maybe_unused]] static void echo_AST_from_stdin() noexcept
@@ -98,7 +94,7 @@ If you wish to exit this mode, type "exit")",
         const auto AST_or_error = RaychelScript::Parser::_parse_no_config_check(line);
 
         if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&AST_or_error); ec) {
-            Logger::log("<ERROR>: ", error_code_to_reason_string(*ec), '\n');
+            Logger::log("<ERROR>: ", *ec, '\n');
             continue;
         }
 

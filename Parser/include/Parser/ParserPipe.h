@@ -30,6 +30,9 @@
 
 #include "Lexer/LexerPipe.h"
 #include "Parser/Parser.h"
+#include "shared/Pipes/PipeResult.h"
+
+#include "RaychelCore/AssertingGet.h"
 
 namespace RaychelScript::Pipes {
 
@@ -37,16 +40,17 @@ namespace RaychelScript::Pipes {
     {
         Parser::ParseResult operator()(const Lexer::LexResult& input) const noexcept
         {
-            if (!input.has_value()) {
-                return Parser::ParserErrorCode::no_input;
-            }
-            return Parser::parse(input.value());
+            return Parser::parse(Raychel::get<Lexer::SourceTokens>(input));
         }
     };
 
-    inline Parser::ParseResult operator|(const Lex& lexer, const Parse& parser) noexcept
+    inline PipeResult<AST> operator|(const Lex& lexer, const Parse& parser) noexcept
     {
-        return parser(lexer());
+        const auto tokens_or_error = lexer();
+        if (const auto* ec = std::get_if<Lexer::LexerErrorCode>(&tokens_or_error); ec) {
+            return *ec;
+        }
+        return parser(Raychel::get<Lexer::SourceTokens>(tokens_or_error));
     }
 
 } //namespace RaychelScript::Pipes

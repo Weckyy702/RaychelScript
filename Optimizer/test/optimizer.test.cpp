@@ -26,9 +26,9 @@
 * 
 */
 
-#include "shared/Misc/PrintAST.h"
-#include "Optimizer/OptimizerPipe.h"
 #include "Interpreter/InterpreterPipe.h"
+#include "Optimizer/OptimizerPipe.h"
+#include "shared/Misc/PrintAST.h"
 
 #include "Optimizer/modules/ConditionalsLight.h"
 #include "Optimizer/modules/RemoveIfNoSideEffects.h"
@@ -47,7 +47,6 @@ static std::size_t estimate_ast_complexity(const RaychelScript::AST& ast) noexce
 
     RaychelScript::for_each_node(ast, [&complexity_score](const RaychelScript::AST_Node& node) {
         using NT = RaychelScript::NodeType;
-
 
         switch (node.type()) {
             case NT::assignment:
@@ -85,18 +84,16 @@ int main()
     const auto optimized_ast_or_error =
         ast_or_error | RaychelScript::Pipes::Optimize{RaychelScript::Optimizer::OptimizationLevel::all};
 
-    if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&ast_or_error); ec) {
-        Logger::log("Error during parsing: ", RaychelScript::Parser::error_code_to_reason_string(*ec), '\n');
+    if (log_if_error(ast_or_error)) {
         return 1;
     }
 
-    if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&optimized_ast_or_error); ec) {
-        Logger::log("Error during parsing: ", RaychelScript::Parser::error_code_to_reason_string(*ec), '\n');
+    if (log_if_error(optimized_ast_or_error)) {
         return 1;
     }
 
-    const auto ast = Raychel::get<RaychelScript::AST>(ast_or_error);
-    const auto optimized_ast = Raychel::get<RaychelScript::AST>(optimized_ast_or_error);
+    const auto ast = ast_or_error.value();
+    const auto optimized_ast = optimized_ast_or_error.value();
 
     Logger::info("Unoptimzed (complexity=", estimate_ast_complexity(ast), "):\n");
     RaychelScript::pretty_print_ast(ast);
@@ -104,17 +101,10 @@ int main()
     Logger::info("Optimized (complexity=", estimate_ast_complexity(optimized_ast), "):\n");
     RaychelScript::pretty_print_ast(optimized_ast);
 
-
     auto label = Logger::startTimer("unoptimized");
-    const auto state_or_error = ast_or_error | RaychelScript::Pipes::Interpret<double>{{
-        {"a", 1},
-        {"b", 1}
-    }};
+    const auto state_or_error = ast_or_error | RaychelScript::Pipes::Interpret<double>{{{"a", 1}, {"b", 1}}};
     Logger::logDuration<std::chrono::microseconds>(label);
     label = Logger::startTimer("optimized");
-    const auto optimized_state_or_error = optimized_ast_or_error | RaychelScript::Pipes::Interpret<double>{{
-        {"a", 1},
-        {"b", 1}
-    }};
+    const auto optimized_state_or_error = optimized_ast_or_error | RaychelScript::Pipes::Interpret<double>{{{"a", 1}, {"b", 1}}};
     Logger::logDuration<std::chrono::microseconds>(label);
 }

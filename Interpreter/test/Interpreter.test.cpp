@@ -28,15 +28,11 @@
 
 #include "Interpreter/InterpreterPipe.h"
 
-#include <condition_variable>
-#include <mutex>
-#include <thread>
 #include "RaychelCore/AssertingGet.h"
 
 int main()
 {
     using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
-    using State = RaychelScript::Interpreter::InterpreterState<RaychelScript::ConstantDescriptor<double>, RaychelScript::VariableDescriptor<double>>;
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::int64_t average_duration{0};
@@ -46,32 +42,34 @@ int main()
         [&average_duration, i] {
             const auto ast_or_error = Lex{lex_file, "../../../shared/test/loops.rsc"} | Parse{};
 
+            if (log_if_error(ast_or_error)) {
+                return;
+            }
             const auto label = Logger::startTimer("Interpretation time");
 
-            const auto state_or_error_code = ast_or_error | Interpret<double>{{{"a", 1}, {"b", 1}}};
+            const auto state_or_error = ast_or_error | Interpret<double>{{{"a", 1}, {"b", 1}}};
 
             average_duration += Logger::getTimer<std::chrono::microseconds>(label).count();
             Logger::logDuration<std::chrono::microseconds>(Logger::LogLevel::log, label);
 
-            if (const auto* ec = std::get_if<RaychelScript::Interpreter::InterpreterErrorCode>(&state_or_error_code); ec) {
-                Logger::error(
-                    "Error during execution! Reason: ", RaychelScript::Interpreter::error_code_to_reason_string(*ec), '\n');
-            } else {
-                const auto state = Raychel::get<State>(state_or_error_code);
+            if (log_if_error(state_or_error)) {
+                return;
+            }
 
-                Logger::info(
-                    "SUCCESS from thread ", i + 1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
+            const auto state = state_or_error.value();
 
-                Logger::log("Constant values: \n");
-                for (const auto& descriptor : state.constants) {
-                    Logger::log(
-                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                }
-                Logger::log("Variable values: \n");
-                for (const auto& descriptor : state.variables) {
-                    Logger::log(
-                        '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
-                }
+            Logger::info(
+                "SUCCESS from thread ", i + 1, ". c=", RaychelScript::get_identifier_value(state, "c").value_or(0.0), '\n');
+
+            Logger::log("Constant values: \n");
+            for (const auto& descriptor : state.constants) {
+                Logger::log(
+                    '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
+            }
+            Logger::log("Variable values: \n");
+            for (const auto& descriptor : state.variables) {
+                Logger::log(
+                    '\t', RaychelScript::get_descriptor_identifier(state, descriptor.id()), ": ", descriptor.value(), '\n');
             }
         }(); //);
     }
