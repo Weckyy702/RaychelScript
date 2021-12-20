@@ -38,12 +38,33 @@ else()
         -Wconversion
         -Werror
     )
+    if(${RAYCHELSCRIPT_ENABLE_ASAN})
+    target_compile_options(RaychelScriptAssembly PUBLIC
+        -fsanitize=address
+    )
+endif()
+if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+    target_compile_options(RaychelScriptAssembly PUBLIC
+        -fsanitize=undefined
+    )
+endif()
 endif()
 
 target_link_libraries(RaychelScriptAssembly PUBLIC 
     RaychelLogger
     RaychelScriptBase
 )
+
+if(${RAYCHELSCRIPT_ENABLE_ASAN})
+    target_link_options(RaychelScriptAssembly PUBLIC
+        -fsanitize=address
+    )
+endif()
+if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+    target_link_options(RaychelScriptAssembly PUBLIC
+        -fsanitize=undefined
+    )
+endif()
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})
     add_subdirectory(test)
