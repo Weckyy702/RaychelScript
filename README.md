@@ -10,7 +10,7 @@ The syntax is deliberately simple and focussed on mathematical operations. It is
 
 Features
 -
-*In its current state, the language barely be executed. Of course, that will change in the future, but it will remain Turing-incomplete for a while.*
+*In its current state, the language can barely be executed. Of course, that will change in the future, but it will remain Turing-incomplete for a while.*
 
 This languages intended purpose is as a scripting language for use in my engine [RaychelCPU](https://github.com/Weckyy702/RaychelCPU). Therefore, its syntax and featureset are tailored towards high-throughput mathematical operations (like shaders).
 
@@ -31,6 +31,9 @@ Building
   * You will need Visual Studio with the C++ workload and CMake installed. You also have to install the dependencies manually.
   * Running cmake will create a RaychelScript.sln file. Open it in Visual Studio to compile the program. Due to windows limitations, you will have
     to copy the built DLLs into the executable directory (either manually or via copy_DLLs.sh)
+
+Note on the coding style
+* I am currently exploring many different coding styles and design patterns and I am using this project to test out what feels good. So the style of the code is quite inconsistent between different modules.
 
 I found a bug!!!
 -
