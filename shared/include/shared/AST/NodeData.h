@@ -101,7 +101,7 @@ namespace RaychelScript {
             magnitude,
         };
 
-        AST_Node value;
+        AST_Node value_node;
         Operation operation{};
     };
 

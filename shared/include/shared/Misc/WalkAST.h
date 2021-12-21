@@ -95,7 +95,7 @@ namespace RaychelScript {
         template <std::invocable<const AST_Node&> F>
         void handle(const UnaryExpressionData& data, F&& f) noexcept
         {
-            handle_node(data.value, std::forward<F>(f));
+            handle_node(data.value_node, std::forward<F>(f));
         }
 
         template <std::invocable<const AST_Node&> F>
@@ -120,23 +120,18 @@ namespace RaychelScript {
             f(node);
 
             switch (node.type()) {
-                case NodeType::assignment:
+                break;case NodeType::assignment:
                     handle(node.to_node_data<AssignmentExpressionData>(), std::forward<F>(f));
-                    break;
-                case NodeType::arithmetic_operator:
+                break;case NodeType::arithmetic_operator:
                     handle(node.to_node_data<ArithmeticExpressionData>(), std::forward<F>(f));
-                    break;
-                case NodeType::unary_operator:
+                break;case NodeType::unary_operator:
                     handle(node.to_node_data<UnaryExpressionData>(), std::forward<F>(f));
-                    break;
-                case NodeType::conditional_construct:
+                break;case NodeType::conditional_construct:
                     handle(node.to_node_data<ConditionalConstructData>(), std::forward<F>(f));
-                    break;
-                case NodeType::relational_operator:
+                break;case NodeType::relational_operator:
                     handle(node.to_node_data<RelationalOperatorData>(), std::forward<F>(f));
-                    break;
                 default:
-                    break;
+                    return;
             }
         }
     } // namespace details

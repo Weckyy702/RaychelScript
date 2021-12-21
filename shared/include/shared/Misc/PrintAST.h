@@ -107,7 +107,7 @@ namespace RaychelScript {
                 default:
                     RAYCHEL_ASSERT_NOT_REACHED;
             }
-            print_node(data.value, "expression=");
+            print_node(data.value_node, "expression=");
         }
 
         inline void handle_conditional_construct(const RaychelScript::ConditionalConstructData& data) noexcept

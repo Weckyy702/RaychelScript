@@ -477,7 +477,7 @@ namespace RaychelScript::Interpreter {
         const auto data = node.to_node_data<UnaryExpressionData>();
 
         state._load_references = true;
-        TRY(execute_node(state, data.value));
+        TRY(execute_node(state, data.value_node));
 
         switch (data.operation) {
             case Op::minus:
