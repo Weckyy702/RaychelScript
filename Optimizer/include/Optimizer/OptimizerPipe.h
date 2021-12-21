@@ -29,7 +29,6 @@
 #define RAYCHELSCRIPT_PIPE_OPTIMIZER_H
 
 #include "Optimizer.h"
-#include "Parser/ParserPipe.h"
 #include "shared/AST/AST.h"
 #include "shared/Pipes/PipeResult.h"
 
