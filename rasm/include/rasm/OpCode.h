@@ -37,13 +37,14 @@
 namespace RaychelScript::Assembly {
 
     enum class OpCode : std::uint8_t {
-        mov = 1, //move values around
-        add,     //add b to a
-        sub,     //subtract b from a
-        mul,     //multiply a by b
-        div,     //divide a by b
-        mag,     //take the magnitude of a
-        fac,     //compute the factorial of a
+        mov, //move a into b (a -> b)
+        add, //add b to a (a = a + b)
+        sub, //subtract b from a (a = a - b)
+        mul, //multiply a by b (a = a * b)
+        div, //divide a by b (a = a / b)
+        mag, //take the magnitude of a (a = |a|)
+        fac, //compute the factorial of a (a = a!)
+        pow, //compute a to the power of b (a = a^b)
 
         num_op_codes
     };
@@ -65,6 +66,8 @@ namespace RaychelScript::Assembly {
                 return "MAG";
             case OpCode::fac:
                 return "FAC";
+            case OpCode::pow:
+                return "POW";
             case OpCode::num_op_codes:
                 break;
         }
@@ -80,6 +83,7 @@ namespace RaychelScript::Assembly {
             case OpCode::sub:
             case OpCode::mul:
             case OpCode::div:
+            case OpCode::pow:
             case OpCode::mag:
             case OpCode::fac:
             case OpCode::num_op_codes:

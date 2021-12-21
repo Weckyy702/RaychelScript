@@ -28,7 +28,6 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 #define RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 
-#include "InstructionData.h"
 #include "OpCode.h"
 
 #include <optional>
@@ -36,11 +35,45 @@
 
 namespace RaychelScript::Assembly {
 
+    class MemoryIndex
+    {
+
+    public:
+        [[nodiscard]] constexpr std::uint8_t value() const noexcept
+        {
+            return data_;
+        }
+
+        constexpr MemoryIndex() = default;
+
+    private:
+        template <std::integral T>
+        explicit constexpr MemoryIndex(T index) : data_{static_cast<std::uint8_t>(index & 0xFFU)}
+        {}
+
+        template <std::integral T>
+        friend constexpr MemoryIndex make_memory_index(T value);
+
+        std::uint8_t data_{};
+    };
+
+    template <std::integral T>
+    constexpr MemoryIndex make_memory_index(T value)
+    {
+        RAYCHEL_ASSERT(value >= 0 && value < T{std::numeric_limits<std::uint8_t>::max()});
+        return MemoryIndex{value};
+    }
+
+    constexpr MemoryIndex operator""_mi(unsigned long long value) //NOLINT(google-runtime-int): we cannot change the C++ spec :(
+    {
+        return make_memory_index(value);
+    }
+
     class Instruction
     {
     public:
-        explicit Instruction(OpCode code, InstructionData data1 = {}, InstructionData data2 = {})
-            : code_{code}, data1_{data1}, data2_{data2}
+        Instruction(OpCode op_code, MemoryIndex data1 = {}, MemoryIndex data2 = {})
+            : code_{op_code}, data1_{data1.value()}, data2_{data2.value()}
         {}
 
         static std::optional<Instruction> from_binary(std::uint32_t data) noexcept
@@ -50,34 +83,10 @@ namespace RaychelScript::Assembly {
                 return std::nullopt;
             }
 
-            InstructionData data1;
-            {
-                auto index = static_cast<std::uint32_t>((data >> 16U) & 0xFFU);
-                if ((index & 0x80U) != 0U) {
-                    index &= ~0x80U;
-                    if ((index) > static_cast<std::uint32_t>(Register::num_registers)) {
-                        return std::nullopt;
-                    }
-                    data1 = InstructionData{static_cast<Register>(index)};
-                } else {
-                    data1 = InstructionData{make_memory_index(index)};
-                }
-            }
+            const auto data1 = static_cast<std::uint8_t>((data >> 16U) & 0xFFU);
+            const auto data2 = static_cast<std::uint8_t>((data >> 8U) & 0xFFU);
 
-            InstructionData data2;
-            {
-                const auto index = static_cast<std::uint32_t>((data >> 8U) & 0xFFU);
-                if ((index & 0x80U) != 0U) {
-                    if ((index & ~0x80U) > static_cast<std::uint32_t>(Register::num_registers)) {
-                        return std::nullopt;
-                    }
-                    data2 = InstructionData{static_cast<Register>(index & ~0x80U)};
-                } else {
-                    data1 = InstructionData{make_memory_index(index)};
-                }
-            }
-
-            return Instruction{op_code, data1, data2};
+            return Instruction{op_code, make_memory_index(data1), make_memory_index(data2)};
         }
 
         [[nodiscard]] std::uint32_t to_binary() const noexcept
@@ -91,8 +100,8 @@ namespace RaychelScript::Assembly {
             std::uint32_t instr = 0U;
 
             instr |= (static_cast<std::uint32_t>(code_) & 0xFFU) << 24U;
-            instr |= (data1_.to_binary() & 0xFFU) << 16U;
-            instr |= (data2_.to_binary() & 0xFFU) << 8U;
+            instr |= (static_cast<std::uint32_t>(data1_) & 0xFFU) << 16U;
+            instr |= (static_cast<std::uint32_t>(data2_) & 0xFFU) << 8U;
 
             return instr;
         }
@@ -101,8 +110,8 @@ namespace RaychelScript::Assembly {
 
     private:
         OpCode code_;
-        InstructionData data1_;
-        InstructionData data2_;
+        std::uint8_t data1_;
+        std::uint8_t data2_;
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept
@@ -111,10 +120,10 @@ namespace RaychelScript::Assembly {
 
         os << instr.code_;
         if (num_args > 0) {
-            os << ' ' << instr.data1_;
+            os << " $" << static_cast<std::uint32_t>(instr.data1_);
         }
         if (num_args > 1) {
-            os << ' ' << instr.data2_;
+            os << " $" << static_cast<std::uint32_t>(instr.data2_);
         }
         return os;
     }

@@ -39,7 +39,7 @@ int main()
 {
     using namespace RaychelScript::Assembly;
 
-    Instruction mov{OpCode::mov, 12_mi, Register::a};
+    Instruction mov{OpCode::mov, 12_mi, 42_mi};
     Instruction add{OpCode::add};
     Instruction sub{OpCode::sub};
     Instruction mul{OpCode::mul};
@@ -47,7 +47,7 @@ int main()
     Instruction mag{OpCode::mag};
     Instruction fac{OpCode::fac};
 
-    std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, Register::a}, sub, add, mov};
+    std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, 12_mi}, sub, add, mov};
 
     if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, instructions})) {
         Logger::error("Writing failed!\n");
