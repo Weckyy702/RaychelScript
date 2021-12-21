@@ -53,11 +53,6 @@ namespace RaychelScript::Pipes {
             source_stream_ = std::make_unique<std::stringstream>(std::string{source_text});
         }
 
-        explicit Lex(const std::string& source_text)
-        {
-            source_stream_ = std::make_unique<std::stringstream>(source_text);
-        }
-
         Lex(details::LexFileTag /*unused*/, std::string_view file_path)
         {
             source_stream_ = std::make_unique<std::ifstream>(std::string{file_path});
