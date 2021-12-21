@@ -46,12 +46,9 @@ namespace RaychelScript::Pipes {
         explicit Optimize(std::vector<Optimizer::OptimizerModule_p> modules) : modules_{std::move(modules)}
         {}
 
-        Parser::ParseResult operator()(const Parser::ParseResult& input) const noexcept
+        AST operator()(const AST& input) const noexcept
         {
-            if (const auto* ec = std::get_if<Parser::ParserErrorCode>(&input); ec) {
-                return *ec;
-            }
-            return Optimizer::optimize(Raychel::get<AST>(input), modules_);
+            return Optimizer::optimize(input, modules_);
         }
 
     private:
