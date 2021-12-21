@@ -120,16 +120,21 @@ namespace RaychelScript {
             f(node);
 
             switch (node.type()) {
-                break;case NodeType::assignment:
+                case NodeType::assignment:
                     handle(node.to_node_data<AssignmentExpressionData>(), std::forward<F>(f));
-                break;case NodeType::arithmetic_operator:
+                    break;
+                case NodeType::arithmetic_operator:
                     handle(node.to_node_data<ArithmeticExpressionData>(), std::forward<F>(f));
-                break;case NodeType::unary_operator:
+                    break;
+                case NodeType::unary_operator:
                     handle(node.to_node_data<UnaryExpressionData>(), std::forward<F>(f));
-                break;case NodeType::conditional_construct:
+                    break;
+                case NodeType::conditional_construct:
                     handle(node.to_node_data<ConditionalConstructData>(), std::forward<F>(f));
-                break;case NodeType::relational_operator:
+                    break;
+                case NodeType::relational_operator:
                     handle(node.to_node_data<RelationalOperatorData>(), std::forward<F>(f));
+                    break;
                 default:
                     return;
             }
