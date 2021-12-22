@@ -29,7 +29,6 @@
 #define RAYCHELSCRIPT_VM_DATA_H
 
 #include "Instruction.h"
-
 #include "shared/AST/ConfigBlock.h"
 
 #include <vector>
@@ -41,6 +40,7 @@ namespace RaychelScript::Assembly {
     struct VMData
     {
         ConfigBlock config_block;
+        std::vector<std::pair<double, MemoryIndex>> immediate_values;
         std::vector<Instruction> instructions;
     };
 

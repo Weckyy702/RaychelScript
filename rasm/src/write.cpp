@@ -67,6 +67,19 @@ namespace RaychelScript::Assembly {
         return true;
     }
 
+    bool write(std::ostream& stream, MemoryIndex index) noexcept
+    {
+        return write(stream, index.value());
+    }
+
+    template <typename T1, typename T2>
+    bool write(std::ostream& stream, const std::pair<T1, T2>& pair) noexcept
+    {
+        TRY(write(stream, pair.first));
+        TRY(write(stream, pair.second));
+        return true;
+    }
+
     template <typename T>
     bool write(std::ostream& stream, const std::vector<T>& vec) noexcept
     {
@@ -91,6 +104,9 @@ namespace RaychelScript::Assembly {
         //I/O section
         TRY(write(stream, data.config_block.input_identifiers))
         TRY(write(stream, data.config_block.output_identifiers))
+
+        //Immediate section
+        TRY(write(stream, data.immediate_values));
 
         //Function section
         //TODO: implement external function calls

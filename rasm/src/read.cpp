@@ -48,10 +48,11 @@ namespace RaychelScript::Assembly {
     namespace details {
 
         template <typename T>
-        std::optional<T> read(std::istream& stream) noexcept;
+        std::optional<T> read(std::istream&) noexcept;
 
-        template <std::integral T>
-        std::optional<T> read(std::istream& stream) noexcept
+        template <typename T>
+        requires std::is_trivial_v<T> std::optional<T> read(std::istream& stream)
+        noexcept
         {
             constexpr auto byte_size = sizeof(T);
             std::array<char, byte_size> bytes{};
@@ -84,6 +85,13 @@ namespace RaychelScript::Assembly {
             return obj;
         }
 
+        template<>
+        std::optional<MemoryIndex> read<MemoryIndex>(std::istream& stream) noexcept
+        {
+            TRY_READ(std::uint8_t, value, std::nullopt);
+            return make_memory_index(value);
+        }
+
         template <>
         std::optional<Instruction> read<Instruction>(std::istream& stream) noexcept
         {
@@ -108,7 +116,33 @@ namespace RaychelScript::Assembly {
             return obj;
         }
 
+        template <typename T1, typename T2>
+        std::optional<std::pair<T1, T2>> read_pair(std::istream& stream) noexcept
+        {
+            TRY_READ(T1, value_1, std::nullopt);
+            TRY_READ(T2, value_2, std::nullopt);
+
+            return std::make_pair(value_1, value_2);
+        }
+
     } // namespace details
+
+    std::optional<std::vector<std::pair<double, MemoryIndex>>> read_immediate_section(std::istream& stream) noexcept
+    {
+        TRY_READ(std::uint32_t, immediates_size, std::nullopt);
+
+        std::vector<std::pair<double, MemoryIndex>> vec{};
+        vec.reserve(immediates_size);
+
+        for (std::uint32_t i = 0; i < immediates_size; i++) {
+            if (auto maybe_value = details::read_pair<double, MemoryIndex>(stream); maybe_value.has_value()) {
+                vec.emplace_back(std::move(maybe_value.value()));
+            } else {
+                return {};
+            }
+        }
+        return vec;
+    }
 
     std::variant<VMData, ReadingErrorCode> read_rsbf(std::istream& stream) noexcept
     {
@@ -136,6 +170,14 @@ namespace RaychelScript::Assembly {
             return ReadingErrorCode::reading_failure;
         }
 
+        //The immediate section was added in version 2
+        std::optional<std::vector<std::pair<double, MemoryIndex>>> maybe_immediates{};
+        if (version > 1) {
+            if (auto _maybe_immediates = read_immediate_section(stream); _maybe_immediates.has_value()) {
+                maybe_immediates = std::move(_maybe_immediates).value();
+            }
+        }
+
         TRY_READ(std::uint32_t, num_instructions, ReadingErrorCode::reading_failure)
         std::vector<Instruction> instructions;
         instructions.reserve(num_instructions);
@@ -148,7 +190,10 @@ namespace RaychelScript::Assembly {
             instructions.emplace_back(maybe_instruction.value());
         }
 
-        return VMData{{maybe_input_identifiers.value(), maybe_output_identifiers.value(), {}}, instructions};
+        return VMData{
+            {maybe_input_identifiers.value(), maybe_output_identifiers.value(), {}},
+            maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
+            instructions};
     }
 
 } //namespace RaychelScript::Assembly
