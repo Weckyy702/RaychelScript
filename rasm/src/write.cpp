@@ -43,7 +43,8 @@
 
 namespace RaychelScript::Assembly {
 
-    template <std::integral T>
+    template <typename T>
+    requires std::is_trivial_v<T>
     bool write(std::ostream& stream, T data) noexcept
     {
         constexpr auto byte_size = sizeof(T);
@@ -60,8 +61,8 @@ namespace RaychelScript::Assembly {
     {
         RAYCHEL_ASSERT(str.size() < std::numeric_limits<std::uint32_t>::max());
         TRY(write(stream, static_cast<std::uint32_t>(str.size())))
-        for (char c : str) {
-            TRY(write(stream, c))
+        for (char elem : str) {
+            TRY(write(stream, elem))
         }
         return true;
     }

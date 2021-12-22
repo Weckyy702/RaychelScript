@@ -116,18 +116,14 @@ namespace RaychelScript::Assembly {
             return ReadingErrorCode::file_not_found;
         }
 
-        {
-            TRY_READ(std::uint32_t, magic, ReadingErrorCode::reading_failure)
-            if (magic != magic_word) {
-                return ReadingErrorCode::no_magic_word;
-            }
+        TRY_READ(std::uint32_t, magic, ReadingErrorCode::reading_failure)
+        if (magic != magic_word) {
+            return ReadingErrorCode::no_magic_word;
         }
 
-        {
-            TRY_READ(std::uint32_t, version, ReadingErrorCode::reading_failure)
-            if (version > version_number()) {
-                return ReadingErrorCode::wrong_version;
-            }
+        TRY_READ(std::uint32_t, version, ReadingErrorCode::reading_failure)
+        if (version > version_number()) {
+            return ReadingErrorCode::wrong_version;
         }
 
         auto maybe_input_identifiers = details::read_vector<std::string>(stream);
