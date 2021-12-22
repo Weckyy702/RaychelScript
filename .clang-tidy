@@ -17,7 +17,8 @@ Checks: " *,
           -llvm-include-order,
           -abseil-string-find-str-contains,
           -bugprone-exception-escape,
-          -fuchsia-trailing-return
+          -fuchsia-trailing-return,
+          -readability-static-accessed-through-instance
 "
 
 CheckOptions:

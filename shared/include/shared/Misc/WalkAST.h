@@ -41,6 +41,8 @@ namespace RaychelScript {
         template <typename T>
         using Handler = std::function<void(const T&)>;
 
+        //NOLINTBEGIN(clang-analyzer-cplusplus.Move): false positive?
+
         template <typename F>
         explicit NodeHandlers(F f)
             : handle_assignment{std::forward<F>(f)},
@@ -57,6 +59,8 @@ namespace RaychelScript {
               handle_inline_state_pop{std::forward<F>(f)},
               handle_loop{std::forward<F>(f)}
         {}
+
+        //NOLINTEND(clang-analyzer-cplusplus.Move)
 
         Handler<AssignmentExpressionData> handle_assignment;
         Handler<VariableDeclarationData> handle_variable_decl;
