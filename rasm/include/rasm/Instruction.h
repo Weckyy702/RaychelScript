@@ -48,7 +48,7 @@ namespace RaychelScript::Assembly {
 
     private:
         template <std::integral T>
-        explicit constexpr MemoryIndex(T index) : data_{static_cast<std::uint8_t>(index & 0xFFU)}
+        explicit constexpr MemoryIndex(T index) : data_{static_cast<std::uint8_t>(index)}
         {}
 
         template <std::integral T>
@@ -72,7 +72,7 @@ namespace RaychelScript::Assembly {
     class Instruction
     {
     public:
-        Instruction(OpCode op_code, MemoryIndex data1 = {}, MemoryIndex data2 = {})
+        explicit Instruction(OpCode op_code, MemoryIndex data1 = {}, MemoryIndex data2 = {})
             : code_{op_code}, data1_{data1.value()}, data2_{data2.value()}
         {}
 
@@ -104,6 +104,31 @@ namespace RaychelScript::Assembly {
             instr |= (static_cast<std::uint32_t>(data2_) & 0xFFU) << 8U;
 
             return instr;
+        }
+
+        [[nodiscard]] auto op_code() const noexcept
+        {
+            return code_;
+        }
+
+        [[nodiscard]] auto data1() const noexcept
+        {
+            return data1_;
+        }
+
+        [[nodiscard]] auto data2() const noexcept
+        {
+            return data2_;
+        }
+
+        [[nodiscard]] auto& data1() noexcept
+        {
+            return data1_;
+        }
+
+        [[nodiscard]] auto& data2() noexcept
+        {
+            return data2_;
         }
 
         friend std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept;
