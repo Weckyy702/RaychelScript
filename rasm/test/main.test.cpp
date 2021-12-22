@@ -37,7 +37,7 @@
 
 int main()
 {
-    using namespace RaychelScript::Assembly;
+    using namespace RaychelScript::Assembly; //NOLINT
 
     Instruction mov{OpCode::mov, 12_mi, 42_mi};
     Instruction add{OpCode::add};
@@ -49,7 +49,7 @@ int main()
 
     std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, 12_mi}, sub, add, mov};
 
-    if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, instructions})) {
+    if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, {{0.1, 12_mi}, {12, 0_mi}, {99, 9_mi}}, instructions})) {
         Logger::error("Writing failed!\n");
         return 1;
     }
@@ -69,6 +69,10 @@ int main()
     Logger::info("File\n");
 
     const auto data = Raychel::get<VMData>(data_or_error);
+
+    for (const auto& [value, address] : data.immediate_values) {
+        Logger::info("\t$", static_cast<std::uint32_t>(address.value()), " -> ", value, '\n');
+    }
 
     for (const auto& instr : data.instructions) {
         Logger::info('\t', instr, '\n');
