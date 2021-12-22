@@ -46,6 +46,9 @@ namespace RaychelScript::Assembly {
         fac, //compute the factorial of a (a = a!)
         pow, //compute a to the power of b (a = a^b)
 
+        jpz, //jump if a is equal to 0 (a == 0)
+        hlt, //halt execution
+
         num_op_codes
     };
 
@@ -68,6 +71,10 @@ namespace RaychelScript::Assembly {
                 return "FAC";
             case OpCode::pow:
                 return "POW";
+            case OpCode::jpz:
+                return "JPZ";
+            case OpCode::hlt:
+                return "HLT";
             case OpCode::num_op_codes:
                 break;
         }
@@ -79,6 +86,8 @@ namespace RaychelScript::Assembly {
         switch (code) {
             case OpCode::mov:
                 return 2;
+            case OpCode::jpz:
+                return 1;
             case OpCode::add:
             case OpCode::sub:
             case OpCode::mul:
@@ -86,6 +95,7 @@ namespace RaychelScript::Assembly {
             case OpCode::pow:
             case OpCode::mag:
             case OpCode::fac:
+            case OpCode::hlt:
             case OpCode::num_op_codes:
                 return 0;
         }
