@@ -37,7 +37,7 @@
 
 namespace RaychelScript::Lexer {
 
-    enum class [[nodiscard]] LexerErrorCode{
+    enum class LexerErrorCode {
         ok,
         no_input,
         invalid_number,

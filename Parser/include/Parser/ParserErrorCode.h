@@ -33,7 +33,7 @@
 
 namespace RaychelScript::Parser {
 
-    enum class [[nodiscard]] ParserErrorCode{
+    enum class ParserErrorCode {
         ok,
         no_input,
 
