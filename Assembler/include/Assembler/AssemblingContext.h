@@ -82,13 +82,24 @@ namespace RaychelScript::Assembler {
             return instructions_.size() - 1;
         }
 
+        [[nodiscard]] auto& instructions() noexcept
+        {
+            return instructions_;
+        }
+
+        [[nodiscard]] const auto& instructions() const noexcept
+        {
+            return instructions_;
+        }
+
         template <Assembly::OpCode code, typename... Ts>
-        Assembly::Instruction& emit(const Ts&... args) noexcept
+        auto emit(const Ts&... args) noexcept
         {
             static_assert(
                 sizeof...(Ts) == Assembly::number_of_arguments(code),
                 "Number of instructions arguments does not match number required!");
-            return instructions_.emplace_back(Assembly::Instruction{code, args...});
+            instructions_.emplace_back(Assembly::Instruction{code, args...});
+            return instruction_index();
         }
 
         [[nodiscard]] Assembly::MemoryIndex allocate_variable(const std::string& name) noexcept

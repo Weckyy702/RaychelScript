@@ -151,7 +151,7 @@ namespace RaychelScript::Assembler {
         }
         TRY(assemble(data.condition_node, ctx), condition_index);
 
-        auto& jump_instr = ctx.emit<Assembly::OpCode::jpz>(Assembly::make_memory_index(0));
+        auto jump_instr_index = ctx.emit<Assembly::OpCode::jpz>(Assembly::make_memory_index(0));
 
         for (const auto& node : data.body) {
             const auto index_or_error = assemble(node, ctx);
@@ -162,7 +162,7 @@ namespace RaychelScript::Assembler {
             }
         }
 
-        jump_instr.data1() = static_cast<std::uint8_t>(ctx.instruction_index() + 1);
+        ctx.instructions().at(jump_instr_index).data1() = static_cast<std::uint8_t>(ctx.instruction_index() + 1);
 
         return AssemblerErrorCode::ok;
     }
