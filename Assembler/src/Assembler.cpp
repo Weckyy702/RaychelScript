@@ -187,7 +187,23 @@ namespace RaychelScript::Assembler {
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble([[maybe_unused]] const RelationalOperatorData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
     {
-        return AssemblerErrorCode::not_implemented;
+        using Op = RelationalOperatorData::Operation;
+        TRY(assemble(data.lhs, ctx), lhs_index);
+        TRY(assemble(data.rhs, ctx), rhs_index);
+
+        switch(data.operation) {
+            case Op::equals:
+                ctx.emit<Assembly::OpCode::ceq>(lhs_index, rhs_index);
+            break;
+            case Op::less_than:
+                ctx.emit<Assembly::OpCode::clt>(lhs_index, rhs_index);
+                break;
+            case Op::greater_than:
+                ctx.emit<Assembly::OpCode::cgt>(lhs_index, rhs_index);
+                break;
+        }
+
+        return ctx.a_index(); //this isn't actually used, but we have no other way to do this
     }
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>

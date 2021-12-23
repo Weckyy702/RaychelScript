@@ -49,6 +49,10 @@ namespace RaychelScript::Assembly {
         jpz, //jump if a is equal to 0 (a == 0)
         hlt, //halt execution
 
+        clt, //set flag if a is less than b (a < b)
+        cgt, //set flag if a is greater than b (a > b)
+        ceq, //set flag if a is equal to b (a == b)
+
         num_op_codes
     };
 
@@ -75,6 +79,12 @@ namespace RaychelScript::Assembly {
                 return "JPZ";
             case OpCode::hlt:
                 return "HLT";
+            case OpCode::clt:
+                return "CLT";
+            case OpCode::cgt:
+                return "CGT";
+            case OpCode::ceq:
+                return "CEQ";
             case OpCode::num_op_codes:
                 break;
         }
@@ -85,6 +95,9 @@ namespace RaychelScript::Assembly {
     {
         switch (code) {
             case OpCode::mov:
+            case OpCode::clt:
+            case OpCode::cgt:
+            case OpCode::ceq:
                 return 2;
             case OpCode::jpz:
                 return 1;
@@ -99,7 +112,7 @@ namespace RaychelScript::Assembly {
             case OpCode::num_op_codes:
                 return 0;
         }
-        RAYCHEL_ASSERT_NOT_REACHED;
+        return 0;
     }
 
     inline std::ostream& operator<<(std::ostream& os, OpCode code) noexcept
