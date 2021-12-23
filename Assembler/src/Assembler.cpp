@@ -61,30 +61,30 @@ namespace RaychelScript::Assembler {
         TRY(assemble(data.lhs, ctx), lhs_index);
         TRY(assemble(data.rhs, ctx), rhs_index);
 
-        ctx.emit<Assembly::OpCode::mov>(lhs_index, ctx.a_index());
-        ctx.emit<Assembly::OpCode::mov>(rhs_index, ctx.b_index());
-
         switch (data.operation) {
             case Op::add:
-                ctx.emit<Assembly::OpCode::add>();
+                ctx.emit<Assembly::OpCode::add>(lhs_index, rhs_index);
                 break;
             case Op::subtract:
-                ctx.emit<Assembly::OpCode::sub>();
+                ctx.emit<Assembly::OpCode::sub>(lhs_index, rhs_index);
                 break;
             case Op::multiply:
-                ctx.emit<Assembly::OpCode::mul>();
+                ctx.emit<Assembly::OpCode::mul>(lhs_index, rhs_index);
                 break;
             case Op::divide:
-                ctx.emit<Assembly::OpCode::div>();
+                ctx.emit<Assembly::OpCode::div>(lhs_index, rhs_index);
                 break;
             case Op::power:
-                ctx.emit<Assembly::OpCode::pow>();
+                ctx.emit<Assembly::OpCode::pow>(lhs_index, rhs_index);
                 break;
             default:
                 return AssemblerErrorCode::unknown_arithmetic_expression;
         }
 
-        return ctx.a_index();
+        const auto result_index = ctx.allocate_intermediate();
+        ctx.emit<Assembly::OpCode::mov>(ctx.a_index(), result_index);
+
+        return result_index;
     }
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
@@ -117,7 +117,6 @@ namespace RaychelScript::Assembler {
         using Op = UnaryExpressionData::Operation;
 
         TRY(assemble(data.value_node, ctx), value_index);
-        ctx.emit<Assembly::OpCode::mov>(value_index, ctx.a_index());
 
         switch (data.operation) {
             case Op::plus:
@@ -125,21 +124,23 @@ namespace RaychelScript::Assembler {
             case Op::minus:
             {
                 const auto invert_index = ctx.allocate_immediate(-1);
-                ctx.emit<Assembly::OpCode::mov>(invert_index, ctx.b_index());
-                ctx.emit<Assembly::OpCode::mul>();
+                ctx.emit<Assembly::OpCode::mul>(value_index, invert_index);
                 break;
             }
             case Op::factorial:
-                ctx.emit<Assembly::OpCode::fac>();
+                ctx.emit<Assembly::OpCode::fac>(value_index);
                 break;
             case Op::magnitude:
-                ctx.emit<Assembly::OpCode::mag>();
+                ctx.emit<Assembly::OpCode::mag>(value_index);
                 break;
             default:
                 return AssemblerErrorCode::unknown_arithmetic_expression;
         }
 
-        return ctx.a_index();
+        auto intermediate_idx = ctx.allocate_intermediate();
+        ctx.emit<Assembly::OpCode::mov>(ctx.a_index(), intermediate_idx);
+
+        return intermediate_idx;
     }
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
@@ -255,6 +256,7 @@ namespace RaychelScript::Assembler {
         }
 
         for (const auto& node : ast.nodes) {
+            ctx.free_intermediates();
             const auto memory_index_or_error = assemble(node, ctx);
             if (const auto* ec = std::get_if<AssemblerErrorCode>(&memory_index_or_error); ec) {
                 if (*ec != AssemblerErrorCode::ok) {

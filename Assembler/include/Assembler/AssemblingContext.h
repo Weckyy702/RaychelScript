@@ -105,6 +105,27 @@ namespace RaychelScript::Assembler {
             return index;
         }
 
+        [[nodiscard]] auto allocate_intermediate() noexcept
+        {
+            for (auto& [free, index] : intermediates_) {
+                if (free) {
+                    free = false;
+                    return index;
+                }
+            }
+
+            auto idx = Assembly::make_memory_index(current_index_++);
+            intermediates_.emplace_back(false, idx);
+            return idx;
+        }
+
+        void free_intermediates() noexcept
+        {
+            for (auto& [free, _] : intermediates_) {
+                free = true;
+            }
+        }
+
     private:
         template <typename Container, typename T = typename Container::value_type>
         [[nodiscard]] std::pair<bool, Assembly::MemoryIndex> _allocate_new(Container& container, const T& value) noexcept
@@ -118,6 +139,7 @@ namespace RaychelScript::Assembler {
 
         std::vector<Assembly::Instruction>& instructions_;
         Immediates& immediate_values_;
+        std::vector<std::pair<bool, Assembly::MemoryIndex>> intermediates_;
 
         std::size_t current_index_{2}; //the first two indecies are reserved
 
