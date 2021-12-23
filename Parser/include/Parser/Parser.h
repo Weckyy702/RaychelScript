@@ -47,6 +47,7 @@
 #include "Lexer/LexerPipe.h"
 #include "ParserErrorCode.h"
 #include "shared/AST/AST.h"
+#include "RaychelCore/compat.h"
 
 namespace RaychelScript::Parser {
 
@@ -64,16 +65,24 @@ namespace RaychelScript::Parser {
         return parse(*tokens);
     }
 
+#if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
+#else if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable: 4996)
+#endif
     RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(const std::string& source_text) noexcept
     {
         std::stringstream stream{source_text};
         return parse(stream);
     }
 
+#if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
 #pragma GCC diagnostic pop
+#elif RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
+#pragma warning(pop)
+#endif
 
     /**
     * \brief Parse the source tokens without checking for a valid config block
