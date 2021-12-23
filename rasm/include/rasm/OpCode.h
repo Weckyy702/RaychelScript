@@ -38,17 +38,21 @@ namespace RaychelScript::Assembly {
 
     enum class OpCode : std::uint8_t {
         mov, //move a into b (a -> b)
-        add, //add b to a (a = a + b)
-        sub, //subtract b from a (a = a - b)
-        mul, //multiply a by b (a = a * b)
-        div, //divide a by b (a = a / b)
-        mag, //take the magnitude of a (a = |a|)
-        fac, //compute the factorial of a (a = a!)
-        pow, //compute a to the power of b (a = a^b)
 
-        jpz, //jump if a is equal to 0 (a == 0)
+        //arithmetic operators
+        add, //add b to a (a + b)
+        sub, //subtract b from a (a - b)
+        mul, //multiply a by b (a * b)
+        div, //divide a by b (a / b)
+        mag, //take the magnitude of a (a|)
+        fac, //compute the factorial of a (a!)
+        pow, //compute a to the power of b (a^b)
+
+        //control flow
+        jpz, //jump if flag is not set
         hlt, //halt execution
 
+        //comparison
         clt, //set flag if a is less than b (a < b)
         cgt, //set flag if a is greater than b (a > b)
         ceq, //set flag if a is equal to b (a == b)
@@ -98,21 +102,20 @@ namespace RaychelScript::Assembly {
     {
         switch (code) {
             case OpCode::mov:
-            case OpCode::clt:
-            case OpCode::cgt:
-            case OpCode::ceq:
-                return 2;
-            case OpCode::jpz:
-                return 1;
             case OpCode::add:
             case OpCode::sub:
             case OpCode::mul:
             case OpCode::div:
             case OpCode::pow:
+            case OpCode::clt:
+            case OpCode::cgt:
+            case OpCode::ceq:
             case OpCode::cne:
                 return 2;
             case OpCode::mag:
             case OpCode::fac:
+            case OpCode::jpz:
+                return 1;
             case OpCode::hlt:
             case OpCode::num_op_codes:
                 return 0;
