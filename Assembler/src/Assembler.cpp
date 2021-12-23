@@ -225,23 +225,6 @@ namespace RaychelScript::Assembler {
         return maybe_result;
     }
 
-    void optimize_assembly(std::vector<Assembly::Instruction>& instructions) noexcept
-    {
-        for (auto it = instructions.begin(); it != instructions.end();) {
-            if (it->op_code() != Assembly::OpCode::mov) {
-                it++;
-                continue;
-            }
-
-            if (it->data1() != it->data2()) {
-                it++;
-                continue;
-            }
-
-            it = instructions.erase(it);
-        }
-    }
-
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept
     {
         Assembly::VMData output;
@@ -268,7 +251,9 @@ namespace RaychelScript::Assembler {
 
         ctx.emit<Assembly::OpCode::hlt>();
 
-        optimize_assembly(output.instructions);
+        for(const auto&[identifier, address] : ctx.names()) {
+            Logger::debug('$', address, " -> ", identifier, '\n');
+        }
 
         return output;
     }
