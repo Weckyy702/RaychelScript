@@ -93,30 +93,27 @@ namespace RaychelScript::Assembler {
 
         [[nodiscard]] Assembly::MemoryIndex allocate_variable(const std::string& name) noexcept
         {
-            return _allocate_new(names_, name);
+            return _allocate_new(names_, name).second;
         }
 
         [[nodiscard]] Assembly::MemoryIndex allocate_immediate(double value) noexcept
         {
-            const auto index = _allocate_new(immediates_, value);
-            immediate_values_.emplace_back(std::make_pair(value, index));
+            const auto[did_insert, index] = _allocate_new(immediates_, value);
+            if(did_insert) {
+                immediate_values_.emplace_back(std::make_pair(value, index));
+            }
             return index;
         }
 
     private:
         template <typename Container, typename T = typename Container::value_type>
-        [[nodiscard]] Assembly::MemoryIndex _allocate_new(Container& container, const T& value) noexcept
+        [[nodiscard]] std::pair<bool, Assembly::MemoryIndex> _allocate_new(Container& container, const T& value) noexcept
         {
             if (const auto it = container.find(value); it != container.end()) {
-                return Assembly::make_memory_index(it->second);
+                return {false, Assembly::make_memory_index(it->second)};
             }
-            const auto it = container.insert({value, _new_index()});
-            return Assembly::make_memory_index(it.first->second);
-        }
-
-        std::size_t _new_index() noexcept
-        {
-            return current_index_++;
+            const auto it = container.insert({value, current_index_++});
+            return {true, Assembly::make_memory_index(it.first->second)};
         }
 
         std::vector<Assembly::Instruction>& instructions_;
