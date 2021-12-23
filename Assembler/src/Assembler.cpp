@@ -243,7 +243,7 @@ namespace RaychelScript::Assembler {
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept
     {
-        Assembly::VMData output;
+        Assembly::VMData output{ast.config_block};
         AssemblingContext ctx{output.instructions, output.immediate_values};
 
         for (const auto& identifier : ast.config_block.input_identifiers) {
@@ -265,7 +265,7 @@ namespace RaychelScript::Assembler {
             }
         }
 
-        ctx.emit<Assembly::OpCode::hlt>();
+        ctx.emit<Assembly::OpCode::hlt>(); //the last instruction must be the HLT instruction
 
         for(const auto&[identifier, address] : ctx.names()) {
             Logger::debug('$', address, " -> ", identifier, '\n');

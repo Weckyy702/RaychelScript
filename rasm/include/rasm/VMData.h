@@ -40,8 +40,8 @@ namespace RaychelScript::Assembly {
     struct VMData
     {
         ConfigBlock config_block;
-        std::vector<std::pair<double, MemoryIndex>> immediate_values;
-        std::vector<Instruction> instructions;
+        std::vector<std::pair<double, MemoryIndex>> immediate_values{};
+        std::vector<Instruction> instructions{};
     };
 
 } // namespace RaychelScript::Assembly
