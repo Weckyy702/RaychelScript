@@ -35,7 +35,7 @@
 #include "shared/AST/AST.h"
 
 #ifdef _WIN32
-    #ifdef RaychelScriptParser_EXPORTS
+    #ifdef RaychelScriptOptimizer_EXPORTS
         #define RAYCHELSCRIPT_OPTIMIZER_API __declspec(dllexport)
     #else
         #define RAYCHELSCRIPT_OPTIMIZER_API __declspec(dllimport)
