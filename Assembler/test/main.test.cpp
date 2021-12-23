@@ -12,7 +12,7 @@ int main()
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     {
 
-        const auto data_or_error = Lex{lex_file, "../../../shared/test/simple.rsc"} | Parse{} | Assemble{};
+        const auto data_or_error = Lex{lex_file, "../../../../shared/test/simple.rsc"} | Parse{} | Assemble{};
 
         if (log_if_error(data_or_error)) {
             return 1;
@@ -34,13 +34,26 @@ int main()
         }
 
         const auto data = Raychel::get<RaychelScript::Assembly::VMData>(data_or_error);
-        for (const auto& [value, address] : data.immediate_values) {
-            Logger::info("\t$", static_cast<std::uint32_t>(address.value()), " -> ", value, '\n');
+
+        Logger::log("Input identifiers:\n");
+        for(const auto& identifier : data.config_block.input_identifiers) {
+            Logger::info(identifier, '\n');
         }
 
+        Logger::log("Output identifiers:\n");
+        for(const auto& identifier : data.config_block.output_identifiers) {
+            Logger::info(identifier, '\n');
+        }
+
+        Logger::log("Immediate values:\n");
+        for (const auto& [value, address] : data.immediate_values) {
+            Logger::info('$', static_cast<std::uint32_t>(address.value()), " -> ", value, '\n');
+        }
+
+        Logger::log("Instructions:\n");
         std::size_t index{0};
         for (const auto instr : data.instructions) {
-            Logger::log(index++, ": ", instr, '\n');
+            Logger::info(index++, ": ", instr, '\n');
         }
     }
 }
