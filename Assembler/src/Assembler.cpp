@@ -202,6 +202,9 @@ namespace RaychelScript::Assembler {
             case Op::greater_than:
                 ctx.emit<Assembly::OpCode::cgt>(lhs_index, rhs_index);
                 break;
+            case Op::not_equals:
+                ctx.emit<Assembly::OpCode::cne>(lhs_index, rhs_index);
+                break;
         }
 
         return ctx.a_index(); //this isn't actually used, but we have no other way to do this

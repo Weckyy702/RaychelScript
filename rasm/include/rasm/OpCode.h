@@ -52,6 +52,7 @@ namespace RaychelScript::Assembly {
         clt, //set flag if a is less than b (a < b)
         cgt, //set flag if a is greater than b (a > b)
         ceq, //set flag if a is equal to b (a == b)
+        cne, //set flag if a is not equal to b (a != b)
 
         num_op_codes
     };
@@ -85,6 +86,8 @@ namespace RaychelScript::Assembly {
                 return "CGT";
             case OpCode::ceq:
                 return "CEQ";
+            case OpCode::cne:
+                return "CNE";
             case OpCode::num_op_codes:
                 break;
         }
@@ -106,6 +109,8 @@ namespace RaychelScript::Assembly {
             case OpCode::mul:
             case OpCode::div:
             case OpCode::pow:
+            case OpCode::cne:
+                return 2;
             case OpCode::mag:
             case OpCode::fac:
             case OpCode::hlt:
