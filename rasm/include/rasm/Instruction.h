@@ -69,6 +69,11 @@ namespace RaychelScript::Assembly {
         return make_memory_index(value);
     }
 
+    inline std::ostream& operator<<(std::ostream& os, const MemoryIndex& index)
+    {
+        return os << static_cast<std::uint32_t>(index.value());
+    }
+
     class Instruction
     {
     public:
