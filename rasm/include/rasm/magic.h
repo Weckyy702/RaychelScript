@@ -30,10 +30,20 @@
 
 #include <cstdint>
 
+#ifdef _WIN32
+    #ifdef RaychelScriptAssembly_EXPORTS
+        #define RAYCHELSCRIPT_ASSEMBLY_API __declspec(dllexport)
+    #else
+        #define RAYCHELSCRIPT_ASSEMBLY_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_ASSEMBLY_API
+#endif
+
 namespace RaychelScript::Assembly {
 
     constexpr std::uint32_t magic_word = 0xF00D4U;
-    std::uint32_t version_number() noexcept;
+   RAYCHELSCRIPT_ASSEMBLY_API std::uint32_t version_number() noexcept;
 
 } //namespace RaychelScript::Assembly
 

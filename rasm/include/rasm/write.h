@@ -38,7 +38,7 @@
 
 namespace RaychelScript::Assembly {
 
-    [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept;
+    RAYCHELSCRIPT_ASSEMBLY_API [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept;
 
     [[nodiscard]] inline bool write_rsbf(std::string_view path, const VMData& data) noexcept
     {

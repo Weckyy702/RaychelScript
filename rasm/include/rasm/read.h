@@ -47,7 +47,7 @@ namespace RaychelScript::Assembly {
         reading_failure,
     };
 
-    std::variant<VMData, ReadingErrorCode> read_rsbf(std::istream& stream) noexcept;
+    RAYCHELSCRIPT_ASSEMBLY_API std::variant<VMData, ReadingErrorCode> read_rsbf(std::istream& stream) noexcept;
 
     inline std::variant<VMData, ReadingErrorCode> read_rsbf(std::string_view path) noexcept
     {
