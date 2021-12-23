@@ -35,9 +35,19 @@
 #include "rasm/VMData.h"
 #include "shared/AST/AST.h"
 
+#ifdef _WIN32
+    #ifdef RaychelScriptAssembler_EXPORTS
+        #define RAYCHELSCRIPT_ASSEMBLER_API __declspec(dllexport)
+    #else
+        #define RAYCHELSCRIPT_ASSEMBLER_API __declspec(dllimport)
+    #endif
+#else
+    #define RAYCHELSCRIPT_ASSEMBLER_API
+#endif
+
 namespace RaychelScript::Assembler {
 
-    [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept;
+    RAYCHELSCRIPT_ASSEMBLER_API [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept;
 
 } //namespace RaychelScript::Assembler
 
