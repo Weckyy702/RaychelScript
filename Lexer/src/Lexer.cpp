@@ -187,6 +187,10 @@ namespace RaychelScript::Lexer {
 
     LexResult lex(std::istream& source_stream) noexcept
     {
+        if (!source_stream) {
+            return LexerErrorCode::no_input;
+        }
+
         const auto tokens_or_error = _lex_raw(source_stream);
         if (const auto* ec = std::get_if<LexerErrorCode>(&tokens_or_error); ec) {
             return *ec;
