@@ -47,7 +47,8 @@
 
 namespace RaychelScript::Assembler {
 
-    RAYCHELSCRIPT_ASSEMBLER_API [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept;
+    RAYCHELSCRIPT_ASSEMBLER_API [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData>
+    assemble(const AST& ast) noexcept;
 
 } //namespace RaychelScript::Assembler
 

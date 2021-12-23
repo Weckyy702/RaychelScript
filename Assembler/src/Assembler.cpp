@@ -192,10 +192,10 @@ namespace RaychelScript::Assembler {
         TRY(assemble(data.lhs, ctx), lhs_index);
         TRY(assemble(data.rhs, ctx), rhs_index);
 
-        switch(data.operation) {
+        switch (data.operation) {
             case Op::equals:
                 ctx.emit<Assembly::OpCode::ceq>(lhs_index, rhs_index);
-            break;
+                break;
             case Op::less_than:
                 ctx.emit<Assembly::OpCode::clt>(lhs_index, rhs_index);
                 break;
@@ -272,7 +272,7 @@ namespace RaychelScript::Assembler {
 
         ctx.emit<Assembly::OpCode::hlt>(); //the last instruction must be the HLT instruction
 
-        for(const auto&[identifier, address] : ctx.names()) {
+        for (const auto& [identifier, address] : ctx.names()) {
             Logger::debug('$', address, " -> ", identifier, '\n');
         }
 

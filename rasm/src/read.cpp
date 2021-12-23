@@ -85,7 +85,7 @@ namespace RaychelScript::Assembly {
             return obj;
         }
 
-        template<>
+        template <>
         std::optional<MemoryIndex> read<MemoryIndex>(std::istream& stream) noexcept
         {
             TRY_READ(std::uint8_t, value, std::nullopt);

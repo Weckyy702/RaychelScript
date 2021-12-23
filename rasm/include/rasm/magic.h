@@ -43,7 +43,7 @@
 namespace RaychelScript::Assembly {
 
     constexpr std::uint32_t magic_word = 0xF00D4U;
-   RAYCHELSCRIPT_ASSEMBLY_API std::uint32_t version_number() noexcept;
+    RAYCHELSCRIPT_ASSEMBLY_API std::uint32_t version_number() noexcept;
 
 } //namespace RaychelScript::Assembly
 

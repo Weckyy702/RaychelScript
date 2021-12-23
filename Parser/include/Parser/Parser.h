@@ -46,8 +46,8 @@
 #include <vector>
 #include "Lexer/LexerPipe.h"
 #include "ParserErrorCode.h"
-#include "shared/AST/AST.h"
 #include "RaychelCore/compat.h"
+#include "shared/AST/AST.h"
 
 namespace RaychelScript::Parser {
 
@@ -66,11 +66,11 @@ namespace RaychelScript::Parser {
     }
 
 #if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#else if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
-#pragma warning(push)
-#pragma warning(disable: 4996)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
+    #pragma warning(push)
+    #pragma warning(disable : 4996)
 #endif
     RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(const std::string& source_text) noexcept
     {
@@ -79,9 +79,9 @@ namespace RaychelScript::Parser {
     }
 
 #if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #elif RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
-#pragma warning(pop)
+    #pragma warning(pop)
 #endif
 
     /**
