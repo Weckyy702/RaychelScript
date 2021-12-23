@@ -54,7 +54,7 @@ namespace RaychelScript::Assembler {
         [[nodiscard]] Assembly::MemoryIndex memory_index_for(const std::string& name) const noexcept
         {
             RAYCHEL_ASSERT(has_name(name));
-            return Assembly::make_memory_index(names_.find(name)->second);
+            return names_.find(name)->second;
         }
 
         [[nodiscard]] static constexpr Assembly::MemoryIndex a_index() noexcept
@@ -102,15 +102,15 @@ namespace RaychelScript::Assembler {
             return instruction_index();
         }
 
-        [[nodiscard]] Assembly::MemoryIndex allocate_variable(const std::string& name) noexcept
+        [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
         {
             return _allocate_new(names_, name).second;
         }
 
-        [[nodiscard]] Assembly::MemoryIndex allocate_immediate(double value) noexcept
+        [[nodiscard]] auto allocate_immediate(double value) noexcept
         {
-            const auto[did_insert, index] = _allocate_new(immediates_, value);
-            if(did_insert) {
+            const auto [did_insert, index] = _allocate_new(immediates_, value);
+            if (did_insert) {
                 immediate_values_.emplace_back(std::make_pair(value, index));
             }
             return index;
@@ -142,10 +142,10 @@ namespace RaychelScript::Assembler {
         [[nodiscard]] std::pair<bool, Assembly::MemoryIndex> _allocate_new(Container& container, const T& value) noexcept
         {
             if (const auto it = container.find(value); it != container.end()) {
-                return {false, Assembly::make_memory_index(it->second)};
+                return {false, it->second};
             }
-            const auto it = container.insert({value, current_index_++});
-            return {true, Assembly::make_memory_index(it.first->second)};
+            const auto it = container.insert({value, Assembly::make_memory_index(current_index_++)});
+            return {true, it.first->second};
         }
 
         std::vector<Assembly::Instruction>& instructions_;
@@ -154,8 +154,8 @@ namespace RaychelScript::Assembler {
 
         std::size_t current_index_{2}; //the first two indecies are reserved
 
-        std::unordered_map<std::string, std::size_t> names_;
-        std::unordered_map<double, std::size_t> immediates_;
+        std::unordered_map<std::string, Assembly::MemoryIndex> names_;
+        std::unordered_map<double, Assembly::MemoryIndex> immediates_;
     };
 
 } //namespace RaychelScript::Assembler
