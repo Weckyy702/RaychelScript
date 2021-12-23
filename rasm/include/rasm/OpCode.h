@@ -50,6 +50,7 @@ namespace RaychelScript::Assembly {
 
         //control flow
         jpz, //jump if flag is not set
+        jmp, //jump unconditionally
         hlt, //halt execution
 
         //comparison
@@ -82,6 +83,8 @@ namespace RaychelScript::Assembly {
                 return "POW";
             case OpCode::jpz:
                 return "JPZ";
+            case OpCode::jmp:
+                return "JMP";
             case OpCode::hlt:
                 return "HLT";
             case OpCode::clt:
@@ -115,6 +118,7 @@ namespace RaychelScript::Assembly {
             case OpCode::mag:
             case OpCode::fac:
             case OpCode::jpz:
+            case OpCode::jmp:
                 return 1;
             case OpCode::hlt:
             case OpCode::num_op_codes:

@@ -225,7 +225,24 @@ namespace RaychelScript::Assembler {
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble([[maybe_unused]] const LoopData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
     {
-        return AssemblerErrorCode::not_implemented;
+        const auto instruction_index_before_condition = ctx.instruction_index();
+        TRY(assemble(data.condition_node, ctx), condition_index);
+
+        const auto condition_instruction_index = ctx.emit<Assembly::OpCode::jpz>(Assembly::make_memory_index(0));
+
+        for (const auto& node : data.body) {
+            const auto index_or_error = assemble(node, ctx);
+            if (const auto* ec = std::get_if<AssemblerErrorCode>(&index_or_error); ec) {
+                if (*ec != AssemblerErrorCode::ok) {
+                    return *ec;
+                }
+            }
+        }
+
+        ctx.emit<Assembly::OpCode::jmp>(Assembly::make_memory_index(instruction_index_before_condition + 1)); //jump to the first instruction of the condition
+
+        ctx.instructions().at(condition_instruction_index).data1() = static_cast<std::uint8_t>(ctx.instruction_index() + 1);
+        return AssemblerErrorCode::ok;
     }
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::MemoryIndex>

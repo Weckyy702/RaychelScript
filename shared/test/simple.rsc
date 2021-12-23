@@ -13,3 +13,7 @@ d2 = 7 + 2
 if d2 < 0   
     d2 = -d2
 endif
+
+while d2 < 0
+    d2 = -d2
+endwhile
