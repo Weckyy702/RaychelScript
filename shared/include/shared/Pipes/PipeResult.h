@@ -45,6 +45,8 @@
             RAYCHEL_TODO("Handle optimizer error codes");                                                                        \
         case ErrorType::interpreter_error:                                                                                       \
             return (name).to_error_code<Interpreter::InterpreterErrorCode>();                                                    \
+        case ErrorType::read_error:                                                                                              \
+            return (name).to_error_code<Assembly::ReadingErrorCode>();                                                           \
         case ErrorType::assembler_error:                                                                                         \
             return (name).to_error_code<Assembler::AssemblerErrorCode>();                                                        \
     }
@@ -67,6 +69,10 @@ namespace RaychelScript {
         enum class AssemblerErrorCode;
     } //namespace Assembler
 
+    namespace Assembly {
+        enum class ReadingErrorCode;
+    } // namespace Assembly
+
 } // namespace RaychelScript
 
 namespace RaychelScript::Pipes {
@@ -77,6 +83,7 @@ namespace RaychelScript::Pipes {
         parser_error,
         optimizer_error,
         interpreter_error,
+        read_error,
         assembler_error,
     };
 
@@ -99,6 +106,10 @@ namespace RaychelScript::Pipes {
 
         template <>
         struct _error_type_for<Interpreter::InterpreterErrorCode> : _base<ErrorType::interpreter_error>
+        {};
+
+        template <>
+        struct _error_type_for<Assembly::ReadingErrorCode> : _base<ErrorType::read_error>
         {};
 
         template <>
@@ -168,7 +179,47 @@ namespace RaychelScript::Pipes {
 
     private:
         ErrorType error_type_;
+        //TODO: using std::any feels a bit extreme, given we only hold enum values (maybe std::uintmax_t?)
         std::variant<std::any, T> error_or_value_;
+    };
+
+    template <>
+    class PipeResult<void>
+    {
+    public:
+        PipeResult()=default;
+
+        template <typename E>
+        requires std::is_enum_v<E> PipeResult(E error_code) //NOLINT we want this constructor to be implicit
+            : error_type_{error_type_for<E>}, error_{error_code}
+        {}
+
+        [[nodiscard]] bool is_error() const noexcept
+        {
+            return error_type() != ErrorType::no_error;
+        }
+
+        [[nodiscard]] ErrorType error_type() const noexcept
+        {
+            return error_type_;
+        }
+
+        template <typename E>
+        requires std::is_enum_v<E>
+        [[nodiscard]] E to_error_code() const noexcept
+        {
+            RAYCHEL_ASSERT(error_type_ == error_type_for<E>);
+            return std::any_cast<E>(error_);
+        }
+
+        explicit operator bool() const noexcept
+        {
+            return !is_error();
+        }
+
+    private:
+        ErrorType error_type_{ErrorType::no_error};
+        std::any error_;
     };
 
     template <typename T>
@@ -191,6 +242,9 @@ namespace RaychelScript::Pipes {
                 RAYCHEL_TODO("Handle optimizer error codes");
             case ErrorType::interpreter_error:
                 Logger::error("Interpreter error: ", result.template to_error_code<Interpreter::InterpreterErrorCode>(), '\n');
+                break;
+            case ErrorType::read_error:
+                Logger::error("Reading error: ", result.template to_error_code<Assembly::ReadingErrorCode>(), '\n');
                 break;
             case ErrorType::assembler_error:
                 Logger::error("Assembler error: ", result.template to_error_code<Assembler::AssemblerErrorCode>(), '\n');
