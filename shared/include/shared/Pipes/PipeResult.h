@@ -187,7 +187,7 @@ namespace RaychelScript::Pipes {
     class PipeResult<void>
     {
     public:
-        PipeResult()=default;
+        PipeResult() = default;
 
         template <typename E>
         requires std::is_enum_v<E> PipeResult(E error_code) //NOLINT we want this constructor to be implicit
