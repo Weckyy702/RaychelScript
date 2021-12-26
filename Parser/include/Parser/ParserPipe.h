@@ -38,19 +38,21 @@ namespace RaychelScript::Pipes {
 
     struct Parse
     {
-        Parser::ParseResult operator()(const Lexer::LexResult& input) const noexcept
+        Parser::ParseResult operator()(const Lexer::SourceTokens& input) const noexcept
         {
-            return Parser::parse(Raychel::get<Lexer::SourceTokens>(input));
+            return Parser::parse(input);
         }
     };
 
+    inline PipeResult<AST> operator|(const PipeResult<Lexer::SourceTokens>& input, const Parse& parser) noexcept
+    {
+        RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
+        return parser(input.value());
+    }
+
     inline PipeResult<AST> operator|(const Lex& lexer, const Parse& parser) noexcept
     {
-        const auto tokens_or_error = lexer();
-        if (const auto* ec = std::get_if<Lexer::LexerErrorCode>(&tokens_or_error); ec) {
-            return *ec;
-        }
-        return parser(Raychel::get<Lexer::SourceTokens>(tokens_or_error));
+        return PipeResult<Lexer::SourceTokens>{lexer()} | parser;
     }
 
 } //namespace RaychelScript::Pipes
