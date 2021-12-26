@@ -46,52 +46,68 @@ namespace RaychelScript::Assembler {
             : instructions_{instructions}, immediate_values_{immediate_values}
         {}
 
+        /**
+        * \brief Return if the name has a memory index assigned to it
+        * 
+        * \param name name of a variable
+        * \return true The name has a memory index associated with it
+        * \return false The name does not have a memory index associated with it
+        */
         [[nodiscard]] bool has_name(const std::string& name) const noexcept
         {
             return names_.find(name) != names_.end();
         }
 
+        /**
+        * \brief Return the memory index associated with a name
+        * 
+        * \param name Name of a variable
+        * \return Assembly::MemoryIndex memory index for the name
+        */
         [[nodiscard]] Assembly::MemoryIndex memory_index_for(const std::string& name) const noexcept
         {
             RAYCHEL_ASSERT(has_name(name));
             return names_.find(name)->second;
         }
 
-        [[nodiscard]] static constexpr Assembly::MemoryIndex a_index() noexcept
+        /**
+        * \brief Return the index for the reserved A register
+        */
+        [[nodiscard]] static constexpr Assembly::MemoryIndex result_index() noexcept
         {
             return Assembly::make_memory_index(0);
         }
 
-        [[nodiscard]] static constexpr Assembly::MemoryIndex b_index() noexcept
-        {
-            return Assembly::make_memory_index(1);
-        }
-
-        [[nodiscard]] const auto& names() const noexcept
-        {
-            return names_;
-        }
-
-        [[nodiscard]] const auto& immediates() const noexcept
-        {
-            return immediates_;
-        }
-
+        /**
+        * \brief Return the index to the last instruction
+        */
         [[nodiscard]] auto instruction_index() const noexcept
         {
             return instructions_.size() - 1;
         }
 
+        /**
+        * \brief Return a reference to the internal instruction buffer
+        */
         [[nodiscard]] auto& instructions() noexcept
         {
             return instructions_;
         }
 
+        /**
+        * \brief Return a constant reference to the internal instruction buffer
+        */
         [[nodiscard]] const auto& instructions() const noexcept
         {
             return instructions_;
         }
 
+        /**
+        * \brief Add a new instruction to the buffer and return its index
+        * 
+        * \tparam code op code of the instruction
+        * \tparam Ts Constructor arguments for the instruction. Must match the number expected for the op code
+        */
         template <Assembly::OpCode code, typename... Ts>
         auto emit(const Ts&... args) noexcept
         {
@@ -102,11 +118,21 @@ namespace RaychelScript::Assembler {
             return instruction_index();
         }
 
+        /**
+        * \brief Allocate a new variable and return its memory index
+        * 
+        * \param name Name of the variable
+        */
         [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
         {
             return _allocate_new(names_, name).second;
         }
 
+        /**
+        * \brief Allocate a new immediate value and return its memory index
+        * 
+        * \param value immediate value
+        */
         [[nodiscard]] auto allocate_immediate(double value) noexcept
         {
             const auto [did_insert, index] = _allocate_new(immediates_, value);
@@ -116,6 +142,9 @@ namespace RaychelScript::Assembler {
             return index;
         }
 
+        /**
+        * \brief allocate a new intermediate value and return its memory index
+        */
         [[nodiscard]] auto allocate_intermediate() noexcept
         {
             for (auto& [free, index] : intermediates_) {
@@ -125,11 +154,14 @@ namespace RaychelScript::Assembler {
                 }
             }
 
-            auto idx = Assembly::make_memory_index(current_index_++);
+            auto idx = _new_index();
             intermediates_.emplace_back(false, idx);
             return idx;
         }
 
+        /**
+        * \brief Mark all intermediate values as free so they can be reused
+        */
         void free_intermediates() noexcept
         {
             for (auto& [free, _] : intermediates_) {
@@ -138,21 +170,34 @@ namespace RaychelScript::Assembler {
         }
 
     private:
+        /**
+        * \brief Return the memory of the given value. If none is assigned yet, allocate a new one
+        * 
+        * \tparam Container Type of the container
+        * \tparam T value type of the container
+        * \param container container to search in
+        * \param value value to search for
+        */
         template <typename Container, typename T = typename Container::value_type>
         [[nodiscard]] std::pair<bool, Assembly::MemoryIndex> _allocate_new(Container& container, const T& value) noexcept
         {
             if (const auto it = container.find(value); it != container.end()) {
                 return {false, it->second};
             }
-            const auto it = container.insert({value, Assembly::make_memory_index(current_index_++)});
+            const auto it = container.insert({value, _new_index()});
             return {true, it.first->second};
+        }
+
+        [[nodiscard]] Assembly::MemoryIndex _new_index() noexcept
+        {
+            return Assembly::make_memory_index(current_index_++);
         }
 
         std::vector<Assembly::Instruction>& instructions_;
         Immediates& immediate_values_;
         std::vector<std::pair<bool, Assembly::MemoryIndex>> intermediates_;
 
-        std::size_t current_index_{2}; //the first two indecies are reserved
+        std::size_t current_index_{1}; //the first index is reserved for the A register
 
         std::unordered_map<std::string, Assembly::MemoryIndex> names_;
         std::unordered_map<double, Assembly::MemoryIndex> immediates_;

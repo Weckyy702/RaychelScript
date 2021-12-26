@@ -84,7 +84,7 @@ namespace RaychelScript::Assembler {
         }
 
         const auto result_index = ctx.allocate_intermediate();
-        ctx.emit<Assembly::OpCode::mov>(ctx.a_index(), result_index);
+        ctx.emit<Assembly::OpCode::mov>(ctx.result_index(), result_index);
 
         return result_index;
     }
@@ -140,7 +140,7 @@ namespace RaychelScript::Assembler {
         }
 
         auto intermediate_idx = ctx.allocate_intermediate();
-        ctx.emit<Assembly::OpCode::mov>(ctx.a_index(), intermediate_idx);
+        ctx.emit<Assembly::OpCode::mov>(ctx.result_index(), intermediate_idx);
 
         return intermediate_idx;
     }
@@ -177,8 +177,8 @@ namespace RaychelScript::Assembler {
     {
         const auto true_index = ctx.allocate_immediate(1);
 
-        ctx.emit<Assembly::OpCode::mov>(true_index, ctx.a_index());
-        return ctx.a_index();
+        ctx.emit<Assembly::OpCode::mov>(true_index, ctx.result_index());
+        return ctx.result_index();
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
@@ -186,8 +186,8 @@ namespace RaychelScript::Assembler {
     {
         const auto false_index = ctx.allocate_immediate(0);
 
-        ctx.emit<Assembly::OpCode::mov>(false_index, ctx.a_index());
-        return ctx.a_index();
+        ctx.emit<Assembly::OpCode::mov>(false_index, ctx.result_index());
+        return ctx.result_index();
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
@@ -214,7 +214,7 @@ namespace RaychelScript::Assembler {
                 return AssemblerErrorCode::unknown_arithmetic_expression;
         }
 
-        return ctx.a_index(); //this isn't actually used, but we have no other way to do this
+        return ctx.result_index(); //this isn't actually used, but we have no other way to do this
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
@@ -355,10 +355,6 @@ namespace RaychelScript::Assembler {
         ctx.emit<Assembly::OpCode::hlt>(); //the last instruction must be the HLT instruction
 
         optimize_assembly(output.instructions);
-
-        for (const auto& [identifier, address] : ctx.names()) {
-            Logger::debug('$', address, " -> ", identifier, '\n');
-        }
 
         return output;
     }
