@@ -32,6 +32,8 @@
 #include "RaychelCore/AssertingGet.h"
 #include "shared/Misc/WalkAST.h"
 
+#include <utility>
+
 #define TRY(expression, name)                                                                                                    \
     const auto maybe_##name = (expression);                                                                                      \
     if (const auto* ec = std::get_if<AssemblerErrorCode>(&maybe_##name); ec) {                                                   \
@@ -262,6 +264,58 @@ namespace RaychelScript::Assembler {
         return maybe_result;
     }
 
+    static void update_jumps(std::vector<Assembly::Instruction>& instructions, auto removed_it) noexcept
+    {
+        const auto is_jump = [](const auto& code) { return code == Assembly::OpCode::jmp || code == Assembly::OpCode::jpz; };
+
+        const auto removed_index = std::distance(instructions.begin(), removed_it);
+
+        for (auto& instr : instructions) {
+            if (!is_jump(instr.op_code())) {
+                continue;
+            }
+
+            if (std::cmp_greater(instr.data1(), removed_index)) {
+                instr.data1()--;
+            }
+        }
+    }
+
+    static void optimize_assembly(std::vector<Assembly::Instruction>& instructions) noexcept
+    {
+        for (auto it = instructions.begin(); it != instructions.end();) {
+            if (it->op_code() != Assembly::OpCode::mov) {
+                it++;
+                continue;
+            }
+
+            //remove MOVs from x to x (x = x -> x)
+            if (it->data1() == it->data2()) {
+                it = instructions.erase(it);
+                update_jumps(instructions, it);
+                continue;
+            }
+
+            //coalesce MOVs where the first ones destination is the second ones source (y = a; b = y -> b = a)
+            if (it != std::prev(instructions.end()) && std::next(it)->op_code() == Assembly::OpCode::mov) {
+                const auto next = std::next(it);
+
+                const auto destination1 = it->data2();
+                const auto source2 = next->data1();
+                const auto destination2 = next->data2();
+
+                if (destination1 == source2) {
+                    it = std::prev(instructions.erase(next));
+                    update_jumps(instructions, std::next(it));
+                    it->data2() = destination2;
+                    continue;
+                }
+            }
+
+            it++;
+        }
+    }
+
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept
     {
         Assembly::VMData output{ast.config_block};
@@ -288,6 +342,8 @@ namespace RaychelScript::Assembler {
         }
 
         ctx.emit<Assembly::OpCode::hlt>(); //the last instruction must be the HLT instruction
+
+        optimize_assembly(output.instructions);
 
         for (const auto& [identifier, address] : ctx.names()) {
             Logger::debug('$', address, " -> ", identifier, '\n');
