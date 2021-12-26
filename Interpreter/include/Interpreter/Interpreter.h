@@ -47,12 +47,12 @@
 #include <string>
 #include <variant>
 
-#include "Parser/Parser.h"
 #include "shared/AST/AST.h"
 #include "shared/Execution/ConstantDescriptor.h"
 #include "shared/Execution/VariableDescriptor.h"
 
 #include "RaychelCore/AssertingGet.h"
+#include "RaychelCore/AssertingOptional.h"
 
 #define RAYCHELSCRIPT_INTERPRETER_DEPRECATED RAYCHELSCRIPT_PARSER_DEPRECATED
 

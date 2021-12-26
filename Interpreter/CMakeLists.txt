@@ -49,7 +49,7 @@ endif()
 
 target_link_libraries(RaychelScriptInterpreter PUBLIC
     RaychelMath
-    RaychelScriptParser
+    RaychelScriptBase
     RaychelLogger
 )
 

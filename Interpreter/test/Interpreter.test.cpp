@@ -27,6 +27,7 @@
 */
 
 #include "Interpreter/InterpreterPipe.h"
+#include "Parser/ParserPipe.h"
 
 #include "RaychelCore/AssertingGet.h"
 

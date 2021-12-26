@@ -32,7 +32,6 @@
 
 #include <map>
 
-#include "Parser/ParserPipe.h"
 #include "shared/Pipes/PipeResult.h"
 
 namespace RaychelScript::Pipes {
