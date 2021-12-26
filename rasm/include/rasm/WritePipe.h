@@ -1,8 +1,8 @@
 /**
-* \file read.h
+* \file WritePipe.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for functions related to reading instructions from RSBF files
-* \date 2021-12-17
+* \brief Header file for WritePipe class
+* \date 2021-12-25
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,38 +25,43 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_ASSEMBLY_READ_H
-#define RAYCHELSCRIPT_ASSEMBLY_READ_H
+#ifndef RAYCHELSCRIPT_WRITE_PIPE_H
+#define RAYCHELSCRIPT_WRITE_PIPE_H
 
 #include "VMData.h"
-#include "magic.h"
+#include "write.h"
 
 #include <fstream>
-#include <istream>
-#include <string>
 #include <string_view>
-#include <variant>
 
-namespace RaychelScript::Assembly {
+#include "shared/AST/AST.h"
+#include "shared/Pipes/PipeResult.h"
 
-    enum class ReadingErrorCode {
-        ok,
-        file_not_found,
-        no_magic_word,
-        wrong_version,
-        reading_failure,
+namespace RaychelScript::Pipes {
+
+    struct Write
+    {
+
+    public:
+        explicit Write(std::string_view output_path) : output_stream_{std::string{output_path}, std::ios::binary}
+        {}
+
+        bool operator()(const Assembly::VMData& data) const noexcept
+        {
+            return Assembly::write_rsbf(output_stream_, data);
+        }
+
+    private:
+        mutable std::ofstream output_stream_;
     };
 
-    using ReadResult = std::variant<ReadingErrorCode, VMData>;
-
-    RAYCHELSCRIPT_ASSEMBLY_API ReadResult read_rsbf(std::istream& stream) noexcept;
-
-    inline ReadResult read_rsbf(std::string_view path) noexcept
+    inline PipeResult<void> operator|(const PipeResult<Assembly::VMData>& input, const Write& writer) noexcept
     {
-        std::ifstream stream{std::string{path}, std::ios::in | std::ios::binary};
-        return read_rsbf(stream);
+        RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
+        writer(input.value()); //TODO: handle errors
+        return {};
     }
 
-} //namespace RaychelScript::Assembly
+} //namespace RaychelScript::Pipes
 
-#endif //!RAYCHELSCRIPT_ASSEMBLY_READ  _H
+#endif //!RAYCHELSCRIPT_WRITE_PI_H

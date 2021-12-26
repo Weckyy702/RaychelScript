@@ -144,7 +144,7 @@ namespace RaychelScript::Assembly {
         return vec;
     }
 
-    std::variant<VMData, ReadingErrorCode> read_rsbf(std::istream& stream) noexcept
+    ReadResult read_rsbf(std::istream& stream) noexcept
     {
         if (!stream) {
             return ReadingErrorCode::file_not_found;

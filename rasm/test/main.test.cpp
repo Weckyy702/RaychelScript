@@ -27,6 +27,7 @@
 */
 
 #include "rasm/Instruction.h"
+#include "rasm/WritePipe.h"
 #include "rasm/read.h"
 #include "rasm/write.h"
 

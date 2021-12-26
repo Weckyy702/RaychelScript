@@ -1,8 +1,8 @@
 /**
-* \file read.h
+* \file ReadPipe.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for functions related to reading instructions from RSBF files
-* \date 2021-12-17
+* \brief Header file for ReadPipe class
+* \date 2021-12-24
 * 
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,38 +25,32 @@
 * SOFTWARE.
 * 
 */
-#ifndef RAYCHELSCRIPT_ASSEMBLY_READ_H
-#define RAYCHELSCRIPT_ASSEMBLY_READ_H
+#ifndef RAYCHELSCRIPT_READ_PIPE_H
+#define RAYCHELSCRIPT_READ_PIPE_H
 
-#include "VMData.h"
-#include "magic.h"
+#include "read.h"
+#include "shared/Pipes/PipeResult.h"
 
 #include <fstream>
-#include <istream>
-#include <string>
 #include <string_view>
-#include <variant>
 
-namespace RaychelScript::Assembly {
+namespace RaychelScript::Pipes {
 
-    enum class ReadingErrorCode {
-        ok,
-        file_not_found,
-        no_magic_word,
-        wrong_version,
-        reading_failure,
+    class ReadRSBF
+    {
+    public:
+        explicit ReadRSBF(std::string_view file_path) : input_stream_{std::string{file_path}, std::ios::binary}
+        {}
+
+        Assembly::ReadResult operator()() noexcept
+        {
+            return Assembly::read_rsbf(input_stream_);
+        }
+
+    private:
+        std::ifstream input_stream_;
     };
 
-    using ReadResult = std::variant<ReadingErrorCode, VMData>;
+} //namespace RaychelScript::Pipes
 
-    RAYCHELSCRIPT_ASSEMBLY_API ReadResult read_rsbf(std::istream& stream) noexcept;
-
-    inline ReadResult read_rsbf(std::string_view path) noexcept
-    {
-        std::ifstream stream{std::string{path}, std::ios::in | std::ios::binary};
-        return read_rsbf(stream);
-    }
-
-} //namespace RaychelScript::Assembly
-
-#endif //!RAYCHELSCRIPT_ASSEMBLY_READ  _H
+#endif //!RAYCHELSCRIPT_READ_PIPE_H

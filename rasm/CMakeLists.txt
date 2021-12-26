@@ -12,6 +12,9 @@ add_library(RaychelScriptAssembly SHARED
     "${RAYCHELSCRIPT_ASSEMBLY_INCLUDE_DIR}/OpCode.h"
     "${RAYCHELSCRIPT_ASSEMBLY_INCLUDE_DIR}/VMData.h"
     "${RAYCHELSCRIPT_ASSEMBLY_INCLUDE_DIR}/magic.h"
+    "${RAYCHELSCRIPT_ASSEMBLY_INCLUDE_DIR}/ReadPipe.h"
+    "${RAYCHELSCRIPT_ASSEMBLY_INCLUDE_DIR}/WritePipe.h"
+
 
     "src/read.cpp"
     "src/write.cpp"
