@@ -71,7 +71,7 @@ namespace RaychelScript::Lexer {
     }
 
     using SourceTokens = std::vector<std::vector<Token>>;
-    using LexResult = std::variant<SourceTokens, LexerErrorCode>;
+    using LexResult = std::variant<LexerErrorCode, SourceTokens>;
 
 } //namespace RaychelScript::Lexer
 
