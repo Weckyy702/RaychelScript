@@ -25,9 +25,9 @@
 * SOFTWARE.
 * 
 */
-
 #include "Interpreter/InterpreterPipe.h"
 #include "Optimizer/OptimizerPipe.h"
+#include "Parser/ParserPipe.h"
 #include "shared/Misc/PrintAST.h"
 
 #include "Optimizer/modules/ConditionalsLight.h"
