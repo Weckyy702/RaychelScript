@@ -382,6 +382,8 @@ namespace RaychelScript::Assembler {
 
         optimize_assembly(output.instructions);
 
+        output.num_memory_locations = ctx.number_of_memory_locations();
+
         return output;
     }
 

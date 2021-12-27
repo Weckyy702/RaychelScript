@@ -206,6 +206,11 @@ namespace RaychelScript::Assembler {
             }
         }
 
+        std::size_t number_of_memory_locations() const noexcept
+        {
+            return current_index_;
+        }
+
     private:
         /**
         * \brief Return the memory of the given value. If none is assigned yet, allocate a new one

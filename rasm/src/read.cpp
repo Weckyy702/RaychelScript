@@ -160,6 +160,14 @@ namespace RaychelScript::Assembly {
             return ReadingErrorCode::wrong_version;
         }
 
+        //since we always have the reserved A register, 0 is actually a sentinel value :)
+        std::size_t number_of_memory_locations{0};
+
+        if (version > 2) {
+            TRY_READ(std::size_t, num_memory_locations, ReadingErrorCode::reading_failure);
+            number_of_memory_locations = num_memory_locations;
+        }
+
         auto maybe_input_identifiers = details::read_vector<std::string>(stream);
         if (!maybe_input_identifiers.has_value()) {
             return ReadingErrorCode::reading_failure;
@@ -191,9 +199,10 @@ namespace RaychelScript::Assembly {
         }
 
         return VMData{
-            {maybe_input_identifiers.value(), maybe_output_identifiers.value(), {}},
-            maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
-            instructions};
+            .config_block = {maybe_input_identifiers.value(), maybe_output_identifiers.value()},
+            .immediate_values = maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
+            .instructions = instructions,
+            .num_memory_locations = number_of_memory_locations};
     }
 
 } //namespace RaychelScript::Assembly

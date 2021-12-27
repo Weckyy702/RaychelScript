@@ -101,6 +101,9 @@ namespace RaychelScript::Assembly {
         TRY(write(stream, magic_word))
         TRY(write(stream, version_number()))
 
+        //Number of memory locations
+        TRY(write(stream, data.num_memory_locations));
+
         //I/O section
         TRY(write(stream, data.config_block.input_identifiers))
         TRY(write(stream, data.config_block.output_identifiers))

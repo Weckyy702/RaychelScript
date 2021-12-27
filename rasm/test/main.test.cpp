@@ -50,7 +50,7 @@ int main()
 
     std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, 12_mi}, sub, add, mov};
 
-    if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, {{0.1, 12_mi}, {12, 0_mi}, {99, 9_mi}}, instructions})) {
+    if (!write_rsbf("./instr.rsbf", VMData{{{"a", "b"}, {"c"}, {}}, {{0.1, 12_mi}, {12, 0_mi}, {99, 9_mi}}, instructions, 12})) {
         Logger::error("Writing failed!\n");
         return 1;
     }
@@ -78,6 +78,8 @@ int main()
     for (const auto& instr : data.instructions) {
         Logger::info('\t', instr, '\n');
     }
+
+    Logger::info(data.num_memory_locations, '\n');
 
     return 0;
 }
