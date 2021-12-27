@@ -116,6 +116,34 @@ namespace RaychelScript::Pipes {
         struct _error_type_for<Assembler::AssemblerErrorCode> : _base<ErrorType::assembler_error>
         {};
 
+        class ErrorContainer
+        {
+        public:
+            ErrorContainer() = default;
+
+            template <typename E>
+            requires std::is_enum_v<E> ErrorContainer(E value) //NOLINT we want this constructor to be implicit
+                : type_{_error_type_for<E>::value}, int_value_{static_cast<std::uintmax_t>(value)}
+            {}
+
+            template <typename E>
+            requires std::is_enum_v<E>
+            [[nodiscard]] E value() const noexcept
+            {
+                RAYCHEL_ASSERT(type_ == _error_type_for<E>::value);
+                return static_cast<E>(int_value_);
+            }
+
+            [[nodiscard]] ErrorType type() const noexcept
+            {
+                return type_;
+            }
+
+        private:
+            ErrorType type_{ErrorType::no_error};
+            std::uintmax_t int_value_{0};
+        };
+
     } // namespace details
 
     template <typename T>
@@ -127,11 +155,11 @@ namespace RaychelScript::Pipes {
     public:
         template <typename E>
         requires std::is_enum_v<E> PipeResult(E error_code) //NOLINT we want this constructor to be implicit
-            : error_type_{error_type_for<E>}, error_or_value_{error_code}
+            : error_or_value_{error_code}
         {}
 
         PipeResult(T value) //NOLINT we want this constructor to be implicit
-            : error_type_{ErrorType::no_error}, error_or_value_{value}
+            : error_or_value_{value}
         {}
 
         template <typename E>
@@ -139,12 +167,10 @@ namespace RaychelScript::Pipes {
         PipeResult(std::variant<E, T>&& value_or_error) //NOLINT we want this constructor to be implicit
         {
             if (const auto* ec = std::get_if<E>(&value_or_error); ec) {
-                error_type_ = error_type_for<E>;
                 error_or_value_ = *ec;
                 return;
             }
 
-            error_type_ = ErrorType::no_error;
             error_or_value_ = Raychel::get<T>(value_or_error);
         }
 
@@ -155,15 +181,18 @@ namespace RaychelScript::Pipes {
 
         [[nodiscard]] ErrorType error_type() const noexcept
         {
-            return error_type_;
+            if (error_or_value_.index() == 1) {
+                return ErrorType::no_error;
+            }
+            return Raychel::get<details::ErrorContainer>(error_or_value_).type();
         }
 
         template <typename E>
         requires std::is_enum_v<E>
         [[nodiscard]] E to_error_code() const noexcept
         {
-            RAYCHEL_ASSERT(error_type_ == error_type_for<E>);
-            return std::any_cast<E>(Raychel::get<std::any>(error_or_value_));
+            RAYCHEL_ASSERT(is_error())
+            return Raychel::get<details::ErrorContainer>(error_or_value_).template value<E>();
         }
 
         [[nodiscard]] T value() const noexcept
@@ -178,9 +207,7 @@ namespace RaychelScript::Pipes {
         }
 
     private:
-        ErrorType error_type_;
-        //TODO: using std::any feels a bit extreme, given we only hold enum values (maybe std::uintmax_t?)
-        std::variant<std::any, T> error_or_value_;
+        std::variant<details::ErrorContainer, T> error_or_value_;
     };
 
     template <>
@@ -191,7 +218,7 @@ namespace RaychelScript::Pipes {
 
         template <typename E>
         requires std::is_enum_v<E> PipeResult(E error_code) //NOLINT we want this constructor to be implicit
-            : error_type_{error_type_for<E>}, error_{error_code}
+            : error_{error_code}
         {}
 
         [[nodiscard]] bool is_error() const noexcept
@@ -201,15 +228,14 @@ namespace RaychelScript::Pipes {
 
         [[nodiscard]] ErrorType error_type() const noexcept
         {
-            return error_type_;
+            return error_.type();
         }
 
         template <typename E>
         requires std::is_enum_v<E>
         [[nodiscard]] E to_error_code() const noexcept
         {
-            RAYCHEL_ASSERT(error_type_ == error_type_for<E>);
-            return std::any_cast<E>(error_);
+            return error_.value<E>();
         }
 
         explicit operator bool() const noexcept
@@ -218,8 +244,7 @@ namespace RaychelScript::Pipes {
         }
 
     private:
-        ErrorType error_type_{ErrorType::no_error};
-        std::any error_;
+        details::ErrorContainer error_{};
     };
 
     template <typename T>
