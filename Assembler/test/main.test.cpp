@@ -14,7 +14,7 @@ int main()
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     {
 
-        const auto ast_or_error = Lex{lex_file, "../../../shared/test/abc.rsc"} | Parse{};
+        const auto ast_or_error = Lex{lex_file, "../../../shared/test/loops.rsc"} | Parse{};
 
         const auto label = Logger::startTimer("Assembling time");
         const auto data_or_error = ast_or_error | Assemble{};

@@ -41,6 +41,7 @@ namespace RaychelScript::Assembler {
         unresolved_identifier,
         unknown_arithmetic_expression,
         not_implemented,
+        invalid_scope_pop,
     };
 
     inline std::string_view error_code_to_reason_string(AssemblerErrorCode ec) noexcept
@@ -56,6 +57,8 @@ namespace RaychelScript::Assembler {
                 return "Unknown arithmetic operator";
             case AssemblerErrorCode::not_implemented:
                 return "Not implemented";
+            case AssemblerErrorCode::invalid_scope_pop:
+                return "Tried to pop a scope when there was no scope left on the stack";
         }
         RAYCHEL_ASSERT_NOT_REACHED;
     }

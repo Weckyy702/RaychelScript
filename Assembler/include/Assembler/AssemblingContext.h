@@ -33,6 +33,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stack>
 
 namespace RaychelScript::Assembler {
 
@@ -40,6 +41,10 @@ namespace RaychelScript::Assembler {
     {
 
         using Immediates = std::vector<std::pair<double, Assembly::MemoryIndex>>;
+
+        struct ScopeData {
+            std::vector<std::string> names;
+        };
 
     public:
         explicit AssemblingContext(std::vector<Assembly::Instruction>& instructions, Immediates& immediate_values)
@@ -56,6 +61,17 @@ namespace RaychelScript::Assembler {
         [[nodiscard]] bool has_name(const std::string& name) const noexcept
         {
             return names_.find(name) != names_.end();
+        }
+
+        /**
+        * \brief Return if the context has at least one scope on the stack
+        * 
+        * \return true The context has at least one scope on the stack
+        * \return false The context has no scopes on the stack
+        */
+        [[nodiscard]] bool has_scopes() const noexcept
+        {
+            return !scopes_.empty();
         }
 
         /**
@@ -118,6 +134,23 @@ namespace RaychelScript::Assembler {
             return instruction_index();
         }
 
+        void push_scope() noexcept
+        {
+            scopes_.emplace();
+        }
+
+        void pop_scope() noexcept
+        {
+            RAYCHEL_ASSERT(!scopes_.empty());
+            const auto& scope = scopes_.top();
+
+            for(const auto& name : scope.names) {
+                names_.erase(name);
+            }
+
+            scopes_.pop();
+        }
+
         /**
         * \brief Allocate a new variable and return its memory index
         * 
@@ -125,7 +158,11 @@ namespace RaychelScript::Assembler {
         */
         [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
         {
-            return _allocate_new(names_, name).second;
+            const auto[did_insert, index] = _allocate_new(names_, name);
+            if(did_insert && !scopes_.empty()) {
+                scopes_.top().names.emplace_back(name);
+            }
+            return index;
         }
 
         /**
@@ -201,6 +238,8 @@ namespace RaychelScript::Assembler {
 
         std::unordered_map<std::string, Assembly::MemoryIndex> names_;
         std::unordered_map<double, Assembly::MemoryIndex> immediates_;
+
+        std::stack<ScopeData, std::vector<ScopeData>> scopes_;
     };
 
 } //namespace RaychelScript::Assembler

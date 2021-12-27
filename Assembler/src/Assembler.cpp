@@ -29,8 +29,10 @@
 #include "Assembler/Assembler.h"
 
 #include "Assembler/AssemblingContext.h"
-#include "RaychelCore/AssertingGet.h"
 #include "shared/Misc/WalkAST.h"
+
+#include "RaychelCore/AssertingGet.h"
+#include "RaychelCore/ClassMacros.h"
 
 #include <utility>
 
@@ -43,11 +45,30 @@
 
 namespace RaychelScript::Assembler {
 
+    class ScopePusher
+    {
+    public:
+        explicit ScopePusher(AssemblingContext& ctx) : ctx_{ctx}
+        {
+            ctx.push_scope();
+        }
+
+        RAYCHEL_MAKE_NONCOPY_NONMOVE(ScopePusher)
+
+        ~ScopePusher() noexcept
+        {
+            ctx_.pop_scope();
+        }
+
+    private:
+        AssemblingContext& ctx_;
+    };
+
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble(const AST_Node& node, AssemblingContext& ctx) noexcept;
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const AssignmentExpressionData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const AssignmentExpressionData& data, AssemblingContext& ctx) noexcept
     {
         TRY(assemble(data.lhs, ctx), lhs_index);
         TRY(assemble(data.rhs, ctx), rhs_index);
@@ -57,7 +78,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const ArithmeticExpressionData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const ArithmeticExpressionData& data, AssemblingContext& ctx) noexcept
     {
         using Op = ArithmeticExpressionData::Operation;
         TRY(assemble(data.lhs, ctx), lhs_index);
@@ -90,7 +111,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const VariableDeclarationData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const VariableDeclarationData& data, AssemblingContext& ctx) noexcept
     {
         if (ctx.has_name(data.name)) {
             return AssemblerErrorCode::duplicate_name;
@@ -99,7 +120,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const VariableReferenceData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const VariableReferenceData& data, AssemblingContext& ctx) noexcept
     {
         if (!ctx.has_name(data.name)) {
             return AssemblerErrorCode::unresolved_identifier;
@@ -108,13 +129,13 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const NumericConstantData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const NumericConstantData& data, AssemblingContext& ctx) noexcept
     {
         return ctx.allocate_immediate(static_cast<double>(data.value));
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const UnaryExpressionData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const UnaryExpressionData& data, AssemblingContext& ctx) noexcept
     {
         using Op = UnaryExpressionData::Operation;
 
@@ -146,17 +167,17 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const ConditionalConstructData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const ConditionalConstructData& data, AssemblingContext& ctx) noexcept
     {
         if (data.body.empty()) {
             return AssemblerErrorCode::ok;
         }
 
-        //FIXME: we don't push the variable stack atm
-
         TRY(assemble(data.condition_node, ctx), condition_index);
 
         auto jump_instr_index = ctx.emit<Assembly::OpCode::jpz>(Assembly::make_memory_index(0));
+
+        ScopePusher pusher{ctx};
 
         for (const auto& node : data.body) {
             const auto index_or_error = assemble(node, ctx);
@@ -173,7 +194,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const LiteralTrueData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble([[maybe_unused]] const LiteralTrueData& data, AssemblingContext& ctx) noexcept
     {
         const auto true_index = ctx.allocate_immediate(1);
 
@@ -182,7 +203,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const LiteralFalseData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble([[maybe_unused]] const LiteralFalseData& data, AssemblingContext& ctx) noexcept
     {
         const auto false_index = ctx.allocate_immediate(0);
 
@@ -191,7 +212,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const RelationalOperatorData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const RelationalOperatorData& data, AssemblingContext& ctx) noexcept
     {
         using Op = RelationalOperatorData::Operation;
         TRY(assemble(data.lhs, ctx), lhs_index);
@@ -218,30 +239,35 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const InlinePushData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble([[maybe_unused]] const InlinePushData& data, AssemblingContext& ctx) noexcept
     {
-        return AssemblerErrorCode::not_implemented;
+        ctx.push_scope();
+        return AssemblerErrorCode::ok;
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const InlinePopData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble([[maybe_unused]] const InlinePopData& data, AssemblingContext& ctx) noexcept
     {
-        return AssemblerErrorCode::not_implemented;
+        if (!ctx.has_scopes()) {
+            return AssemblerErrorCode::invalid_scope_pop;
+        }
+        ctx.pop_scope();
+        return AssemblerErrorCode::ok;
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const LoopData& data, [[maybe_unused]] AssemblingContext& ctx) noexcept
+    assemble(const LoopData& data, AssemblingContext& ctx) noexcept
     {
         if (data.body.empty()) {
             return AssemblerErrorCode::ok;
         }
 
-        //FIXME: we don't push the variable stack atm
-
         const auto condition_instruction_index = Assembly::make_memory_index(ctx.instruction_index() + 1);
         TRY(assemble(data.condition_node, ctx), condition_index);
 
         const auto jump_instruction_index = ctx.emit<Assembly::OpCode::jpz>(Assembly::make_memory_index(0));
+
+        ScopePusher pusher{ctx};
 
         for (const auto& node : data.body) {
             const auto index_or_error = assemble(node, ctx);
