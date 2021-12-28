@@ -39,18 +39,18 @@ int main()
         const auto data = data_or_error.value();
 
         Logger::log("Input identifiers:\n");
-        for (const auto& identifier : data.config_block.input_identifiers) {
-            Logger::info(identifier, '\n');
+        for (const auto&[identifier, address] : data.config_block.input_identifiers) {
+            Logger::info(address, " -> ", identifier, '\n');
         }
 
         Logger::log("Output identifiers:\n");
-        for (const auto& identifier : data.config_block.output_identifiers) {
-            Logger::info(identifier, '\n');
+        for (const auto&[identifier, address] : data.config_block.output_identifiers) {
+            Logger::info(address, " -> ", identifier, '\n');
         }
 
         Logger::log("Immediate values:\n");
         for (const auto& [value, address] : data.immediate_values) {
-            Logger::info('$', address, " -> ", value, '\n');
+            Logger::info(address, " -> ", value, '\n');
         }
 
         Logger::log("Instructions:\n");

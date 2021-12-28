@@ -159,6 +159,9 @@ namespace RaychelScript::Assembly {
         if (version > version_number()) {
             return ReadingErrorCode::wrong_version;
         }
+        if(version != version_number()) {
+            Logger::warn("Mismatched versions between reading library and written file. Please consider regenerating the file\n");
+        }
 
         //since we always have the reserved A register, 0 is actually a sentinel value :)
         std::size_t number_of_memory_locations{0};
@@ -168,14 +171,48 @@ namespace RaychelScript::Assembly {
             number_of_memory_locations = num_memory_locations;
         }
 
-        auto maybe_input_identifiers = details::read_vector<std::string>(stream);
-        if (!maybe_input_identifiers.has_value()) {
-            return ReadingErrorCode::reading_failure;
+        std::size_t identifier_index{1};
+        std::vector<std::pair<std::string, MemoryIndex>> input_identifiers{};
+
+        if (version > 3) {
+            TRY_READ(std::uint32_t, size, ReadingErrorCode::reading_failure);
+            for (std::uint32_t i = 0; i < size; i++) {
+                if (auto maybe_value = details::read_pair<std::string, MemoryIndex>(stream); maybe_value.has_value()) {
+                    input_identifiers.emplace_back(std::move(maybe_value.value()));
+                }
+            }
+        } else {
+            auto maybe_input_identifiers = details::read_vector<std::string>(stream);
+            if (!maybe_input_identifiers.has_value()) {
+                return ReadingErrorCode::reading_failure;
+            }
+
+            //we have to convert the old data format to the new one (pain)
+            for (auto& identifier : maybe_input_identifiers.value()) {
+                input_identifiers.emplace_back(std::move(identifier), make_memory_index(identifier_index++));
+            }
         }
 
-        auto maybe_output_identifiers = details::read_vector<std::string>(stream);
-        if (!maybe_output_identifiers.has_value()) {
-            return ReadingErrorCode::reading_failure;
+        std::vector<std::pair<std::string, MemoryIndex>> output_identifiers{};
+
+        if (version > 3) {
+            TRY_READ(std::uint32_t, size, ReadingErrorCode::reading_failure);
+            for (std::uint32_t i = 0; i < size; i++) {
+                if (auto maybe_value = details::read_pair<std::string, MemoryIndex>(stream); maybe_value.has_value()) {
+                    output_identifiers.emplace_back(std::move(maybe_value.value()));
+                }
+            }
+        } else {
+
+            auto maybe_output_identifiers = details::read_vector<std::string>(stream);
+            if (!maybe_output_identifiers.has_value()) {
+                return ReadingErrorCode::reading_failure;
+            }
+
+            //we have to convert the old data format to the new one (pain)
+            for (auto& identifier : maybe_output_identifiers.value()) {
+                output_identifiers.emplace_back(std::move(identifier), make_memory_index(identifier_index++));
+            }
         }
 
         //The immediate section was added in version 2
@@ -199,7 +236,7 @@ namespace RaychelScript::Assembly {
         }
 
         return VMData{
-            .config_block = {maybe_input_identifiers.value(), maybe_output_identifiers.value()},
+            .config_block = {input_identifiers, output_identifiers},
             .immediate_values = maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
             .instructions = instructions,
             .num_memory_locations = number_of_memory_locations};

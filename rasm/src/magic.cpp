@@ -32,7 +32,7 @@ namespace RaychelScript::Assembly {
 
     [[nodiscard]] std::uint32_t version_number() noexcept
     {
-        return 0x3;
+        return 0x4;
     }
 
 } //namespace RaychelScript::Assembly

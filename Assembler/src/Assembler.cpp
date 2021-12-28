@@ -355,15 +355,15 @@ namespace RaychelScript::Assembler {
 
     [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept
     {
-        Assembly::VMData output{ast.config_block};
+        Assembly::VMData output{};
         AssemblingContext ctx{output.instructions, output.immediate_values};
 
         for (const auto& identifier : ast.config_block.input_identifiers) {
-            (void)ctx.allocate_variable(identifier);
+            output.config_block.input_identifiers.emplace_back(identifier, ctx.allocate_variable(identifier));
         }
 
         for (const auto& identifier : ast.config_block.output_identifiers) {
-            (void)ctx.allocate_variable(identifier);
+            output.config_block.output_identifiers.emplace_back(identifier, ctx.allocate_variable(identifier));
         }
 
         for (const auto& node : ast.nodes) {

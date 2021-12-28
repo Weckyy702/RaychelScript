@@ -34,11 +34,25 @@
 #include <vector>
 namespace RaychelScript::Assembly {
 
+    struct VMConfigBlock
+    {
+        using IdentiferContainer = std::vector<std::pair<std::string, MemoryIndex>>;
+        
+        IdentiferContainer input_identifiers;
+        IdentiferContainer output_identifiers;
+    };
+
     /**
     * \brief The VM equivalent of the AST struct for the interpreter
     */
     struct VMData
     {
+        VMConfigBlock config_block;
+
+        std::vector<std::pair<double, MemoryIndex>> immediate_values;
+        //TODO: add information about the variables
+
+        std::vector<Instruction> instructions;
         std::size_t num_memory_locations;
     };
 
