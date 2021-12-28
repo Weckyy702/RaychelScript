@@ -5,7 +5,7 @@ output c
 
 [[body]]
 
-var i = 0
+var i #I love this syntax :) (value will be implicitely zero)
 while i < 1000000
     i+=1
 endwhile
