@@ -101,7 +101,7 @@ namespace RaychelScript::Lexer {
             } else if (is_part_of_digit(c)) {
                 might_be_number = true;
             } else {
-                Logger::error(line_number, ':', column_number, " : invalid Token!\n");
+                Logger::error(line_number, ':', column_number, ": invalid token '", current_token + c, "'!\n");
                 return false;
             }
             current_token.push_back(c);
