@@ -71,7 +71,7 @@ namespace RaychelScript::Assembly {
 
     inline std::ostream& operator<<(std::ostream& os, const MemoryIndex& index)
     {
-        return os << static_cast<std::uint32_t>(index.value());
+        return os << '$' << static_cast<std::uint32_t>(index.value());
     }
 
     class Instruction
