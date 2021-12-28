@@ -49,6 +49,8 @@
             return (name).to_error_code<Assembly::ReadingErrorCode>();                                                           \
         case ErrorType::assembler_error:                                                                                         \
             return (name).to_error_code<Assembler::AssemblerErrorCode>();                                                        \
+        case ErrorType::vm_error:                                                                                                \
+            return (name).to_error_code<VM::VMErrorCode>();                                                                      \
     }
 
 namespace RaychelScript {
@@ -73,6 +75,10 @@ namespace RaychelScript {
         enum class ReadingErrorCode;
     } // namespace Assembly
 
+    namespace VM {
+        enum class VMErrorCode;
+    } // namespace VM
+
 } // namespace RaychelScript
 
 namespace RaychelScript::Pipes {
@@ -85,6 +91,7 @@ namespace RaychelScript::Pipes {
         interpreter_error,
         read_error,
         assembler_error,
+        vm_error,
     };
 
     namespace details {
@@ -114,6 +121,10 @@ namespace RaychelScript::Pipes {
 
         template <>
         struct _error_type_for<Assembler::AssemblerErrorCode> : _base<ErrorType::assembler_error>
+        {};
+
+        template <>
+        struct _error_type_for<VM::VMErrorCode> : _base<ErrorType::vm_error>
         {};
 
         class ErrorContainer
@@ -274,6 +285,8 @@ namespace RaychelScript::Pipes {
             case ErrorType::assembler_error:
                 Logger::error("Assembler error: ", result.template to_error_code<Assembler::AssemblerErrorCode>(), '\n');
                 break;
+            case ErrorType::vm_error:
+                Logger::error("VM error: ", result.template to_error_code<VM::VMErrorCode>(), '\n');
         }
         return true;
     }
