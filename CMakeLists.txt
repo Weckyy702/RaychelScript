@@ -8,7 +8,7 @@ option(RAYCHELSCRIPT_BUILD_OPTIMIZER "Build the RaychelScript optimizer" ON)
 option(RAYCHELSCRIPT_BUILD_INTERPRETER "Build the RaychelScript interpreter" ON)
 option(RAYCHELSCRIPT_BUILD_RASM_LIB "Build the RASM library" ON)
 option(RAYCHELSCRIPT_BUILD_ASSEMBLER "Build the RASM assembler" ON)
-option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" OFF)
+option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" ON)
 
 option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
 
@@ -72,4 +72,9 @@ endif()
 if(${RAYCHELSCRIPT_BUILD_ASSEMBLER})
     message(STATUS "Adding RaychelScript Assembler...")
     add_subdirectory(Assembler)
+endif()
+
+if(${RAYCHELSCRIPT_BUILD_VM})
+    message(STATUS "Adding RaychelScript Virtual Machine...")
+    add_subdirectory(VM)
 endif()
