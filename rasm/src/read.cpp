@@ -159,7 +159,7 @@ namespace RaychelScript::Assembly {
         if (version > version_number()) {
             return ReadingErrorCode::wrong_version;
         }
-        if(version != version_number()) {
+        if (version != version_number()) {
             Logger::warn("Mismatched versions between reading library and written file. Please consider regenerating the file\n");
         }
 

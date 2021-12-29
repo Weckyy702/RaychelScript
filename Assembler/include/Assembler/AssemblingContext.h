@@ -30,10 +30,10 @@
 
 #include "rasm/Instruction.h"
 
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <stack>
 
 namespace RaychelScript::Assembler {
 
@@ -42,7 +42,8 @@ namespace RaychelScript::Assembler {
 
         using Immediates = std::vector<std::pair<double, Assembly::MemoryIndex>>;
 
-        struct ScopeData {
+        struct ScopeData
+        {
             std::vector<std::string> names;
         };
 
@@ -144,7 +145,7 @@ namespace RaychelScript::Assembler {
             RAYCHEL_ASSERT(!scopes_.empty());
             const auto& scope = scopes_.top();
 
-            for(const auto& name : scope.names) {
+            for (const auto& name : scope.names) {
                 names_.erase(name);
             }
 
@@ -158,8 +159,8 @@ namespace RaychelScript::Assembler {
         */
         [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
         {
-            const auto[did_insert, index] = _allocate_new(names_, name);
-            if(did_insert && !scopes_.empty()) {
+            const auto [did_insert, index] = _allocate_new(names_, name);
+            if (did_insert && !scopes_.empty()) {
                 scopes_.top().names.emplace_back(name);
             }
             return index;

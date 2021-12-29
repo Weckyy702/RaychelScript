@@ -37,7 +37,7 @@ namespace RaychelScript::Assembly {
     struct VMConfigBlock
     {
         using IdentiferContainer = std::vector<std::pair<std::string, MemoryIndex>>;
-        
+
         IdentiferContainer input_identifiers;
         IdentiferContainer output_identifiers;
     };

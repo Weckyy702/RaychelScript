@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_VM_ERROR_CODE_H
 #define RAYCHELSCRIPT_VM_ERROR_CODE_H
 
-#include <string_view>
 #include <ostream>
+#include <string_view>
 
 namespace RaychelScript::VM {
 
@@ -44,19 +44,19 @@ namespace RaychelScript::VM {
 
     std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
     {
-        switch(code) {
-        case VMErrorCode::ok:
-            return "Everything's fine :)";
-        case VMErrorCode::unknow_op_code:
-            return "Unknown instruction op code";
-        case VMErrorCode::not_implemented:
-            return "Handler not implemented";
-        case VMErrorCode::mismatched_input_identifiers:
-            return "Number of specified input identifiers does not match number of values provided";
-        case VMErrorCode::divide_by_zero:
-            return "Division by zero";
-        case VMErrorCode::invalid_argument:
-            return "Invalid argument to mathematical function";
+        switch (code) {
+            case VMErrorCode::ok:
+                return "Everything's fine :)";
+            case VMErrorCode::unknow_op_code:
+                return "Unknown instruction op code";
+            case VMErrorCode::not_implemented:
+                return "Handler not implemented";
+            case VMErrorCode::mismatched_input_identifiers:
+                return "Number of specified input identifiers does not match number of values provided";
+            case VMErrorCode::divide_by_zero:
+                return "Division by zero";
+            case VMErrorCode::invalid_argument:
+                return "Invalid argument to mathematical function";
         }
 
         return "<unkown>";
