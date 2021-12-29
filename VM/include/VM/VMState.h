@@ -29,6 +29,7 @@
 #define RAYCHELSCRIPT_VM_STATE_H
 
 #include "rasm/Instruction.h"
+#include "rasm/VMData.h"
 
 #include <concepts>
 #include <vector>
@@ -53,9 +54,41 @@ namespace RaychelScript::VM {
         std::vector<T> memory;
 
         //flags
-        bool flag : 1 {false};
-        bool halt_flag : 1 {false};
+        bool flag{false};
+        bool halt_flag{false};
     };
+
+    template <std::floating_point T>
+    std::vector<T> get_output_values(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    {
+        if (state.memory.size() != data.num_memory_locations) {
+            return {};
+        }
+
+        std::vector<T> result;
+        result.reserve(data.config_block.output_identifiers.size());
+        for ([[maybe_unused]] const auto& [_, address] : data.config_block.output_identifiers) {
+            result.emplace_back(state.memory.at(address.value()));
+        }
+
+        return result;
+    }
+
+    template <std::floating_point T>
+    std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    {
+        if (state.memory.size() != data.num_memory_locations) {
+            return {};
+        }
+
+        std::vector<std::pair<std::string, T>> result;
+        result.reserve(data.config_block.output_identifiers.size());
+        for (const auto& [name, address] : data.config_block.output_identifiers) {
+            result.emplace_back(name, state.memory.at(address.value()));
+        }
+
+        return result;
+    }
 
 } //namespace RaychelScript::VM
 
