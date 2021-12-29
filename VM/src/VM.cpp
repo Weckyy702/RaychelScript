@@ -30,9 +30,9 @@
 
 #include <cmath>
 #include <utility>
+#include "RaychelCore/ScopedTimer.h"
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
-#include "RaychelCore/ScopedTimer.h"
 
 #define END_REGULAR_HANDLER                                                                                                      \
     update_instruction_pointer(state, 1);                                                                                        \
@@ -98,9 +98,9 @@ namespace RaychelScript::VM {
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
-        result_location = lhs + rhs;
+        result = lhs + rhs;
 
         END_ARITHMETIC_HANDLER;
     }
@@ -110,9 +110,9 @@ namespace RaychelScript::VM {
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
-        result_location = lhs - rhs;
+        result = lhs - rhs;
 
         END_ARITHMETIC_HANDLER;
     }
@@ -122,9 +122,9 @@ namespace RaychelScript::VM {
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
-        result_location = lhs * rhs;
+        result = lhs * rhs;
 
         END_ARITHMETIC_HANDLER;
     }
@@ -134,13 +134,13 @@ namespace RaychelScript::VM {
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
         if (Raychel::equivalent<T>(rhs, 0)) {
             return VMErrorCode::divide_by_zero;
         }
 
-        result_location = lhs / rhs;
+        result = lhs / rhs;
 
         END_ARITHMETIC_HANDLER;
     }
@@ -149,9 +149,9 @@ namespace RaychelScript::VM {
     [[nodiscard]] static VMErrorCode handle_mag(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
     {
         const auto lhs = get_location(state, instruction.data1());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
-        result_location = std::abs(lhs);
+        result = std::abs(lhs);
 
         END_ARITHMETIC_HANDLER;
     }
@@ -160,13 +160,13 @@ namespace RaychelScript::VM {
     [[nodiscard]] static VMErrorCode handle_fac(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
     {
         const auto lhs = get_location(state, instruction.data1());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
         if (lhs < 0 && Raychel::is_integer(lhs)) {
             return VMErrorCode::invalid_argument;
         }
 
-        result_location = std::tgamma(lhs + 1);
+        result = std::tgamma(lhs + 1);
 
         END_ARITHMETIC_HANDLER;
     }
@@ -176,9 +176,9 @@ namespace RaychelScript::VM {
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
-        auto& result_location = get_result_location(state);
+        auto& result = get_result_location(state);
 
-        result_location = std::pow(lhs, rhs);
+        result = std::pow(lhs, rhs);
 
         END_ARITHMETIC_HANDLER;
     }
@@ -317,7 +317,7 @@ namespace RaychelScript::VM {
         //Initialize state
         VMState<T> state{data.instructions, data.num_memory_locations};
 
-        //initialize input variables
+        //initialize special variables
         {
             auto it = input_variables.begin();
             for (const auto& [_, address] : data.config_block.input_identifiers) {

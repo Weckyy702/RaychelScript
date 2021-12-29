@@ -213,7 +213,7 @@ namespace RaychelScript::Assembler {
 
     private:
         /**
-        * \brief Return the memory of the given value. If none is assigned yet, allocate a new one
+        * \brief Return the memory index for the given value. If none is assigned yet, allocate a new one
         * 
         * \tparam Container Type of the container
         * \tparam T value type of the container

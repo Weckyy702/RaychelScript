@@ -367,6 +367,7 @@ namespace RaychelScript::Assembler {
         }
 
         for (const auto& node : ast.nodes) {
+            //TODO: free the intermediates more regularly (maybe whenever we MOV out of one)
             ctx.free_intermediates();
             const auto memory_index_or_error = assemble(node, ctx);
             if (const auto* ec = std::get_if<AssemblerErrorCode>(&memory_index_or_error); ec) {
