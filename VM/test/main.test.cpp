@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    std::string script_name{"../../../shared/test/abc.rsc"};
+    std::string script_name{"../../../shared/test/loops.rsc"};
     std::vector<double> args{1, 2};
 
     //NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -23,7 +23,6 @@ int main(int argc, char** argv)
         script_name = argv[1];
 
         args.clear();
-        args.reserve(argc - 2);
         for (int i = 2; i < argc; i++) {
             char* end{};
             const double arg = std::strtod(argv[i], &end);

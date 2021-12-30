@@ -40,6 +40,7 @@ namespace RaychelScript::VM {
         mismatched_input_identifiers,
         divide_by_zero,
         invalid_argument,
+        invalid_instruction_access,
     };
 
     inline std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
@@ -57,6 +58,8 @@ namespace RaychelScript::VM {
                 return "Division by zero";
             case VMErrorCode::invalid_argument:
                 return "Invalid argument to mathematical function";
+            case VMErrorCode::invalid_instruction_access:
+                return "Instruction index out of bounds";
         }
 
         return "<unkown>";

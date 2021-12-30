@@ -49,21 +49,18 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     static void set_instruction_pointer(VMState<T>& state, std::uint8_t instr_index) noexcept
     {
-        RAYCHEL_ASSERT(std::cmp_less(instr_index, state.instructions.size()));
         state.instruction_pointer = state.instructions.begin() + instr_index;
     }
 
     template <std::floating_point T>
-    static void update_instruction_pointer(VMState<T>& state, std::size_t delta) noexcept
+    static void update_instruction_pointer(VMState<T>& state, std::ptrdiff_t delta) noexcept
     {
-        RAYCHEL_ASSERT(std::cmp_less_equal(delta, std::distance(state.instruction_pointer, state.instructions.end())));
-        state.instruction_pointer += static_cast<std::ptrdiff_t>(delta);
+        state.instruction_pointer += delta;
     }
 
     template <std::floating_point T>
     [[nodiscard]] static T& get_location(VMState<T>& state, std::uint8_t index) noexcept
     {
-        RAYCHEL_ASSERT(index < state.memory.size());
         return state.memory[index];
     }
 
@@ -299,6 +296,48 @@ namespace RaychelScript::VM {
         }
     }
 
+    template <std::integral T, typename Container>
+    bool in_range(T index, const Container& container) noexcept
+    {
+        return std::cmp_less(index, container.size());
+    }
+
+    template <typename Container>
+    bool instruction_indecies_in_range(const Assembly::Instruction& instruction, const Container& container) noexcept
+    {
+        return in_range(instruction.data1(), container) && in_range(instruction.data2(), container);
+    }
+
+    template <std::floating_point T>
+    bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState<T>& state)
+    {
+        using Assembly::OpCode;
+
+        switch (instruction.op_code()) {
+            case OpCode::mov:
+            case OpCode::add:
+            case OpCode::sub:
+            case OpCode::mul:
+            case OpCode::div:
+            case OpCode::mag:
+            case OpCode::fac:
+            case OpCode::pow:
+            case OpCode::clt:
+            case OpCode::cgt:
+            case OpCode::ceq:
+            case OpCode::cne:
+                return instruction_indecies_in_range(instruction, state.memory);
+            case OpCode::jpz:
+            case OpCode::jmp:
+                return instruction_indecies_in_range(instruction, state.instructions);
+            case OpCode::hlt:
+                return true;
+            case OpCode::num_op_codes:
+                break;
+        }
+        return false;
+    }
+
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
     {
@@ -314,6 +353,8 @@ namespace RaychelScript::VM {
             return VMErrorCode::mismatched_input_identifiers;
         }
 
+        //TODO: according to callgrind, std::vector<T>::operator[] is taking up 7% of runtime. We might want to consider using a VLA. (clang-tidy is already screaming)
+
         //Initialize state
         VMState<T> state{data.instructions, data.num_memory_locations};
 
@@ -327,6 +368,14 @@ namespace RaychelScript::VM {
 
         for (const auto& [value, index] : data.immediate_values) {
             get_location(state, index.value()) = static_cast<T>(value);
+        }
+
+
+        //Check all instruction indecies before execution so we don't have to check for overflows during execution
+        for (const auto& instr : state.instructions) {
+            if(!instruction_access_in_range(instr, state)) {
+                return VMErrorCode::invalid_instruction_access;
+            }
         }
 
         //main execution loop
