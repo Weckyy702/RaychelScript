@@ -169,8 +169,11 @@ namespace RaychelScript::Pipes {
             : error_or_value_{error_code}
         {}
 
-        PipeResult(T value) //NOLINT we want this constructor to be implicit
+        PipeResult(const T& value) //NOLINT we want this constructor to be implicit
             : error_or_value_{value}
+        {}
+
+        PipeResult(T&& value) : error_or_value_{std::move(value)} //NOLINT we want this constructor to be implicit
         {}
 
         template <typename E>
