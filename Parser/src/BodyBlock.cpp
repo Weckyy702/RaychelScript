@@ -31,7 +31,7 @@
 #if __has_include(<ranges>)
     #include <ranges>
 #else
-    #pragma message("We could not find the <ranges> header. Using a workaround that will be a little less elegant")
+    #pragma message("Could not find the <ranges> header. Using a workaround that will be a little less elegant")
     #define RAYCHELSCRIPT_NO_RANGES_HEADER
 #endif
 #include <variant>
@@ -49,7 +49,7 @@
 #include "RaychelCore/charconv.h"
 
 #define RAYCHELSCRIPT_PARSER_NOISY 1
-#define RAYCHELSCRIPT_PARSER_SILENT 1
+#define RAYCHELSCRIPT_PARSER_SILENT 0
 
 #if RAYCHELSCRIPT_PARSER_SILENT
     #define RAYCHELSCRIPT_PARSER_DEBUG(...)
@@ -76,6 +76,39 @@ using ParseExpressionResult = std::variant<RaychelScript::Parser::ParserErrorCod
 
 namespace RaychelScript::Parser {
 
+    //FIXME: tis brokne :(
+
+    template <typename TokenIt, typename PatternIt>
+    [[nodiscard]] static bool handle_subexpression(
+        TokenIt& token_it, const TokenIt& token_end, PatternIt& pattern_it, const PatternIt& pattern_end, LineTokens& match)
+    {
+        if (pattern_it == std::prev(pattern_end)) {
+            for (auto it = token_it; it != token_end; it++) {
+                match.emplace_back(*it);
+                token_it++;
+            }
+            pattern_it++;
+            return true;
+        }
+
+        const auto escape_token = *std::next(pattern_it);
+        int paren_depth{0};
+        for (auto it = token_it; it != token_end; it++) {
+            if (is_opening_parenthesis(it->type)) {
+                paren_depth++;
+            } else if (is_closing_parenthesis(it->type)) {
+                paren_depth--;
+            }
+            if (paren_depth == 0 && it->type == escape_token) {
+                pattern_it++;
+                break;
+            }
+            token_it++;
+            match.emplace_back(*it);
+        }
+        return paren_depth == 0;
+    }
+
     /**
     * \brief Match a token against a provided pattern.
     * 
@@ -86,7 +119,7 @@ namespace RaychelScript::Parser {
     *  TokenType::arith_op_ is used to find all arithmetic operators as defined by is_arith_op().
     */
     template <std::size_t N>
-    requires(N != 0) static SourceTokens
+    requires(N != 0) [[nodiscard]] static SourceTokens
         match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern) noexcept
     {
         if (tokens.size() < N) {
@@ -109,40 +142,19 @@ namespace RaychelScript::Parser {
             auto& match = matches.emplace_back();
 
             if (expected == TokenType::expression_) {
-                if (pattern_it == std::prev(pattern.end())) {
-                    for (auto it = token_it; it != tokens.end(); it++) {
-                        match.emplace_back(*it);
-                        token_it++;
-                    }
-                    pattern_it++;
-                    break;
-                }
-
-                const auto escape_token = *std::next(pattern_it);
-                int paren_depth{0};
-                for (auto it = token_it; it != tokens.end(); it++) {
-                    if (is_opening_parenthesis(it->type)) {
-                        paren_depth++;
-                    } else if (is_closing_parenthesis(it->type)) {
-                        paren_depth--;
-                    }
-                    if (paren_depth == 0 && it->type == escape_token) {
-                        pattern_it++;
-                        break;
-                    }
-                    token_it++;
-                    match.emplace_back(*it);
-                }
-                if (paren_depth != 0) {
+                if (!handle_subexpression(token_it, tokens.end(), pattern_it, pattern.end(), match)) {
                     return {};
                 }
-            } else if (token_matched(current.type, expected)) {
+                continue;
+            }
+
+            if (token_matched(current.type, expected)) {
                 match.emplace_back(current);
                 pattern_it++;
                 token_it++;
-            } else {
-                return {};
+                continue;
             }
+            return {};
         }
 
         if (token_it != tokens.end() || pattern_it != pattern.end()) {
