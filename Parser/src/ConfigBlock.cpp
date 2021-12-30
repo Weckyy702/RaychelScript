@@ -44,7 +44,7 @@ namespace RaychelScript::Parser {
             Logger::error("Duplicate config entry!\n");
             return false;
         }
-        bool has_failed = false;
+        bool has_failed{false};
 
         std::for_each(
             std::next(entry_tokens.begin()),
@@ -55,7 +55,7 @@ namespace RaychelScript::Parser {
                 }
 
                 //every second token has to be an identifier
-                if (index % 2U == 0 && token.type != TokenType::identifer) {
+                if (index % 2U == 0 && (token.type != TokenType::identifer && token.type != TokenType::number)) {
                     Logger::error(token.location, ": invalid token in config entry!\n");
                     has_failed = true;
                     return;
@@ -90,10 +90,9 @@ namespace RaychelScript::Parser {
             return false;
         }
 
-        //a config entry can only ever by ID ID, ID, ID ...
-        //TODO: should we support numeric config entries?
+        //a config entry can only ever be ID (ID/NUM), (ID/NUM), (ID/NUM), ...
         const bool valid = std::all_of(line.begin(), line.end(), [](const Token& token) {
-            return token.type == TokenType::identifer || token.type == TokenType::comma;
+            return token.type == TokenType::identifer || token.type == TokenType::comma || token.type == TokenType::number;
         });
 
         const auto& first_token = line.at(0);
