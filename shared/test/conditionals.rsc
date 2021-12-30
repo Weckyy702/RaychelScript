@@ -11,43 +11,43 @@ endif
 
 
 #uncomment for satisfying AST
-#if true
-#    if false
-#        if true
-#            if false
-#                if true
-#                    if false
-#                        if true
-#                            if false
-#                                if true
-#                                    if false
-#                                        if true
-#                                            if false
-#                                                if true
-#                                                    if false
-#                                                        if true
-#                                                            if false
-#                                                                if true
-#                                                                    if false
-#                                                                        if true
-#                                                                            if false
-#                                                                            endif
-#                                                                        endif
-#                                                                    endif
-#                                                                endif
-#                                                            endif
-#                                                        endif
-#                                                    endif
-#                                                endif
-#                                            endif
-#                                        endif
-#                                    endif
-#                                endif
-#                            endif
-#                        endif
-#                    endif
-#                endif
-#            endif
-#        endif
-#    endif
-#endif
+if true
+    if false
+        if true
+            if false
+                if true
+                    if false
+                        if true
+                            if false
+                                if true
+                                    if false
+                                        if true
+                                            if false
+                                                if true
+                                                    if false
+                                                        if true
+                                                            if false
+                                                                if true
+                                                                    if false
+                                                                        if true
+                                                                            if false
+                                                                            endif
+                                                                        endif
+                                                                    endif
+                                                                endif
+                                                            endif
+                                                        endif
+                                                    endif
+                                                endif
+                                            endif
+                                        endif
+                                    endif
+                                endif
+                            endif
+                        endif
+                    endif
+                endif
+            endif
+        endif
+    endif
+endif

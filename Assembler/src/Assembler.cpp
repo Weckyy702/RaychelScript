@@ -333,6 +333,8 @@ namespace RaychelScript::Assembler {
                 continue;
             }
 
+            //FIXME: do not coalesce MOVs if one of them might be skipped by a jump
+
             //coalesce MOVs where the first ones destination is the second ones source (y = a; b = y -> b = a)
             if (it != std::prev(instructions.end()) && std::next(it)->op_code() == Assembly::OpCode::mov) {
                 const auto next = std::next(it);
