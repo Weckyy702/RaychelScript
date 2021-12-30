@@ -42,7 +42,7 @@ namespace RaychelScript::VM {
         invalid_argument,
     };
 
-    std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
+    inline std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
     {
         switch (code) {
             case VMErrorCode::ok:
@@ -62,7 +62,7 @@ namespace RaychelScript::VM {
         return "<unkown>";
     }
 
-    std::ostream& operator<<(std::ostream& os, VMErrorCode code)
+    inline std::ostream& operator<<(std::ostream& os, VMErrorCode code)
     {
         return os << error_code_to_reason_string(code);
     }

@@ -1,15 +1,18 @@
 #include "VM/VM.h"
 
 #include "Assembler/AssemblerPipe.h"
-#include "Interpreter/Interpreter.h"
 #include "Lexer/LexerPipe.h"
+#include "Optimizer/OptimizerPipe.h"
 #include "Parser/ParserPipe.h"
+#include "VM/VMPipe.h"
 
 #include "RaychelCore/AssertingGet.h"
 
 int main(int argc, char** argv)
 {
     using namespace RaychelScript::Pipes;
+
+    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::string script_name{"../../../shared/test/abc.rsc"};
     std::vector<double> args{1, 2};
@@ -34,21 +37,15 @@ int main(int argc, char** argv)
 
     Logger::info("Executing script ", script_name, '\n');
 
-    const auto data_or_error = Lex{lex_file, script_name} | Parse{} | Assemble{};
+    const auto state_or_error = Lex{lex_file, script_name} | Parse{} |
+                                Optimize{RaychelScript::Optimizer::OptimizationLevel::hard} | Assemble{} |
+                                Execute<double>{std::move(args)};
 
-    if (log_if_error(data_or_error)) {
+    if (log_if_error(state_or_error)) {
         return 1;
     }
 
-    const auto data = data_or_error.value();
-    const auto state_or_error = RaychelScript::VM::execute<double>(data, args);
-
-    if (const auto* ec = std::get_if<RaychelScript::VM::VMErrorCode>(&state_or_error); ec) {
-        Logger::log(*ec, '\n');
-        return 1;
-    }
-
-    const auto state = Raychel::get<RaychelScript::VM::VMState<double>>(state_or_error);
+    const auto [data, state] = state_or_error.value();
 
     std::size_t index{};
 
