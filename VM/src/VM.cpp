@@ -299,7 +299,7 @@ namespace RaychelScript::VM {
     template <std::integral T, typename Container>
     bool in_range(T index, const Container& container) noexcept
     {
-        return std::cmp_less(index, container.size());
+        return std::cmp_less(index, std::size(container));
     }
 
     template <typename Container>
@@ -326,7 +326,7 @@ namespace RaychelScript::VM {
             case OpCode::cgt:
             case OpCode::ceq:
             case OpCode::cne:
-                return instruction_indecies_in_range(instruction, state.memory);
+                return instruction.data1() < state.memory_size && instruction.data2() < state.memory_size;
             case OpCode::jpz:
             case OpCode::jmp:
                 return instruction_indecies_in_range(instruction, state.instructions);
