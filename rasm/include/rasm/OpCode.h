@@ -48,16 +48,16 @@ namespace RaychelScript::Assembly {
         fac, //compute the factorial of a (a!)
         pow, //compute a to the power of b (a^b)
 
-        //control flow
-        jpz, //jump if flag is not set
-        jmp, //jump unconditionally
-        hlt, //halt execution
-
         //comparison
         clt, //set flag if a is less than b (a < b)
         cgt, //set flag if a is greater than b (a > b)
         ceq, //set flag if a is equal to b (a == b)
         cne, //set flag if a is not equal to b (a != b)
+
+        //control flow
+        jpz, //jump if flag is not set
+        jmp, //jump unconditionally
+        hlt, //halt execution
 
         num_op_codes
     };

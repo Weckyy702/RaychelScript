@@ -35,6 +35,8 @@
 
 namespace RaychelScript::Assembly {
 
+    //TODO: cramming all the instruction data into just 32 bits feels a bit silly. Maybe we should just use 32-bit memory indecies
+
     class MemoryIndex
     {
 

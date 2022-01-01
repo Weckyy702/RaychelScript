@@ -61,7 +61,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     [[nodiscard]] static T& get_location(VMState<T>& state, std::uint8_t index) noexcept
     {
-        return state.memory[index];
+        return state.memory[index]; //NOLINT(cppcoreguidelines-pro-bounds-constant-array-index): we have checked all accesses beforehand
     }
 
     template <std::floating_point T>
@@ -250,11 +250,6 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-#define TRY(expression)                                                                                                          \
-    if (const auto ec = (expression); ec != VMErrorCode::ok) {                                                                   \
-        return ec;                                                                                                               \
-    }
-
     template <std::floating_point T>
     [[nodiscard]] static VMErrorCode execute_with_state(VMState<T>& state) noexcept
     {
@@ -296,16 +291,9 @@ namespace RaychelScript::VM {
         }
     }
 
-    template <std::integral T, typename Container>
-    bool in_range(T index, const Container& container) noexcept
+    [[nodiscard]] bool instruction_indecies_in_range(const Assembly::Instruction& instruction, std::size_t size) noexcept
     {
-        return std::cmp_less(index, std::size(container));
-    }
-
-    template <typename Container>
-    bool instruction_indecies_in_range(const Assembly::Instruction& instruction, const Container& container) noexcept
-    {
-        return in_range(instruction.data1(), container) && in_range(instruction.data2(), container);
+        return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
     }
 
     template <std::floating_point T>
@@ -313,35 +301,20 @@ namespace RaychelScript::VM {
     {
         using Assembly::OpCode;
 
-        switch (instruction.op_code()) {
-            case OpCode::mov:
-            case OpCode::add:
-            case OpCode::sub:
-            case OpCode::mul:
-            case OpCode::div:
-            case OpCode::mag:
-            case OpCode::fac:
-            case OpCode::pow:
-            case OpCode::clt:
-            case OpCode::cgt:
-            case OpCode::ceq:
-            case OpCode::cne:
-                return instruction.data1() < state.memory_size && instruction.data2() < state.memory_size;
-            case OpCode::jpz:
-            case OpCode::jmp:
-                return instruction_indecies_in_range(instruction, state.instructions);
-            case OpCode::hlt:
-                return true;
-            case OpCode::num_op_codes:
-                break;
+        if (instruction.op_code() <= OpCode::cne) {
+            return instruction_indecies_in_range(instruction, state.memory_size);
         }
-        return false;
+        if (instruction.op_code() < OpCode::hlt) {
+            return instruction_indecies_in_range(instruction, state.instructions.size());
+        }
+        return instruction.op_code() == OpCode::hlt;
     }
 
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
     {
         Raychel::ScopedTimer<std::chrono::microseconds> timer{"Execution time"};
+
         //Check for the correct number of input identifiers
         if (input_variables.size() != data.config_block.input_identifiers.size()) {
             Logger::error(
@@ -354,7 +327,7 @@ namespace RaychelScript::VM {
         }
 
         //Sanity check that the last instruction is a HLT instruction
-        if(data.instructions.back().op_code() != Assembly::OpCode::hlt) {
+        if (data.instructions.back().op_code() != Assembly::OpCode::hlt) {
             Logger::error("Last instruction is not a HLT instruction!\n");
             return VMErrorCode::last_instruction_not_hlt;
         }
@@ -374,17 +347,18 @@ namespace RaychelScript::VM {
             get_location(state, index.value()) = static_cast<T>(value);
         }
 
-
         //Check all instruction indecies before execution so we don't have to check for overflows during execution
         for (const auto& instr : state.instructions) {
-            if(!instruction_access_in_range(instr, state)) {
+            if (!instruction_access_in_range(instr, state)) {
                 return VMErrorCode::invalid_instruction_access;
             }
         }
 
         //main execution loop
         while (!state.halt_flag) {
-            TRY(execute_with_state(state));
+            if(const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
+                return ec;
+            }
         }
 
         return state;
