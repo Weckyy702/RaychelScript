@@ -353,7 +353,11 @@ namespace RaychelScript::VM {
             return VMErrorCode::mismatched_input_identifiers;
         }
 
-        //TODO: according to callgrind, std::vector<T>::operator[] is taking up 7% of runtime. We might want to consider using a VLA. (clang-tidy is already screaming)
+        //Sanity check that the last instruction is a HLT instruction
+        if(data.instructions.back().op_code() != Assembly::OpCode::hlt) {
+            Logger::error("Last instruction is not a HLT instruction!\n");
+            return VMErrorCode::last_instruction_not_hlt;
+        }
 
         //Initialize state
         VMState<T> state{data.instructions, data.num_memory_locations};
@@ -379,10 +383,7 @@ namespace RaychelScript::VM {
         }
 
         //main execution loop
-        while (state.instruction_pointer != state.instructions.end()) {
-            if (state.halt_flag) {
-                break;
-            }
+        while (!state.halt_flag) {
             TRY(execute_with_state(state));
         }
 
