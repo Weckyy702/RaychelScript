@@ -195,8 +195,7 @@ namespace RaychelScript::Interpreter {
             std::erase_if(descriptor_table, [&id](const auto& entry) { return entry.second == id; });
         }
 
-        //NOLINTNEXTLINE(clang-diagnostic-sign-conversion): we can't change the STLs spec :(
-        descriptors.erase(descriptors.begin() + descriptor_index, descriptors.end());
+        descriptors.erase(descriptors.begin() + static_cast<std::ptrdiff_t>(descriptor_index), descriptors.end());
         DescriptorID::reset_id<Desc>(descriptors.back().id().id() + 1);
     }
 
