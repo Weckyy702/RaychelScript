@@ -42,6 +42,7 @@ namespace RaychelScript::VM {
         invalid_argument,
         invalid_instruction_access,
         last_instruction_not_hlt,
+        fp_exception,
     };
 
     inline std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
@@ -63,6 +64,8 @@ namespace RaychelScript::VM {
                 return "Instruction index out of bounds";
             case VMErrorCode::last_instruction_not_hlt:
                 return "Last instruction is not a HLT instruction";
+            case VMErrorCode::fp_exception:
+                return "Floating-point exception occured during execution";
         }
 
         return "<unkown>";

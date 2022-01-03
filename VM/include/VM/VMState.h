@@ -58,6 +58,7 @@ namespace RaychelScript::VM {
         //flags
         bool flag{false};
         bool halt_flag{false};
+        bool check_fp_flag{false};
     };
 
     template <std::floating_point T>

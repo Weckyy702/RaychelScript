@@ -28,11 +28,17 @@
 
 #include "VM/VM.h"
 
+#include <cerrno>
+#include <cfenv>
 #include <cmath>
+#include <mutex>
 #include <utility>
 #include "RaychelCore/ScopedTimer.h"
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
+
+//FIXME: this needs to be enabled, but -Werror doesn't like this unknown pragma
+//#pragma STDC FENV_ACCESS ON
 
 #define END_REGULAR_HANDLER                                                                                                      \
     update_instruction_pointer(state, 1);                                                                                        \
@@ -40,6 +46,7 @@
 
 #define END_ARITHMETIC_HANDLER                                                                                                   \
     set_state_flags(state);                                                                                                      \
+    state.check_fp_flag = true;                                                                                                  \
     END_REGULAR_HANDLER
 
 namespace RaychelScript::VM {
@@ -88,6 +95,8 @@ namespace RaychelScript::VM {
 
         lhs = rhs;
 
+        state.flag = !Raychel::equivalent<T>(lhs, 0);
+
         END_REGULAR_HANDLER;
     }
 
@@ -133,10 +142,6 @@ namespace RaychelScript::VM {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
         auto& result = get_result_location(state);
-
-        if (Raychel::equivalent<T>(rhs, 0)) {
-            return VMErrorCode::divide_by_zero;
-        }
 
         result = lhs / rhs;
 
@@ -219,10 +224,6 @@ namespace RaychelScript::VM {
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
-
-        if (Raychel::equivalent<T>(rhs, 0)) {
-            return VMErrorCode::divide_by_zero;
-        }
 
         lhs /= rhs;
 
@@ -380,6 +381,20 @@ namespace RaychelScript::VM {
         return instruction.op_code() == OpCode::hlt;
     }
 
+    static bool handle_fp_exceptions() noexcept
+    {
+        //TODO: According to callgrind, we are spending 15% of runtime in this function (oof)
+        //This mutex is used for the call to std::strerror if errno gets set
+        static std::mutex strerror_mtx;
+
+        if (errno != 0) {
+            std::lock_guard lck{strerror_mtx};
+            Logger::error("VM error: '", std::strerror(errno), "'\n");
+            return true;
+        }
+        return fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+    }
+
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
     {
@@ -428,6 +443,15 @@ namespace RaychelScript::VM {
         while (!state.halt_flag) {
             if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
                 return ec;
+            }
+            if (state.check_fp_flag) {
+                state.check_fp_flag = false;
+                if (handle_fp_exceptions()) {
+                    for (std::size_t i = 0; i < state.memory_size; i++) {
+                        Logger::debug('$', i, ": ", state.memory.at(i), '\n');
+                    }
+                    return VMErrorCode::fp_exception;
+                }
             }
         }
 
