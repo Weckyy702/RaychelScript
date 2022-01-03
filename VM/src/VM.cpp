@@ -61,6 +61,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     [[nodiscard]] static T& get_location(VMState<T>& state, std::uint8_t index) noexcept
     {
+        //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): we have checked all accesses beforehand
         return state.memory[index];
     }
 
@@ -181,6 +182,65 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_inc(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs += rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_dec(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs -= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_mas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs *= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_das(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        if (Raychel::equivalent<T>(rhs, 0)) {
+            return VMErrorCode::divide_by_zero;
+        }
+
+        lhs /= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_pas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs = std::pow(lhs, rhs);
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
     [[nodiscard]] static VMErrorCode handle_jpz(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
     {
         if (state.flag) {
@@ -250,11 +310,6 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-#define TRY(expression)                                                                                                          \
-    if (const auto ec = (expression); ec != VMErrorCode::ok) {                                                                   \
-        return ec;                                                                                                               \
-    }
-
     template <std::floating_point T>
     [[nodiscard]] static VMErrorCode execute_with_state(VMState<T>& state) noexcept
     {
@@ -277,6 +332,16 @@ namespace RaychelScript::VM {
                 return handle_fac(state, instr);
             case Assembly::OpCode::pow:
                 return handle_pow(state, instr);
+            case Assembly::OpCode::inc:
+                return handle_inc(state, instr);
+            case Assembly::OpCode::dec:
+                return handle_dec(state, instr);
+            case Assembly::OpCode::mas:
+                return handle_mas(state, instr);
+            case Assembly::OpCode::das:
+                return handle_das(state, instr);
+            case Assembly::OpCode::pas:
+                return handle_pas(state, instr);
             case Assembly::OpCode::jpz:
                 return handle_jpz(state, instr);
             case Assembly::OpCode::jmp:
@@ -296,16 +361,9 @@ namespace RaychelScript::VM {
         }
     }
 
-    template <std::integral T, typename Container>
-    bool in_range(T index, const Container& container) noexcept
+    [[nodiscard]] bool instruction_indecies_in_range(const Assembly::Instruction& instruction, std::size_t size) noexcept
     {
-        return std::cmp_less(index, container.size());
-    }
-
-    template <typename Container>
-    bool instruction_indecies_in_range(const Assembly::Instruction& instruction, const Container& container) noexcept
-    {
-        return in_range(instruction.data1(), container) && in_range(instruction.data2(), container);
+        return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
     }
 
     template <std::floating_point T>
@@ -313,35 +371,20 @@ namespace RaychelScript::VM {
     {
         using Assembly::OpCode;
 
-        switch (instruction.op_code()) {
-            case OpCode::mov:
-            case OpCode::add:
-            case OpCode::sub:
-            case OpCode::mul:
-            case OpCode::div:
-            case OpCode::mag:
-            case OpCode::fac:
-            case OpCode::pow:
-            case OpCode::clt:
-            case OpCode::cgt:
-            case OpCode::ceq:
-            case OpCode::cne:
-                return instruction_indecies_in_range(instruction, state.memory);
-            case OpCode::jpz:
-            case OpCode::jmp:
-                return instruction_indecies_in_range(instruction, state.instructions);
-            case OpCode::hlt:
-                return true;
-            case OpCode::num_op_codes:
-                break;
+        if (instruction.op_code() <= OpCode::cne) {
+            return instruction_indecies_in_range(instruction, state.memory_size);
         }
-        return false;
+        if (instruction.op_code() < OpCode::hlt) {
+            return instruction_indecies_in_range(instruction, state.instructions.size());
+        }
+        return instruction.op_code() == OpCode::hlt;
     }
 
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
     {
         Raychel::ScopedTimer<std::chrono::microseconds> timer{"Execution time"};
+
         //Check for the correct number of input identifiers
         if (input_variables.size() != data.config_block.input_identifiers.size()) {
             Logger::error(
@@ -353,7 +396,11 @@ namespace RaychelScript::VM {
             return VMErrorCode::mismatched_input_identifiers;
         }
 
-        //TODO: according to callgrind, std::vector<T>::operator[] is taking up 7% of runtime. We might want to consider using a VLA. (clang-tidy is already screaming)
+        //Sanity check that the last instruction is a HLT instruction
+        if (data.instructions.back().op_code() != Assembly::OpCode::hlt) {
+            Logger::error("Last instruction is not a HLT instruction!\n");
+            return VMErrorCode::last_instruction_not_hlt;
+        }
 
         //Initialize state
         VMState<T> state{data.instructions, data.num_memory_locations};
@@ -370,20 +417,18 @@ namespace RaychelScript::VM {
             get_location(state, index.value()) = static_cast<T>(value);
         }
 
-
         //Check all instruction indecies before execution so we don't have to check for overflows during execution
         for (const auto& instr : state.instructions) {
-            if(!instruction_access_in_range(instr, state)) {
+            if (!instruction_access_in_range(instr, state)) {
                 return VMErrorCode::invalid_instruction_access;
             }
         }
 
         //main execution loop
-        while (state.instruction_pointer != state.instructions.end()) {
-            if (state.halt_flag) {
-                break;
+        while (!state.halt_flag) {
+            if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
+                return ec;
             }
-            TRY(execute_with_state(state));
         }
 
         return state;

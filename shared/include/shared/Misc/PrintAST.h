@@ -36,35 +36,35 @@
 
 namespace RaychelScript {
 
-    inline void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept;
+    inline void print_node(const AST_Node& node, std::string_view prefix) noexcept;
 
     namespace details {
 
-        inline void handle_assignment_data(const RaychelScript::AssignmentExpressionData& data) noexcept
+        inline void handle_assignment_data(const AssignmentExpressionData& data) noexcept
         {
             Logger::log("ASSIGN\n");
             print_node(data.lhs, "lhs=");
             print_node(data.rhs, "rhs=");
         }
 
-        inline void handle_numeric_constant_data(const RaychelScript::NumericConstantData& data) noexcept
+        inline void handle_numeric_constant_data(const NumericConstantData& data) noexcept
         {
             Logger::log("NUMBER ", data.value, '\n');
         }
 
-        inline void handle_variable_declaration_data(const RaychelScript::VariableDeclarationData& data) noexcept
+        inline void handle_variable_declaration_data(const VariableDeclarationData& data) noexcept
         {
             Logger::log("VAR_REF ", data.is_const ? "CONST " : "MUT ", data.name, '\n');
         }
 
-        inline void handle_variable_reference_data(const RaychelScript::VariableReferenceData& data) noexcept
+        inline void handle_variable_reference_data(const VariableReferenceData& data) noexcept
         {
             Logger::log("VAR ", data.name, '\n');
         }
 
-        inline void handle_arithmetic_expression_data(const RaychelScript::ArithmeticExpressionData& data) noexcept
+        inline void handle_arithmetic_expression_data(const ArithmeticExpressionData& data) noexcept
         {
-            using Op = RaychelScript::ArithmeticExpressionData::Operation;
+            using Op = ArithmeticExpressionData::Operation;
             switch (data.operation) {
                 case Op::add:
                     Logger::log("ADD\n");
@@ -88,9 +88,35 @@ namespace RaychelScript {
             print_node(data.rhs, "rhs=");
         }
 
-        inline void handle_unary_operator_data(const RaychelScript::UnaryExpressionData& data) noexcept
+        inline void handle_update_expression_data(const UpdateExpressionData& data) noexcept
         {
-            using Op = RaychelScript::UnaryExpressionData::Operation;
+            using Op = UpdateExpressionData::Operation;
+            switch (data.operation) {
+                case Op::add:
+                    Logger::log("INCREMENT\n");
+                    break;
+                case Op::subtract:
+                    Logger::log("DECREMENT\n");
+                    break;
+                case Op::multiply:
+                    Logger::log("MULTIPLY\n");
+                    break;
+                case Op::divide:
+                    Logger::log("DIVIDE\n");
+                    break;
+                case Op::power:
+                    Logger::log("POWER\n");
+                    break;
+                default:
+                    RAYCHEL_ASSERT_NOT_REACHED;
+            }
+            print_node(data.lhs, "lhs=");
+            print_node(data.rhs, "rhs=");
+        }
+
+        inline void handle_unary_operator_data(const UnaryExpressionData& data) noexcept
+        {
+            using Op = UnaryExpressionData::Operation;
             switch (data.operation) {
                 case Op::minus:
                     Logger::log("UNARY MINUS\n");
@@ -110,7 +136,7 @@ namespace RaychelScript {
             print_node(data.value_node, "expression=");
         }
 
-        inline void handle_conditional_construct(const RaychelScript::ConditionalConstructData& data) noexcept
+        inline void handle_conditional_construct(const ConditionalConstructData& data) noexcept
         {
             Logger::log("CONDITIONAL\n");
 
@@ -121,9 +147,9 @@ namespace RaychelScript {
             }
         }
 
-        inline void handle_relational_operator(const RaychelScript::RelationalOperatorData& data) noexcept
+        inline void handle_relational_operator(const RelationalOperatorData& data) noexcept
         {
-            using Op = RaychelScript::RelationalOperatorData::Operation;
+            using Op = RelationalOperatorData::Operation;
             switch (data.operation) {
                 case Op::equals:
                     Logger::log("EQUALS\n");
@@ -157,7 +183,7 @@ namespace RaychelScript {
 
     } // namespace details
 
-    inline void print_config_block(const RaychelScript::ConfigBlock& config_block) noexcept
+    inline void print_config_block(const ConfigBlock& config_block) noexcept
     {
         if (config_block.input_identifiers.empty()) {
             Logger::log("input vars:\n");
@@ -185,7 +211,7 @@ namespace RaychelScript {
         }
     }
 
-    inline void print_node(const RaychelScript::AST_Node& node, std::string_view prefix) noexcept
+    inline void print_node(const AST_Node& node, std::string_view prefix) noexcept
     {
         namespace RS = RaychelScript;
 
@@ -208,6 +234,10 @@ namespace RaychelScript {
 
             case RS::NodeType::arithmetic_operator:
                 details::handle_arithmetic_expression_data(node.to_node_data<RS::ArithmeticExpressionData>());
+                break;
+
+            case RS::NodeType::update_expression:
+                details::handle_update_expression_data(node.to_node_data<RS::UpdateExpressionData>());
                 break;
 
             case RS::NodeType::numeric_constant:
@@ -253,7 +283,7 @@ namespace RaychelScript {
             Logger::log("<Empty>\n");
         }
 
-        RaychelScript::IndentHandler::reset_indent();
+        IndentHandler::reset_indent();
 
         for_each_top_node(ast, [](auto& node) { print_node(node, ""); });
     }

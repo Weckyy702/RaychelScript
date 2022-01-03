@@ -46,12 +46,6 @@ int main(int argc, char** argv)
 
     const auto [data, state] = state_or_error.value();
 
-    std::size_t index{};
-
-    for (const auto& value : state.memory) {
-        Logger::log('$', index++, ": ", value, '\n');
-    }
-
     const auto output = RaychelScript::VM::get_output_variables(state, data);
     for (const auto& [name, value] : output) {
         Logger::info(name, " = ", value, '\n');

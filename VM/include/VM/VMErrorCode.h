@@ -41,6 +41,7 @@ namespace RaychelScript::VM {
         divide_by_zero,
         invalid_argument,
         invalid_instruction_access,
+        last_instruction_not_hlt,
     };
 
     inline std::string_view error_code_to_reason_string(VMErrorCode code) noexcept
@@ -60,6 +61,8 @@ namespace RaychelScript::VM {
                 return "Invalid argument to mathematical function";
             case VMErrorCode::invalid_instruction_access:
                 return "Instruction index out of bounds";
+            case VMErrorCode::last_instruction_not_hlt:
+                return "Last instruction is not a HLT instruction";
         }
 
         return "<unkown>";

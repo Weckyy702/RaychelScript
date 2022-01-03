@@ -49,6 +49,7 @@ namespace RaychelScript {
               handle_variable_decl{std::forward<F>(f)},
               handle_variable_ref{std::forward<F>(f)},
               handle_arithmetic_operator{std::forward<F>(f)},
+              handle_update_expression{std::forward<F>(f)},
               handle_numeric_constant{std::forward<F>(f)},
               handle_unary_operator{std::forward<F>(f)},
               handle_conditional_construct{std::forward<F>(f)},
@@ -66,6 +67,7 @@ namespace RaychelScript {
         Handler<VariableDeclarationData> handle_variable_decl;
         Handler<VariableReferenceData> handle_variable_ref;
         Handler<ArithmeticExpressionData> handle_arithmetic_operator;
+        Handler<UpdateExpressionData> handle_update_expression;
         Handler<NumericConstantData> handle_numeric_constant;
         Handler<UnaryExpressionData> handle_unary_operator;
         Handler<ConditionalConstructData> handle_conditional_construct;
@@ -172,6 +174,8 @@ namespace RaychelScript {
                 return handlers.handle_variable_ref(node.to_node_data<VariableReferenceData>());
             case NodeType::arithmetic_operator:
                 return handlers.handle_arithmetic_operator(node.to_node_data<ArithmeticExpressionData>());
+            case NodeType::update_expression:
+                return handlers.handle_update_expression(node.to_node_data<UpdateExpressionData>());
             case NodeType::numeric_constant:
                 return handlers.handle_numeric_constant(node.to_node_data<NumericConstantData>());
             case NodeType::unary_operator:

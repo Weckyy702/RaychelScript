@@ -51,6 +51,7 @@ static std::size_t estimate_ast_complexity(const RaychelScript::AST& ast) noexce
         switch (node.type()) {
             case NT::assignment:
             case NT::arithmetic_operator:
+            case NT::update_expression:
             case NT::relational_operator:
             case NT::loop:
                 complexity_score += 3;

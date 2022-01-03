@@ -32,6 +32,9 @@
 #include "rasm/VMData.h"
 
 #include <concepts>
+#include <cstring>
+#include <limits>
+#include <memory>
 #include <vector>
 
 namespace RaychelScript::VM {
@@ -43,15 +46,14 @@ namespace RaychelScript::VM {
         using InstructionPointer = typename InstructionBuffer::const_iterator;
 
         VMState(const InstructionBuffer& buffer, std::size_t number_of_memory_locations)
-            : instructions{buffer}, instruction_pointer{buffer.begin()}
-        {
-            memory.resize(number_of_memory_locations);
-        }
+            : instructions{buffer}, instruction_pointer{buffer.begin()}, memory_size{number_of_memory_locations}
+        {}
 
         const InstructionBuffer& instructions;
         InstructionPointer instruction_pointer;
 
-        std::vector<T> memory;
+        std::array<T, std::numeric_limits<std::uint8_t>::max()> memory{};
+        std::size_t memory_size;
 
         //flags
         bool flag{false};
@@ -77,14 +79,14 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const Assembly::VMData& data) noexcept
     {
-        if (state.memory.size() != data.num_memory_locations) {
+        if (state.memory_size != data.num_memory_locations) {
             return {};
         }
 
         std::vector<std::pair<std::string, T>> result;
         result.reserve(data.config_block.output_identifiers.size());
         for (const auto& [name, address] : data.config_block.output_identifiers) {
-            result.emplace_back(name, state.memory.at(address.value()));
+            result.emplace_back(name, state.memory[address.value()]);
         }
 
         return result;

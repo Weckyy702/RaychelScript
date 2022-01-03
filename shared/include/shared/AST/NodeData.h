@@ -76,6 +76,15 @@ namespace RaychelScript {
         Operation operation{};
     };
 
+    struct UpdateExpressionData : NodeDataBase<NodeType::update_expression, ValueType::none, false, true>
+    {
+        using Operation = ArithmeticExpressionData::Operation;
+
+        AST_Node lhs;
+        AST_Node rhs;
+        Operation operation{};
+    };
+
     struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::none, true, true>
     {
         std::string name;
