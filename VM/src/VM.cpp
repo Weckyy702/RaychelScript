@@ -61,7 +61,8 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     [[nodiscard]] static T& get_location(VMState<T>& state, std::uint8_t index) noexcept
     {
-        return state.memory[index]; //NOLINT(cppcoreguidelines-pro-bounds-constant-array-index): we have checked all accesses beforehand
+        //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): we have checked all accesses beforehand
+        return state.memory[index];
     }
 
     template <std::floating_point T>
@@ -181,6 +182,65 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_inc(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs += rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_dec(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs -= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_mas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs *= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_das(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        if (Raychel::equivalent<T>(rhs, 0)) {
+            return VMErrorCode::divide_by_zero;
+        }
+
+        lhs /= rhs;
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
+    [[nodiscard]] static VMErrorCode handle_pas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    {
+        auto& lhs = get_location(state, instruction.data1());
+        const auto& rhs = get_location(state, instruction.data2());
+
+        lhs = std::pow(lhs, rhs);
+
+        END_ARITHMETIC_HANDLER;
+    }
+
+    template <std::floating_point T>
     [[nodiscard]] static VMErrorCode handle_jpz(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
     {
         if (state.flag) {
@@ -272,6 +332,16 @@ namespace RaychelScript::VM {
                 return handle_fac(state, instr);
             case Assembly::OpCode::pow:
                 return handle_pow(state, instr);
+            case Assembly::OpCode::inc:
+                return handle_inc(state, instr);
+            case Assembly::OpCode::dec:
+                return handle_dec(state, instr);
+            case Assembly::OpCode::mas:
+                return handle_mas(state, instr);
+            case Assembly::OpCode::das:
+                return handle_das(state, instr);
+            case Assembly::OpCode::pas:
+                return handle_pas(state, instr);
             case Assembly::OpCode::jpz:
                 return handle_jpz(state, instr);
             case Assembly::OpCode::jmp:
@@ -356,7 +426,7 @@ namespace RaychelScript::VM {
 
         //main execution loop
         while (!state.halt_flag) {
-            if(const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
+            if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
                 return ec;
             }
         }

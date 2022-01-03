@@ -111,6 +111,37 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
+    assemble(const UpdateExpressionData& data, AssemblingContext& ctx) noexcept
+    {
+        using Op = UpdateExpressionData::Operation;
+
+        TRY(assemble(data.lhs, ctx), lhs_index);
+        TRY(assemble(data.rhs, ctx), rhs_index);
+
+        switch (data.operation) {
+            case Op::add:
+                ctx.emit<Assembly::OpCode::inc>(lhs_index, rhs_index);
+                break;
+            case Op::subtract:
+                ctx.emit<Assembly::OpCode::dec>(lhs_index, rhs_index);
+                break;
+            case Op::multiply:
+                ctx.emit<Assembly::OpCode::mas>(lhs_index, rhs_index);
+                break;
+            case Op::divide:
+                ctx.emit<Assembly::OpCode::das>(lhs_index, rhs_index);
+                break;
+            case Op::power:
+                ctx.emit<Assembly::OpCode::pas>(lhs_index, rhs_index);
+                break;
+            default:
+                return AssemblerErrorCode::unknown_arithmetic_expression;
+        }
+
+        return AssemblerErrorCode::ok;
+    }
+
+    [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble(const VariableDeclarationData& data, AssemblingContext& ctx) noexcept
     {
         if (ctx.has_name(data.name)) {

@@ -298,7 +298,7 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseExpressionResult handle_op_assign_expression(
+    [[nodiscard]] static ParseExpressionResult handle_update_expression(
         LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
@@ -403,9 +403,8 @@ namespace RaychelScript::Parser {
         if (const auto matches =
                 match_token_pattern(expression_tokens, array{TT::identifer, TT::arith_op_, TT::equal, TT::expression_});
             !matches.empty()) {
-            RAYCHELSCRIPT_PARSER_DEBUG(
-                handler.indent(), "Found operator-assign expression at ", matches.front().front().location);
-            return handle_op_assign_expression(
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found update expression at ", matches.front().front().location);
+            return handle_update_expression(
                 matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type), ctx);
         }
 
@@ -574,15 +573,9 @@ namespace RaychelScript::Parser {
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
     }
 
-    [[nodiscard]] static ParseExpressionResult handle_op_assign_expression(
-        LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
+    [[nodiscard]] static ParseExpressionResult handle_update_expression(
+        LineView identifier_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
-        const auto operator_node_or_error = handle_math_op(identifier_tokens, rhs, op, ctx);
-
-        if (const auto* ec = std::get_if<ParserErrorCode>(&operator_node_or_error); ec) {
-            return *ec;
-        }
-
         TRY_GET_NODE(identifier);
 
         if (identifier_node.type() != NodeType::variable_ref) {
@@ -590,9 +583,13 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::op_assign_lhs_not_identifier;
         }
 
-        auto operator_node = Raychel::get<AST_Node>(operator_node_or_error);
+        TRY_GET_NODE(rhs);
 
-        return AST_Node{AssignmentExpressionData{{}, identifier_node, operator_node}};
+        if(rhs_node.value_type() != ValueType::number) {
+            Logger::error("Right-hand-side of update expression does nat have 'number' type, has '", rhs_node.value_type(), "' instead!\n");
+        }
+
+        return AST_Node{UpdateExpressionData{{}, identifier_node, rhs_node, op}};
     }
 
     [[nodiscard]] static ParseExpressionResult

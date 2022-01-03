@@ -47,6 +47,11 @@ namespace RaychelScript::Assembly {
         mag, //take the magnitude of a (a|)
         fac, //compute the factorial of a (a!)
         pow, //compute a to the power of b (a^b)
+        inc, //increment a by b (a += b)
+        dec, //decrement a by b (a -= b)
+        mas, //multiply-assign a and b (a *= b)
+        das, //divide-assign a and b (a /= b)
+        pas, //power-assign a and b (a ^= b)
 
         //comparison
         clt, //set flag if a is less than b (a < b)
@@ -81,6 +86,16 @@ namespace RaychelScript::Assembly {
                 return "FAC";
             case OpCode::pow:
                 return "POW";
+            case OpCode::inc:
+                return "INC";
+            case OpCode::dec:
+                return "DEC";
+            case OpCode::mas:
+                return "MAS";
+            case OpCode::das:
+                return "DAS";
+            case OpCode::pas:
+                return "PAS";
             case OpCode::jpz:
                 return "JPZ";
             case OpCode::jmp:
@@ -110,6 +125,11 @@ namespace RaychelScript::Assembly {
             case OpCode::mul:
             case OpCode::div:
             case OpCode::pow:
+            case OpCode::inc:
+            case OpCode::dec:
+            case OpCode::mas:
+            case OpCode::das:
+            case OpCode::pas:
             case OpCode::clt:
             case OpCode::cgt:
             case OpCode::ceq:

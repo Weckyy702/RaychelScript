@@ -34,6 +34,7 @@ namespace RaychelScript {
         variable_decl,
         variable_ref,
         arithmetic_operator,
+        update_expression,
         numeric_constant,
         unary_operator,
         conditional_construct,

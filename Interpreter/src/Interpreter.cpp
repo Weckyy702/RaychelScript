@@ -313,7 +313,7 @@ namespace RaychelScript::Interpreter {
     template <typename T>
     [[nodiscard]] InterpreterErrorCode handle_config_vars(State<T>& state, const AST& ast) noexcept
     {
-        //TODO: parse configuration variables and change  state flags if needed
+        //TODO: parse configuration variables and change state flags if needed
         (void)state;
 
         for (const auto& [name, values] : ast.config_block.config_vars) {
@@ -449,6 +449,56 @@ namespace RaychelScript::Interpreter {
             default:
                 return InterpreterErrorCode::invalid_arithmetic_operation;
         }
+
+        set_status_registers(state);
+
+        return InterpreterErrorCode::ok;
+    }
+
+    RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(update_expression)
+    {
+        using Op = UpdateExpressionData::Operation;
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_update_expression()\n");
+
+        const auto data = node.to_node_data<UpdateExpressionData>();
+
+        state._load_references = true;
+        TRY(execute_node(state, data.rhs));
+
+        state._load_references = false;
+        TRY(execute_node(state, data.lhs));
+
+        if (state._current_descriptor.is_constant()) {
+            Logger::error("Trying to update a constant!\n");
+            return InterpreterErrorCode::constant_reassign;
+        }
+
+        auto& value = state.variables.at(state._current_descriptor.index()).value();
+
+        switch (data.operation) {
+            case Op::add:
+                value += state.registers.result;
+                break;
+            case Op::subtract:
+                value -= state.registers.result;
+                break;
+            case Op::multiply:
+                value *= state.registers.result;
+                break;
+            case Op::divide:
+                if (Raychel::equivalent<T>(state.registers.result, 0)) {
+                    return InterpreterErrorCode::divide_by_zero;
+                }
+                value /= state.registers.result;
+                break;
+            case Op::power:
+                value = std::pow(value, state.registers.result);
+                break;
+            default:
+                return InterpreterErrorCode::invalid_arithmetic_operation;
+        }
+
+        state.registers.result = value;
 
         set_status_registers(state);
 
@@ -596,6 +646,8 @@ namespace RaychelScript::Interpreter {
                 return handle_variable_reference(state, node);
             case NodeType::arithmetic_operator:
                 return handle_arithmetic_operation(state, node);
+            case NodeType::update_expression:
+                return handle_update_expression(state, node);
             case NodeType::numeric_constant:
                 return handle_numeric_constant(state, node);
             case NodeType::unary_operator:
