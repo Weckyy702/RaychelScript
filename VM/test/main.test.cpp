@@ -2,7 +2,6 @@
 
 #include "Assembler/AssemblerPipe.h"
 #include "Lexer/LexerPipe.h"
-#include "Optimizer/OptimizerPipe.h"
 #include "Parser/ParserPipe.h"
 #include "VM/VMPipe.h"
 
@@ -36,9 +35,7 @@ int main(int argc, char** argv)
 
     Logger::info("Executing script ", script_name, '\n');
 
-    const auto state_or_error = Lex{lex_file, script_name} | Parse{} |
-                                Optimize{RaychelScript::Optimizer::OptimizationLevel::hard} | Assemble{} |
-                                Execute<double>{std::move(args)};
+    const auto state_or_error = Lex{lex_file, script_name} | Parse{} | Assemble{} | Execute<double>{std::move(args)};
 
     if (log_if_error(state_or_error)) {
         return 1;
