@@ -125,7 +125,7 @@ namespace RaychelScript::Pipes {
 
             template <typename E>
             requires std::is_enum_v<E>
-            [[nodiscard]] ErrorContainer& operator=(E value) noexcept
+            ErrorContainer& operator=(E value) noexcept
             {
                 type_ = _error_type_for<E>::value;
                 int_value_ = static_cast<std::uintmax_t>(value);
