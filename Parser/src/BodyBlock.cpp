@@ -587,8 +587,9 @@ namespace RaychelScript::Parser {
 
         TRY_GET_NODE(rhs);
 
-        if(rhs_node.value_type() != ValueType::number) {
-            Logger::error("Right-hand-side of update expression does nat have 'number' type, has '", rhs_node.value_type(), "' instead!\n");
+        if (rhs_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Right-hand-side of update expression does nat have 'number' type, has '", rhs_node.value_type(), "' instead!\n");
         }
 
         return AST_Node{UpdateExpressionData{{}, identifier_node, rhs_node, op}};
