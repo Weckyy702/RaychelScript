@@ -28,43 +28,85 @@
 #ifndef RAYCHELSCRIPT_TOKEN_TYPE_H
 #define RAYCHELSCRIPT_TOKEN_TYPE_H
 
-namespace RaychelScript::TokenType {
+#include <ostream>
+#include <string>
+#include "RaychelCore/Raychel_assert.h"
 
-    enum TokenType : char {
-        newline = '\n',
-        left_paren = '(',
-        right_paren = ')',
-        left_bracket = '[',
-        right_bracket = ']',
-        left_curly = '{',
-        right_curly = '}',
-        comma = ',',
-        number = '0',
-        identifer = '1',
-        declaration = '2',
-        conditional_header = '3',
-        conditional_footer = '4',
-        loop_header = '5',
-        loop_footer = '6',
-        literal_true = '7',
-        literal_false = '8',
-        plus = '+',
-        minus = '-',
-        star = '*',
-        slash = '/',
-        percent = '%',
-        equal = '=',
-        left_angle = '<',
-        right_angle = '>',
-        bang = '!',
-        ampersand = '&',
-        pipe = '|',
-        caret = '^',
+namespace RaychelScript {
+    namespace TokenType {
 
-        expression_ = '\0',
-        arith_op_ = '\1',
-    };
+        enum TokenType : char {
+            newline = '\n',
+            left_paren = '(',
+            right_paren = ')',
+            left_bracket = '[',
+            right_bracket = ']',
+            left_curly = '{',
+            right_curly = '}',
+            comma = ',',
+            number = '0',
+            identifer = '1',
+            declaration = '2',
+            conditional_header = '3',
+            conditional_footer = '4',
+            loop_header = '5',
+            loop_footer = '6',
+            literal_true = '7',
+            literal_false = '8',
+            plus = '+',
+            minus = '-',
+            star = '*',
+            slash = '/',
+            percent = '%',
+            equal = '=',
+            left_angle = '<',
+            right_angle = '>',
+            bang = '!',
+            ampersand = '&',
+            pipe = '|',
+            caret = '^',
 
-} //namespace RaychelScript::TokenType
+            expression_ = '\0',
+            arith_op_ = '\1',
+        };
+
+    } //namespace TokenType
+
+    inline std::string token_type_to_string(TokenType::TokenType type) noexcept
+    {
+        using TT = RaychelScript::TokenType::TokenType;
+
+        switch (type) {
+            case TT::number:
+                return "NUMBER";
+            case TT::declaration:
+                return "DECLARATION";
+            case TT::identifer:
+                return "IDENTIFIER";
+            case TT::conditional_header:
+                return "IF";
+            case TT::conditional_footer:
+                return "ENDIF";
+            case TT::loop_header:
+                return "WHILE";
+            case TT::loop_footer:
+                return "ENDWHILE";
+            case TT::literal_true:
+                return "TRUE";
+            case TT::literal_false:
+                return "FALSE";
+            case TT::expression_:
+            case TT::arith_op_:
+                RAYCHEL_TERMINATE("TokenType::expression_ and TokenType::arith_op_ cannot appear in this context!\n");
+            default:
+                return std::string{type};
+        }
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, TokenType::TokenType type) noexcept
+    {
+        return os << token_type_to_string(type);
+    }
+} // namespace RaychelScript
 
 #endif //!RAYCHELSCRIPT_TOKEN_TYPE_H
