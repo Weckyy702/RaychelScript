@@ -43,6 +43,9 @@ namespace RaychelScript::VM {
 
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept;
+
+    template <std::floating_point T>
+    void dump_state(const Assembly::VMData& data, const VMState<T>& state) noexcept;
 } //namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_H

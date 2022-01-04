@@ -383,16 +383,8 @@ namespace RaychelScript::VM {
 
     static bool handle_fp_exceptions() noexcept
     {
-        //TODO: According to callgrind, we are spending 15% of runtime in this function (oof)
-        //This mutex is used for the call to std::strerror if errno gets set
-        static std::mutex strerror_mtx;
-
-        if (errno != 0) {
-            std::lock_guard lck{strerror_mtx};
-            Logger::error("VM error: '", std::strerror(errno), "'\n");
-            return true;
-        }
-        return fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+        //NOLINTNEXTLINE(hicpp-signed-bitwise): we cannot change the STL spec :(
+        return errno != 0 || fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT) != 0;
     }
 
     template <std::floating_point T>
@@ -442,20 +434,103 @@ namespace RaychelScript::VM {
         //main execution loop
         while (!state.halt_flag) {
             if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
+                dump_state(data, state);
                 return ec;
             }
             if (state.check_fp_flag) {
                 state.check_fp_flag = false;
                 if (handle_fp_exceptions()) {
-                    for (std::size_t i = 0; i < state.memory_size; i++) {
-                        Logger::debug('$', i, ": ", state.memory.at(i), '\n');
-                    }
+                    dump_state_error(data, state);
                     return VMErrorCode::fp_exception;
                 }
             }
         }
 
         return state;
+    }
+
+    //Functions fo dumping the state in case of an error
+    template <std::floating_point T>
+    static void dump_instructions(const VMState<T>& state) noexcept
+    {
+        Logger::log("Instruction dump: (active instruction marked with '*'):\n");
+        for (auto it = state.instructions.begin(); it != state.instructions.end(); it++) {
+            if (it == std::prev(state.instruction_pointer)) {
+                Logger::log('*');
+            } else {
+                Logger::log(' ');
+            }
+            Logger::log(*it, '\n');
+        }
+    }
+
+    template <typename Container, std::floating_point T = typename Container::value_type>
+    static bool dump_value_with_maybe_name(std::size_t index, T value, const Container& container) noexcept
+    {
+        const auto it = std::find_if(container.begin(), container.end(), [&](const auto& descriptor) {
+            return std::cmp_equal(descriptor.second.value(), index);
+        });
+        if (it == container.end()) {
+            return false;
+        }
+        Logger::log(it->first, " -> ", value, '\n');
+        return true;
+    }
+
+    template <std::floating_point T>
+    static void dump_values(const Assembly::VMData& data, const VMState<T>& state) noexcept
+    {
+        Logger::log(" A -> ", state.memory.at(0), '\n');
+        for (std::size_t i = 1; i < state.memory_size; i++) {
+            if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
+                continue;
+            }
+            if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
+                continue;
+            }
+            Logger::log('$', i, " -> ", state.memory.at(i), '\n');
+        }
+    }
+
+    template <std::floating_point T>
+    void dump_state(const Assembly::VMData& data, const VMState<T>& state) noexcept
+    {
+        if (data.num_memory_locations != state.memory_size) {
+            return;
+        }
+        dump_instructions(state);
+        dump_values(data, state);
+    }
+
+    static std::string_view get_error_description() noexcept
+    {
+        static std::mutex strerror_mtx;
+
+        if (errno != 0) {
+            std::lock_guard lck{strerror_mtx};
+            return std::strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+        }
+
+        if (std::fetestexcept(FE_DIVBYZERO) != 0) {
+            return "Division by zero";
+        }
+        if (std::fetestexcept(FE_INVALID) != 0) {
+            return "Domain error";
+        }
+        if (std::fetestexcept(FE_OVERFLOW) != 0) {
+            return "Overflow";
+        }
+        if (std::fetestexcept(FE_UNDERFLOW) != 0) {
+            return "Underflow";
+        }
+        return "Unknown error";
+    }
+
+    template <std::floating_point T>
+    static void dump_state_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
+    {
+        Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
+        dump_state(data, state);
     }
 
     namespace details {
