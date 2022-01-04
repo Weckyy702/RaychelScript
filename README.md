@@ -11,8 +11,6 @@ My good friend [plexx-dev](https://github.com/plexx-dev) has published an awesom
 
 Features
 -
-*In its current state, the language can barely be executed. Of course, that will change in the future, but it will remain Turing-incomplete for a while.*
-
 This languages intended purpose is as a scripting language for use in my engine [RaychelCPU](https://github.com/Weckyy702/RaychelCPU). Therefore, its syntax and featureset are tailored towards high-throughput mathematical operations (like shaders).
 
 Building
@@ -20,9 +18,10 @@ Building
 * Dependencies
   * RaychelCore
   * RaychelLogger
+  * RaychelMath
 
 * Compiler support
-  * I have tested GCC 11.1.0 on linux 5.14 and MSVC on Windows 10.
+  * I have tested GCC 11.1.0 on linux 5.15 and MSVC on Windows 10.
   * Clang seems to have trouble with the STL ranges library from libstdc++.
 
 * GNU/Linux

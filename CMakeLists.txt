@@ -12,7 +12,7 @@ option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" ON)
 
 option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
 
-option(RAYCHELSCRIPT_ENABLE_ASAN "Enable ASAN instrumentation" OFF)
+option(RAYCHELSCRIPT_ENABLE_ASAN "Enable ASAN instrumentation" ON)
 option(RAYCHELSCRIPT_ENABLE_UBSAN "Enable UBSAN instrumentation" ON)
 
 option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" OFF)
