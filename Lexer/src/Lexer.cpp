@@ -28,6 +28,7 @@
 #include "Lexer/Lexer.h"
 #include "shared/Lexing/Alphabet.h"
 
+#include <utility>
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelLogger/Logger.h"
 
@@ -64,9 +65,9 @@ namespace RaychelScript::Lexer {
     }
 
     //TODO: make this code less awful
-    std::variant<std::vector<Token>, LexerErrorCode> _lex_raw(std::istream& source_stream) noexcept
+    std::pair<std::vector<Token>, LexerErrorCode> _lex_raw(std::istream& source_stream) noexcept
     {
-        std::vector<Token> tokens{};
+        std::vector<Token> tokens_so_far{};
         std::string current_token{};
 
         bool in_comment = false;
@@ -82,7 +83,7 @@ namespace RaychelScript::Lexer {
         const auto reset_state = [&] {
             if (!current_token.empty()) {
                 auto type = parse_token(current_token);
-                tokens.emplace_back(type, SourceLocation{line_number, column_number}, current_token);
+                tokens_so_far.emplace_back(type, SourceLocation{line_number, column_number}, current_token);
                 current_token.clear();
             }
             might_be_number = false;
@@ -113,8 +114,9 @@ namespace RaychelScript::Lexer {
 
             if (c == '\n') {
                 reset_state();
-                if (tokens.empty() || tokens.back().type != TokenType::newline) { //multiple newlines in sequence are ignored
-                    tokens.emplace_back(TokenType::newline, SourceLocation{line_number, column_number});
+                if (tokens_so_far.empty() ||
+                    tokens_so_far.back().type != TokenType::newline) { //multiple newlines in sequence are ignored
+                    tokens_so_far.emplace_back(TokenType::newline, SourceLocation{line_number, column_number});
                 }
 
                 if (line_paren_depth != 0) {
@@ -133,8 +135,9 @@ namespace RaychelScript::Lexer {
             }
 
             if (c == '_' && source_stream.peek() == '_') {
-                Logger::error("Invalid character sequence! Any sequence starting with two underscores (__*) is reserved!\n");
-                return LexerErrorCode::reserved_identifier;
+                Logger::error("Invalid character sequence! Any sequence starting with two underscores (__*) is reserved and "
+                              "cannot be used!\n");
+                return {tokens_so_far, LexerErrorCode::reserved_identifier};
             }
 
             if (is_opening_parenthesis(static_cast<TokenType::TokenType>(c))) {
@@ -149,16 +152,16 @@ namespace RaychelScript::Lexer {
                 reset_state();
             } else if (is_special_char(c)) {
                 reset_state();
-                tokens.emplace_back(static_cast<TokenType::TokenType>(c), SourceLocation{line_number, column_number});
+                tokens_so_far.emplace_back(static_cast<TokenType::TokenType>(c), SourceLocation{line_number, column_number});
             } else {
                 if (!handle_regular_char(c)) {
-                    return LexerErrorCode::invalid_token;
+                    return {tokens_so_far, LexerErrorCode::invalid_token};
                 }
             }
         }
         reset_state();
 
-        return tokens;
+        return {tokens_so_far, LexerErrorCode::ok};
     }
 
     std::vector<std::vector<Token>> combine_tokens_into_lines(const std::vector<Token>& raw_tokens) noexcept
@@ -191,11 +194,19 @@ namespace RaychelScript::Lexer {
             return LexerErrorCode::no_input;
         }
 
-        const auto tokens_or_error = _lex_raw(source_stream);
-        if (const auto* ec = std::get_if<LexerErrorCode>(&tokens_or_error); ec) {
-            return *ec;
+        const auto tokens_and_error = _lex_raw(source_stream);
+        if (tokens_and_error.second != LexerErrorCode::ok) {
+            return tokens_and_error.second;
         }
-        return combine_tokens_into_lines(Raychel::get<std::vector<Token>>(tokens_or_error));
+        return combine_tokens_into_lines(tokens_and_error.first);
+    }
+
+    SourceTokens lex_until_invalid_or_eof(std::istream& source_stream) noexcept
+    {
+        if (!source_stream) {
+            return {};
+        }
+        return combine_tokens_into_lines(_lex_raw(source_stream).first);
     }
 
 } // namespace RaychelScript::Lexer

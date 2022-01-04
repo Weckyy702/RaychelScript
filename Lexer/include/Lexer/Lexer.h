@@ -23,6 +23,8 @@ namespace RaychelScript::Lexer {
 
     [[nodiscard]] RAYCHELSCRIPT_LEXER_API LexResult lex(std::istream& source_stream) noexcept;
 
+    [[nodiscard]] RAYCHELSCRIPT_LEXER_API SourceTokens lex_until_invalid_or_eof(std::istream& source_stream) noexcept;
+
 } // namespace RaychelScript::Lexer
 
 #endif //!RAYCHELSCRIPT_LEXER_H
