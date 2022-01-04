@@ -25,6 +25,6 @@ endif()
 
 target_link_libraries(Lexer_test PUBLIC
     RaychelScriptBase
-    RaychelScriptParser
+    RaychelScriptLexer
     RaychelLogger
 )
