@@ -37,16 +37,12 @@ int main(int /*unused*/, char** /*unused*/)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    std::ifstream in_file{"../../../shared/test/conditionals.rsc"};
-    const auto lines_or_error = RaychelScript::Lexer::lex(in_file);
+    std::ifstream in_file{"../../../shared/test/features.rsc"};
 
-    if (const auto* ec = std::get_if<RaychelScript::Lexer::LexerErrorCode>(&lines_or_error); ec) {
-        return 1;
-    }
+    const auto lines = RaychelScript::Lexer::lex_until_invalid_or_eof(in_file);
 
     std::size_t line_no = 1U;
-
-    for (const auto& line : Raychel::get<RaychelScript::Lexer::SourceTokens>(lines_or_error)) {
+    for (const auto& line : lines) {
         Logger::log(line_no, ": ");
         for (const auto& [type, _1, _2] : line) {
             Logger::log(RaychelScript::token_type_to_string(type), ' ');
