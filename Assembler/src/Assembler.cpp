@@ -332,10 +332,13 @@ namespace RaychelScript::Assembler {
         return maybe_result;
     }
 
+    static bool is_jump(const Assembly::OpCode& code)
+    {
+        return code == Assembly::OpCode::jmp || code == Assembly::OpCode::jpz;
+    }
+
     static void update_jumps(std::vector<Assembly::Instruction>& instructions, auto removed_it) noexcept
     {
-        const auto is_jump = [](const auto& code) { return code == Assembly::OpCode::jmp || code == Assembly::OpCode::jpz; };
-
         const auto removed_index = std::distance(instructions.begin(), removed_it);
 
         for (auto& instr : instructions) {
@@ -349,8 +352,20 @@ namespace RaychelScript::Assembler {
         }
     }
 
-    static void optimize_assembly(std::vector<Assembly::Instruction>& instructions) noexcept
+    static auto
+    closest_jump(const std::forward_iterator auto instruction_it, std::vector<Assembly::Instruction>& instructions) noexcept
     {
+        for (auto it = instruction_it; it != instructions.begin(); it--) {
+            if (is_jump(it->op_code())) {
+                return it;
+            }
+        }
+        return instructions.end();
+    }
+
+    static void optimize_assembly(AssemblingContext& ctx) noexcept
+    {
+        auto& instructions = ctx.instructions();
         for (auto it = instructions.begin(); it != instructions.end();) {
             if (it->op_code() != Assembly::OpCode::mov) {
                 it++;
@@ -364,15 +379,24 @@ namespace RaychelScript::Assembler {
                 continue;
             }
 
-            //FIXME: do not coalesce MOVs if one of them might be skipped by a jump
-
             //coalesce MOVs where the first ones destination is the second ones source (y = a; b = y -> b = a)
             if (it != std::prev(instructions.end()) && std::next(it)->op_code() == Assembly::OpCode::mov) {
                 const auto next = std::next(it);
 
+                //If only one MOV might be skipped by a jump, we cannot coalesce them
+                if (closest_jump(it, instructions) != closest_jump(it, instructions)) {
+                    it++;
+                    continue;
+                }
+
                 const auto destination1 = it->data2();
                 const auto source2 = next->data1();
                 const auto destination2 = next->data2();
+
+                if (!ctx.is_intermediate(destination1)) {
+                    it++;
+                    continue;
+                }
 
                 if (destination1 == source2) {
                     it = std::prev(instructions.erase(next));
@@ -414,7 +438,7 @@ namespace RaychelScript::Assembler {
 
         ctx.emit<Assembly::OpCode::hlt>(); //the last instruction must be the HLT instruction
 
-        optimize_assembly(output.instructions);
+        optimize_assembly(ctx);
 
         output.num_memory_locations = ctx.number_of_memory_locations();
 

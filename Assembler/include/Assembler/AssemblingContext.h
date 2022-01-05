@@ -76,6 +76,20 @@ namespace RaychelScript::Assembler {
         }
 
         /**
+        * \brief Return if the index points to an intermediate location
+        * 
+        * \param index Index of a memory location
+        * \return true The index points to an intermediate value
+        * \return false The index does not point to an intermediate value
+        */
+        [[nodiscard]] bool is_intermediate(std::uint8_t index) const noexcept
+        {
+            return std::find_if(intermediates_.begin(), intermediates_.end(), [&](const auto& intermediate) {
+                       return intermediate.second.value() == index;
+                   }) != intermediates_.end();
+        }
+
+        /**
         * \brief Return the memory index associated with a name
         * 
         * \param name Name of a variable
