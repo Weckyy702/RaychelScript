@@ -50,11 +50,6 @@ namespace RaychelScript::Pipes {
         return parser(input.value());
     }
 
-    inline PipeResult<AST> operator|(const Lex& lexer, const Parse& parser) noexcept
-    {
-        return PipeResult<Lexer::SourceTokens>{lexer()} | parser;
-    }
-
 } //namespace RaychelScript::Pipes
 
 #endif //!RAYCHELSCRIPT_PARSER_PIP_H

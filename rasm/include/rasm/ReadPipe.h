@@ -47,6 +47,11 @@ namespace RaychelScript::Pipes {
             return Assembly::read_rsbf(input_stream_);
         }
 
+        operator PipeResult<Assembly::VMData>() noexcept //NOLINT: we want this conversion operator to be implicit
+        {
+            return (*this)();
+        }
+
     private:
         std::ifstream input_stream_;
     };
