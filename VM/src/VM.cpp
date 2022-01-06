@@ -37,6 +37,8 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
+#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 0
+
 //FIXME: this needs to be enabled, but -Werror doesn't like this unknown pragma
 //#pragma STDC FENV_ACCESS ON
 
@@ -390,8 +392,9 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
     {
+#if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         Raychel::ScopedTimer<std::chrono::microseconds> timer{"Execution time"};
-
+#endif
         //Check for the correct number of input identifiers
         if (input_variables.size() != data.config_block.input_identifiers.size()) {
             Logger::error(
