@@ -32,7 +32,7 @@
 #include "magic.h"
 
 #include <fstream>
-#include <istream>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -46,6 +46,28 @@ namespace RaychelScript::Assembly {
         wrong_version,
         reading_failure,
     };
+
+    constexpr std::string_view error_code_to_reason_string(ReadingErrorCode ec) noexcept
+    {
+        switch (ec) {
+            case ReadingErrorCode::ok:
+                return "ok";
+            case ReadingErrorCode::file_not_found:
+                return "File not found";
+            case ReadingErrorCode::no_magic_word:
+                return "Wrong magic bytes";
+            case ReadingErrorCode::wrong_version:
+                return "Incombatible version";
+            case ReadingErrorCode::reading_failure:
+                return "Error while reading data";
+        }
+        return "<unknown>";
+    }
+
+    inline std::ostream& operator<<(std::ostream& os, ReadingErrorCode ec)
+    {
+        return os << error_code_to_reason_string(ec);
+    }
 
     using ReadResult = std::variant<ReadingErrorCode, VMData>;
 
