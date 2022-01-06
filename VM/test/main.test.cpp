@@ -4,13 +4,12 @@
 #include "Lexer/LexerPipe.h"
 #include "Parser/ParserPipe.h"
 #include "VM/VMPipe.h"
+#include "rasm/ReadPipe.h"
 
 #include "RaychelCore/AssertingGet.h"
 
 int main(int argc, char** argv)
 {
-    using namespace RaychelScript::Pipes;
-
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
     std::string script_name{"../../../shared/test/loops.rsc"};
@@ -31,11 +30,21 @@ int main(int argc, char** argv)
         }
     }
 
+    const auto is_binary_file = script_name.ends_with(".rsbf");
+
     //NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    Logger::info("Executing script ", script_name, '\n');
+    Logger::info("Executing ", is_binary_file ? "binary ": "script ", script_name, '\n');
 
-    const auto state_or_error = Lex{lex_file, script_name} | Parse{} | Assemble{} | Execute<double>{std::move(args)};
+    const auto data_or_error = [&]() -> RaychelScript::Pipes::PipeResult<RaychelScript::Assembly::VMData> {
+        using namespace RaychelScript::Pipes;
+        if (is_binary_file) {
+            return ReadRSBF{"./instr.rsbf"};
+        }
+        return Lex{lex_file, script_name} | Parse{} | Assemble{};
+    }();
+
+    const auto state_or_error = data_or_error | RaychelScript::Pipes::Execute<double>{std::move(args)};
 
     if (log_if_error(state_or_error)) {
         return 1;
