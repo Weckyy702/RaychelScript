@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    std::string script_name{"../../../shared/test/loops.rsc"};
+    std::string script_name{"script.rsc"};
     std::vector<double> args{1, 2};
 
     //NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     //NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-    Logger::info("Executing ", is_binary_file ? "binary ": "script ", script_name, '\n');
+    Logger::info("Executing ", is_binary_file ? "binary " : "script ", script_name, '\n');
 
     const auto data_or_error = [&]() -> RaychelScript::Pipes::PipeResult<RaychelScript::Assembly::VMData> {
         using namespace RaychelScript::Pipes;

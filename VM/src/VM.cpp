@@ -456,7 +456,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     static void dump_instructions(const VMState<T>& state) noexcept
     {
-        Logger::log("Instruction dump: (active instruction marked with '*'):\n");
+        Logger::log("Instruction dump: (faulty instruction marked with '*'):\n");
         for (auto it = state.instructions.begin(); it != state.instructions.end(); it++) {
             if (it == std::prev(state.instruction_pointer)) {
                 Logger::log('*');
