@@ -221,7 +221,7 @@ namespace RaychelScript::Assembler {
             }
         }
 
-        std::size_t number_of_memory_locations() const noexcept
+        [[nodiscard]] std::size_t number_of_memory_locations() const noexcept
         {
             return current_index_;
         }

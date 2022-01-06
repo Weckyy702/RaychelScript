@@ -480,7 +480,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     static void dump_values(const Assembly::VMData& data, const VMState<T>& state) noexcept
     {
-        Logger::log(" A -> ", state.memory.at(0), '\n');
+        Logger::log("$A -> ", state.memory.at(0), '\n');
         for (std::size_t i = 1; i < state.memory_size; i++) {
             if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
                 continue;
