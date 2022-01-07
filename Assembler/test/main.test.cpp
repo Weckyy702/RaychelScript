@@ -1,20 +1,29 @@
 #include "Assembler/AssemblerPipe.h"
 #include "Lexer/LexerPipe.h"
 #include "Parser/ParserPipe.h"
-#include "rasm/ReadPipe.h"
 #include "rasm/WritePipe.h"
 
 #include "rasm/read.h"
-#include "rasm/write.h"
-
-int main()
+int main(int argc, char** argv)
 {
     using namespace RaychelScript::Pipes; //NOLINT
 
+    const auto script_name = [&]() -> std::string {
+        if (argc > 1) {
+            return argv[1];
+        }
+        return "script.rsc";
+    }();
+    const auto output_name = [&]() -> std::string {
+        if (argc > 2) {
+            return argv[2];
+        }
+        return "script.rsbf";
+    }();
+
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     {
-
-        const auto ast_or_error = Lex{lex_file, "../../../shared/test/loops.rsc"} | Parse{};
+        const auto ast_or_error = Lex{lex_file, script_name} | Parse{};
 
         const auto label = Logger::startTimer("Assembling time");
         const auto data_or_error = ast_or_error | Assemble{};
@@ -24,13 +33,13 @@ int main()
             return 1;
         }
 
-        if (log_if_error(data_or_error | Write{"./instr.rsbf"})) {
+        if (log_if_error(data_or_error | Write{output_name})) {
             return 1;
         }
     }
 
     {
-        const auto data_or_error = PipeResult<RaychelScript::Assembly::VMData>{ReadRSBF{"./instr.rsbf"}()};
+        const auto data_or_error = PipeResult<RaychelScript::Assembly::VMData>{RaychelScript::Assembly::read_rsbf(output_name)};
 
         if (log_if_error(data_or_error)) {
             return 1;

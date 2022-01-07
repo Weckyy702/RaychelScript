@@ -33,11 +33,18 @@
 #include "RaychelCore/AssertingGet.h"
 #include "RaychelLogger/Logger.h"
 
-int main(int /*unused*/, char** /*unused*/)
+int main(int argc, char** argv)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    std::ifstream in_file{"../../../shared/test/features.rsc"};
+    const auto script_name = [&]() -> std::string {
+        if (argc > 1) {
+            return argv[1];
+        }
+        return "script.rsc";
+    }();
+
+    std::ifstream in_file{script_name};
 
     const auto lines = RaychelScript::Lexer::lex_until_invalid_or_eof(in_file);
 
