@@ -54,7 +54,7 @@ namespace RaychelScript {
 
         inline void handle_variable_declaration_data(const VariableDeclarationData& data) noexcept
         {
-            Logger::log("VAR_REF ", data.is_const ? "CONST " : "MUT ", data.name, '\n');
+            Logger::log("VAR_DECL ", data.is_const ? "CONST " : "MUT ", data.name, '\n');
         }
 
         inline void handle_variable_reference_data(const VariableReferenceData& data) noexcept

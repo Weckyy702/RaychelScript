@@ -68,7 +68,6 @@ namespace RaychelScript::Pipes {
             return Lexer::lex(*source_stream_);
         }
 
-        /*implicit*/
         operator PipeResult<Lexer::SourceTokens>() const noexcept //NOLINT: we want this conversion operator to be implicit
         {
             return (*this)();
