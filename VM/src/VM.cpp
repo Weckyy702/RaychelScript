@@ -435,7 +435,7 @@ namespace RaychelScript::VM {
         //main execution loop
         while (!state.halt_flag) {
             if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
-                dump_state(data, state);
+                dump_state(state, data);
                 return ec;
             }
             if (state.check_fp_flag) {
@@ -448,59 +448,6 @@ namespace RaychelScript::VM {
         }
 
         return state;
-    }
-
-    //Functions fo dumping the state in case of an error
-    template <std::floating_point T>
-    static void dump_instructions(const VMState<T>& state) noexcept
-    {
-        Logger::log("Instruction dump: (faulty instruction marked with '*'):\n");
-        for (auto it = state.instructions.begin(); it != state.instructions.end(); it++) {
-            if (it == std::prev(state.instruction_pointer)) {
-                Logger::log('*');
-            } else {
-                Logger::log(' ');
-            }
-            Logger::log(*it, '\n');
-        }
-    }
-
-    template <typename Container, std::floating_point T = typename Container::value_type>
-    static bool dump_value_with_maybe_name(std::size_t index, T value, const Container& container) noexcept
-    {
-        const auto it = std::find_if(container.begin(), container.end(), [&](const auto& descriptor) {
-            return std::cmp_equal(descriptor.second.value(), index);
-        });
-        if (it == container.end()) {
-            return false;
-        }
-        Logger::log(it->first, " -> ", value, '\n');
-        return true;
-    }
-
-    template <std::floating_point T>
-    static void dump_values(const Assembly::VMData& data, const VMState<T>& state) noexcept
-    {
-        Logger::log("$A -> ", state.memory.at(0), '\n');
-        for (std::size_t i = 1; i < state.memory_size; i++) {
-            if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
-                continue;
-            }
-            if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
-                continue;
-            }
-            Logger::log('$', i, " -> ", state.memory.at(i), '\n');
-        }
-    }
-
-    template <std::floating_point T>
-    void dump_state(const Assembly::VMData& data, const VMState<T>& state) noexcept
-    {
-        if (data.num_memory_locations != state.memory_size) {
-            return;
-        }
-        dump_instructions(state);
-        dump_values(data, state);
     }
 
     static std::string_view get_error_description() noexcept
@@ -531,7 +478,7 @@ namespace RaychelScript::VM {
     static void dump_state_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
     {
         Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
-        dump_state(data, state);
+        dump_state(state, data);
     }
 
     namespace details {

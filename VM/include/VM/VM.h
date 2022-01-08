@@ -38,6 +38,59 @@
 
 namespace RaychelScript::VM {
 
+    namespace details {
+        inline void dump_instructions(const Assembly::VMData& data, const auto instruction_pointer) noexcept
+        {
+            Logger::log("Instruction dump: (active instruction marked with '*'):\n");
+            for (auto it = data.instructions.begin(); it != data.instructions.end(); it++) {
+                if (it == std::prev(instruction_pointer)) {
+                    Logger::log('*');
+                } else {
+                    Logger::log(' ');
+                }
+                Logger::log(*it, '\n');
+            }
+        }
+
+        template <typename Container, std::floating_point T = typename Container::value_type>
+        bool dump_value_with_maybe_name(std::size_t index, T value, const Container& container) noexcept
+        {
+            const auto it = std::find_if(container.begin(), container.end(), [&](const auto& descriptor) {
+                return std::cmp_equal(descriptor.second.value(), index);
+            });
+            if (it == container.end()) {
+                return false;
+            }
+            Logger::log(it->first, " -> ", value, '\n');
+            return true;
+        }
+
+        template <std::floating_point T>
+        void dump_memory(const Assembly::VMData& data, const VMState<T>& state) noexcept
+        {
+            Logger::log("$A -> ", state.memory.at(0), '\n');
+            for (std::size_t i = 1; i < state.memory_size; i++) {
+                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
+                    continue;
+                }
+                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
+                    continue;
+                }
+                Logger::log('$', i, " -> ", state.memory.at(i), '\n');
+            }
+        }
+
+        template <std::floating_point T>
+        void dump_state(const VMState<T>& state, const Assembly::VMData& data) noexcept
+        {
+            if (data.num_memory_locations != state.memory_size) {
+                return;
+            }
+            dump_instructions(data, state.instruction_pointer);
+            dump_memory(data, state);
+        }
+    } // namespace details
+
     template <std::floating_point T>
     using VMResult = std::variant<VMErrorCode, VMState<T>>;
 
@@ -45,7 +98,10 @@ namespace RaychelScript::VM {
     VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept;
 
     template <std::floating_point T>
-    void dump_state(const Assembly::VMData& data, const VMState<T>& state) noexcept;
+    void dump_state(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    {
+        details::dump_state(state, data);
+    }
 } //namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_H
