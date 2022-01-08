@@ -441,7 +441,7 @@ namespace RaychelScript::VM {
             if (state.check_fp_flag) {
                 state.check_fp_flag = false;
                 if (handle_fp_exceptions()) {
-                    dump_state_error(data, state);
+                    dump_state_fp_error(data, state);
                     return VMErrorCode::fp_exception;
                 }
             }
@@ -463,19 +463,19 @@ namespace RaychelScript::VM {
             return "Division by zero";
         }
         if (std::fetestexcept(FE_INVALID) != 0) {
-            return "Domain error";
+            return "Argument is out of domain";
         }
         if (std::fetestexcept(FE_OVERFLOW) != 0) {
-            return "Overflow";
+            return "Floating point overflow";
         }
         if (std::fetestexcept(FE_UNDERFLOW) != 0) {
-            return "Underflow";
+            return "Floating point underflow";
         }
         return "Unknown error";
     }
 
     template <std::floating_point T>
-    static void dump_state_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
+    static void dump_state_fp_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
     {
         Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
         dump_state(state, data);
