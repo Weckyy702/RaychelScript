@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 
     const auto file_name = [&]() -> std::string {
         if (argc > 1) {
-            return argv[1];
+            return argv[1]; //NOLINT
         }
         return "script.rsc";
     }();
@@ -24,8 +24,8 @@ int main(int argc, char** argv)
             std::vector<double> _args{};
             for (int i = 2; i < argc; i++) {
                 char* end{};
-                const double arg = std::strtod(argv[i], &end);
-                if (end != argv[i]) {
+                const double arg = std::strtod(argv[i], &end); //NOLINT
+                if (end != argv[i]) {                          //NOLINT
                     _args.emplace_back(arg);
                 }
             }
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     Logger::info("Executing ", is_binary_file ? "binary " : "script ", file_name, '\n');
 
     const auto data_or_error = [&]() -> RaychelScript::Pipes::PipeResult<RaychelScript::Assembly::VMData> {
-        using namespace RaychelScript::Pipes;
+        using namespace RaychelScript::Pipes; //NOLINT
         if (is_binary_file) {
             return ReadRSBF{file_name};
         }
