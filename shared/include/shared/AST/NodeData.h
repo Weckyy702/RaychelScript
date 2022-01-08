@@ -122,12 +122,6 @@ namespace RaychelScript {
         //TODO: else blocks
     };
 
-    struct LiteralTrueData : NodeDataBase<NodeType::literal_true, ValueType::boolean>
-    {};
-
-    struct LiteralFalseData : NodeDataBase<NodeType::literal_false, ValueType::boolean>
-    {};
-
     struct RelationalOperatorData : NodeDataBase<NodeType::relational_operator, ValueType::boolean>
     {
         enum class Operation { equals = 1, not_equals, less_than, greater_than };

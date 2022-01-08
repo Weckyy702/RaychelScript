@@ -49,12 +49,6 @@ namespace RaychelScript::Lexer {
         if (token == "endif") {
             return TokenType::conditional_footer;
         }
-        if (token == "true") {
-            return TokenType::literal_true;
-        }
-        if (token == "false") {
-            return TokenType::literal_false;
-        }
         if (token == "while") {
             return TokenType::loop_header;
         }

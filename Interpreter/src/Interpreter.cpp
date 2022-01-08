@@ -653,13 +653,6 @@ namespace RaychelScript::Interpreter {
                 return handle_unary_expression(state, node);
             case NodeType::conditional_construct:
                 return handle_conditional_construct(state, node);
-            case NodeType::literal_true:
-                state.registers.result = 1;
-                return InterpreterErrorCode::ok;
-            case NodeType::literal_false:
-                state.registers.result = 0;
-                state.registers.flags |= StateFlags::zero;
-                return InterpreterErrorCode::ok;
             case NodeType::relational_operator:
                 return handle_relational_operator(state, node);
             case NodeType::inline_state_push:

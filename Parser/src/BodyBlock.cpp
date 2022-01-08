@@ -486,14 +486,6 @@ namespace RaychelScript::Parser {
             return AST_Node{NumericConstantData{{}, value}};
         }
 
-        if (const auto matches = match_token_pattern(expression_tokens, array{TT::literal_true}); !matches.empty()) {
-            return AST_Node{LiteralTrueData{{}}};
-        }
-
-        if (const auto matches = match_token_pattern(expression_tokens, array{TT::literal_false}); !matches.empty()) {
-            return AST_Node{LiteralFalseData{{}}};
-        }
-
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::identifer}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(),

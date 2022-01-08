@@ -53,8 +53,6 @@ namespace RaychelScript {
               handle_numeric_constant{std::forward<F>(f)},
               handle_unary_operator{std::forward<F>(f)},
               handle_conditional_construct{std::forward<F>(f)},
-              handle_literal_true{std::forward<F>(f)},
-              handle_literal_false{std::forward<F>(f)},
               handle_relational_operator{std::forward<F>(f)},
               handle_inline_state_push{std::forward<F>(f)},
               handle_inline_state_pop{std::forward<F>(f)},
@@ -71,8 +69,6 @@ namespace RaychelScript {
         Handler<NumericConstantData> handle_numeric_constant;
         Handler<UnaryExpressionData> handle_unary_operator;
         Handler<ConditionalConstructData> handle_conditional_construct;
-        Handler<LiteralTrueData> handle_literal_true;
-        Handler<LiteralFalseData> handle_literal_false;
         Handler<RelationalOperatorData> handle_relational_operator;
         Handler<InlinePushData> handle_inline_state_push;
         Handler<InlinePopData> handle_inline_state_pop;
@@ -182,10 +178,6 @@ namespace RaychelScript {
                 return handlers.handle_unary_operator(node.to_node_data<UnaryExpressionData>());
             case NodeType::conditional_construct:
                 return handlers.handle_conditional_construct(node.to_node_data<ConditionalConstructData>());
-            case NodeType::literal_true:
-                return handlers.handle_literal_true(node.to_node_data<LiteralTrueData>());
-            case NodeType::literal_false:
-                return handlers.handle_literal_false(node.to_node_data<LiteralFalseData>());
             case NodeType::relational_operator:
                 return handlers.handle_relational_operator(node.to_node_data<RelationalOperatorData>());
             case NodeType::inline_state_push:

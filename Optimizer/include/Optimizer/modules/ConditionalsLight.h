@@ -64,8 +64,6 @@ namespace RaychelScript::Optimizer {
 
                 auto data = it->to_node_data<ConditionalConstructData>();
 
-                RAYCHELSCRIPT_WRAP_CALL(_remove_if_condition_is_literal_false(data, it, ast.nodes))
-                RAYCHELSCRIPT_WRAP_CALL(_remove_if_condition_is_literal_true(data, it, ast.nodes))
                 RAYCHELSCRIPT_WRAP_CALL(_remove_if_condition_body_is_empty(data, it, ast.nodes))
 
                 if (should_increment) {
@@ -77,53 +75,6 @@ namespace RaychelScript::Optimizer {
         ~OptimizeConditionalsLight() override = default;
 
     private:
-        [[nodiscard]] bool
-        _remove_if_condition_is_literal_false(const ConditionalConstructData& data, auto& it, auto& nodes) const noexcept
-        {
-            if (!node_has_known_value(data.condition_node)) {
-                return false;
-            }
-
-            if (data.condition_node.type() != NodeType::literal_false) {
-                return false;
-            }
-
-            it = nodes.erase(it); //remove 'if false'
-            return true;
-        }
-
-        [[nodiscard]] bool
-        _remove_if_condition_is_literal_true(ConditionalConstructData& data, auto& it, auto& nodes) const noexcept
-        {
-            if (!node_has_known_value(data.condition_node)) {
-                return false;
-            }
-
-            if (data.condition_node.type() != NodeType::literal_true) {
-                return false;
-            }
-
-            //save where we left our condition node (we can't use iterators because they are invalidated by insert())
-            const auto condition_index = std::distance(nodes.begin(), it);
-
-            //Because conditionals push the state, we need to do the same
-            it = nodes.insert(std::next(it), AST_Node{InlinePushData{{}}});
-
-            //insert all body nodes behind our condition node
-            for (auto& node : data.body) {
-                it = nodes.insert(std::next(it), std::move(node));
-            }
-
-            //Because conditionals pop the state, we need to do the same
-            it = nodes.insert(std::next(it), AST_Node{InlinePopData{{}}});
-
-            //remove the condition node
-            const auto conditon_iterator = nodes.begin() + condition_index;
-            it = nodes.erase(conditon_iterator);
-
-            return true;
-        }
-
         [[nodiscard]] bool
         _remove_if_condition_body_is_empty(const ConditionalConstructData& data, auto& it, auto& nodes) const noexcept
         {

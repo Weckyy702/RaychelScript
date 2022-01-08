@@ -97,8 +97,6 @@ namespace RaychelScript::VM {
 
         lhs = rhs;
 
-        state.flag = !Raychel::equivalent<T>(lhs, 0);
-
         END_REGULAR_HANDLER;
     }
 

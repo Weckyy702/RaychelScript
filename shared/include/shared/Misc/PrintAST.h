@@ -252,14 +252,6 @@ namespace RaychelScript {
                 details::handle_conditional_construct(node.to_node_data<RS::ConditionalConstructData>());
                 break;
 
-            case RS::NodeType::literal_true:
-                Logger::log("TRUE\n");
-                break;
-
-            case RS::NodeType::literal_false:
-                Logger::log("FALSE\n");
-                break;
-
             case RS::NodeType::relational_operator:
                 details::handle_relational_operator(node.to_node_data<RS::RelationalOperatorData>());
                 break;

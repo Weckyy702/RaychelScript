@@ -34,14 +34,7 @@ namespace RaychelScript {
 
     [[nodiscard]] inline bool node_has_known_value(const AST_Node& node) noexcept
     {
-        switch (node.type()) {
-            case NodeType::literal_true:
-            case NodeType::literal_false:
-            case NodeType::numeric_constant:
-                return true;
-            default:
-                return false;
-        }
+        return node.type() == NodeType::numeric_constant;
     }
 
 } //namespace RaychelScript

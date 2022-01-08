@@ -225,24 +225,6 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const LiteralTrueData& data, AssemblingContext& ctx) noexcept
-    {
-        const auto true_index = ctx.allocate_immediate(1);
-
-        ctx.emit<Assembly::OpCode::mov>(true_index, ctx.result_index());
-        return ctx.result_index();
-    }
-
-    [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble([[maybe_unused]] const LiteralFalseData& data, AssemblingContext& ctx) noexcept
-    {
-        const auto false_index = ctx.allocate_immediate(0);
-
-        ctx.emit<Assembly::OpCode::mov>(false_index, ctx.result_index());
-        return ctx.result_index();
-    }
-
-    [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble(const RelationalOperatorData& data, AssemblingContext& ctx) noexcept
     {
         using Op = RelationalOperatorData::Operation;

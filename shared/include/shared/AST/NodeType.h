@@ -38,8 +38,6 @@ namespace RaychelScript {
         numeric_constant,
         unary_operator,
         conditional_construct,
-        literal_true,
-        literal_false,
         relational_operator,
         inline_state_push,
         inline_state_pop,

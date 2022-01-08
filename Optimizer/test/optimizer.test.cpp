@@ -63,8 +63,6 @@ static std::size_t estimate_ast_complexity(const RaychelScript::AST& ast) noexce
             case NT::variable_decl:
             case NT::variable_ref:
             case NT::numeric_constant:
-            case NT::literal_true:
-            case NT::literal_false:
             case NT::inline_state_push:
             case NT::inline_state_pop:
                 complexity_score++;

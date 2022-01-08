@@ -51,8 +51,6 @@ namespace RaychelScript {
             conditional_footer = '4',
             loop_header = '5',
             loop_footer = '6',
-            literal_true = '7',
-            literal_false = '8',
             plus = '+',
             minus = '-',
             star = '*',
@@ -91,10 +89,6 @@ namespace RaychelScript {
                 return "WHILE";
             case TT::loop_footer:
                 return "ENDWHILE";
-            case TT::literal_true:
-                return "TRUE";
-            case TT::literal_false:
-                return "FALSE";
             case TT::expression_:
             case TT::arith_op_:
                 RAYCHEL_TERMINATE("TokenType::expression_ and TokenType::arith_op_ cannot appear in this context!\n");
