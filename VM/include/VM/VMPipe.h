@@ -41,10 +41,7 @@ namespace RaychelScript::Pipes {
     {
 
     public:
-        explicit Execute(const std::vector<T>& args) : args_{args}
-        {}
-
-        explicit Execute(std::vector<T>&& args) : args_{std::move(args)}
+        explicit Execute(std::vector<T> args) : args_{std::move(args)}
         {}
 
         VM::VMResult<T> operator()(const Assembly::VMData& data) const noexcept
