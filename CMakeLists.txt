@@ -1,14 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(RaychelScript VERSION 0.0.1 LANGUAGES CXX)
+project(RaychelScript VERSION 1.0.0 LANGUAGES CXX)
 
-option(RAYCHELSCRIPT_BUILD_LEXER "Build the RaychelScript lexer" ON)
-option(RAYCHELSCRIPT_BUILD_PARSER "Build the RaychelScript parser" ON)
-option(RAYCHELSCRIPT_BUILD_OPTIMIZER "Build the RaychelScript optimizer" ON)
-option(RAYCHELSCRIPT_BUILD_INTERPRETER "Build the RaychelScript interpreter" ON)
-option(RAYCHELSCRIPT_BUILD_RASM_LIB "Build the RASM library" ON)
-option(RAYCHELSCRIPT_BUILD_ASSEMBLER "Build the RASM assembler" ON)
-option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" ON)
+option(RAYCHELSCRIPT_BUILD_LEXER "Build the RaychelScript lexer" OFF)
+option(RAYCHELSCRIPT_BUILD_PARSER "Build the RaychelScript parser" OFF)
+option(RAYCHELSCRIPT_BUILD_INTERPRETER "Build the RaychelScript interpreter" OFF)
+option(RAYCHELSCRIPT_BUILD_RASM_LIB "Build the RASM library" OFF)
+option(RAYCHELSCRIPT_BUILD_ASSEMBLER "Build the RASM assembler" OFF)
+option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" OFF)
 
 option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
 
@@ -52,11 +51,6 @@ endif()
 if(${RAYCHELSCRIPT_BUILD_PARSER})
     message(STATUS "Adding RaychelScript Parser...")
     add_subdirectory(Parser)
-endif()
-
-if(${RAYCHELSCRIPT_BUILD_OPTIMIZER})
-    message(STATUS "Adding RaychelScript Optimizer...")
-    add_subdirectory(Optimizer)
 endif()
 
 if(${RAYCHELSCRIPT_BUILD_INTERPRETER})
