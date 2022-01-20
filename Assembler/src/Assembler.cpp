@@ -392,9 +392,9 @@ namespace RaychelScript::Assembler {
         }
     }
 
-    [[nodiscard]] std::variant<AssemblerErrorCode, Assembly::VMData> assemble(const AST& ast) noexcept
+    [[nodiscard]] std::variant<AssemblerErrorCode, VM::VMData> assemble(const AST& ast) noexcept
     {
-        Assembly::VMData output{};
+        VM::VMData output{};
         AssemblingContext ctx{output.instructions, output.immediate_values};
 
         for (const auto& identifier : ast.config_block.input_identifiers) {

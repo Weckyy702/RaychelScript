@@ -28,15 +28,15 @@
 #ifndef RAYCHELSCRIPT_VM_DATA_H
 #define RAYCHELSCRIPT_VM_DATA_H
 
-#include "Instruction.h"
+#include "shared/rasm/Instruction.h"
 #include "shared/AST/ConfigBlock.h"
 
 #include <vector>
-namespace RaychelScript::Assembly {
+namespace RaychelScript::VM {
 
     struct VMConfigBlock
     {
-        using IdentiferContainer = std::vector<std::pair<std::string, MemoryIndex>>;
+        using IdentiferContainer = std::vector<std::pair<std::string, Assembly::MemoryIndex>>;
 
         IdentiferContainer input_identifiers;
         IdentiferContainer output_identifiers;
@@ -49,11 +49,10 @@ namespace RaychelScript::Assembly {
     {
         VMConfigBlock config_block;
 
-        std::vector<std::pair<double, MemoryIndex>> immediate_values;
-        //TODO: add information about the variables
+        std::vector<std::pair<double, Assembly::MemoryIndex>> immediate_values;
 
-        std::vector<Instruction> instructions;
-        std::size_t num_memory_locations;
+        std::vector<Assembly::Instruction> instructions;
+        std::uint8_t num_memory_locations;
     };
 
 } // namespace RaychelScript::Assembly

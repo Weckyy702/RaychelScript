@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
     Logger::info("Executing ", is_binary_file ? "binary " : "script ", file_name, '\n');
 
-    const auto data_or_error = [&]() -> RaychelScript::Pipes::PipeResult<RaychelScript::Assembly::VMData> {
+    const auto data_or_error = [&]() -> RaychelScript::Pipes::PipeResult<RaychelScript::VM::VMData> {
         using namespace RaychelScript::Pipes; //NOLINT
         if (is_binary_file) {
             return ReadRSBF{file_name};

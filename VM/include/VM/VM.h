@@ -31,7 +31,7 @@
 #include "VMErrorCode.h"
 #include "VMState.h"
 
-#include "rasm/VMData.h"
+#include "shared/VM/VMData.h"
 
 #include <variant>
 #include <vector>
@@ -42,7 +42,7 @@ namespace RaychelScript::VM {
     using VMResult = std::variant<VMErrorCode, VMState<T>>;
 
     template <std::floating_point T>
-    VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept;
+    VMResult<T> execute(const VMData& data, const std::vector<T>& input_variables) noexcept;
 } //namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_H

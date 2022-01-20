@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 #define RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 
-#include "rasm/Instruction.h"
+#include "shared/rasm/Instruction.h"
 
 #include <stack>
 #include <string>

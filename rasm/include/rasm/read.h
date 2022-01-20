@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_READ_H
 #define RAYCHELSCRIPT_ASSEMBLY_READ_H
 
-#include "VMData.h"
+#include "shared/VM/VMData.h"
 #include "magic.h"
 
 #include <fstream>
@@ -69,7 +69,7 @@ namespace RaychelScript::Assembly {
         return os << error_code_to_reason_string(ec);
     }
 
-    using ReadResult = std::variant<ReadingErrorCode, VMData>;
+    using ReadResult = std::variant<ReadingErrorCode, VM::VMData>;
 
     RAYCHELSCRIPT_ASSEMBLY_API ReadResult read_rsbf(std::istream& stream) noexcept;
 

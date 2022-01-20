@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_WRITE_H
 #define RAYCHELSCRIPT_ASSEMBLY_WRITE_H
 
-#include "VMData.h"
+#include "shared/VM/VMData.h"
 #include "magic.h"
 
 #include <fstream>
@@ -38,9 +38,9 @@
 
 namespace RaychelScript::Assembly {
 
-    RAYCHELSCRIPT_ASSEMBLY_API [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept;
+    RAYCHELSCRIPT_ASSEMBLY_API [[nodiscard]] bool write_rsbf(std::ostream& stream, const VM::VMData& data) noexcept;
 
-    [[nodiscard]] inline bool write_rsbf(std::string_view path, const VMData& data) noexcept
+    [[nodiscard]] inline bool write_rsbf(std::string_view path, const VM::VMData& data) noexcept
     {
         std::ofstream stream{std::string{path}, std::ios::out | std::ios::binary};
         return write_rsbf(stream, data);

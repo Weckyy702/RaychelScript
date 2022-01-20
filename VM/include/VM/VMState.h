@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_VM_STATE_H
 #define RAYCHELSCRIPT_VM_STATE_H
 
-#include "rasm/Instruction.h"
-#include "rasm/VMData.h"
+#include "shared/rasm/Instruction.h"
+#include "shared/VM/VMData.h"
 
 #include <concepts>
 #include <cstring>
@@ -62,7 +62,7 @@ namespace RaychelScript::VM {
     };
 
     template <std::floating_point T>
-    std::vector<T> get_output_values(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    std::vector<T> get_output_values(const VMState<T>& state, const VM::VMData& data) noexcept
     {
         if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
             return {};
@@ -78,7 +78,7 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const VM::VMData& data) noexcept
     {
         if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
             return {};

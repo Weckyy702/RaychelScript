@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_WRITE_PIPE_H
 #define RAYCHELSCRIPT_WRITE_PIPE_H
 
-#include "VMData.h"
+#include "shared/VM/VMData.h"
 #include "write.h"
 
 #include <fstream>
@@ -46,7 +46,7 @@ namespace RaychelScript::Pipes {
         explicit Write(std::string_view output_path) : output_stream_{std::string{output_path}, std::ios::binary}
         {}
 
-        bool operator()(const Assembly::VMData& data) const noexcept
+        bool operator()(const VM::VMData& data) const noexcept
         {
             return Assembly::write_rsbf(output_stream_, data);
         }
@@ -55,7 +55,7 @@ namespace RaychelScript::Pipes {
         mutable std::ofstream output_stream_;
     };
 
-    inline PipeResult<void> operator|(const PipeResult<Assembly::VMData>& input, const Write& writer) noexcept
+    inline PipeResult<void> operator|(const PipeResult<VM::VMData>& input, const Write& writer) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         writer(input.value()); //TODO: handle errors

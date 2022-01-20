@@ -26,7 +26,7 @@
 * 
 */
 
-#include "rasm/Instruction.h"
+#include "shared/rasm/Instruction.h"
 #include "rasm/WritePipe.h"
 #include "rasm/read.h"
 #include "rasm/write.h"
@@ -52,7 +52,7 @@ int main()
 
     if (!write_rsbf(
             "./instr.rsbf",
-            VMData{
+            RaychelScript::VM::VMData{
                 .config_block = {{{"a", 1_mi}, {"b", 2_mi}}, {{"c", 3_mi}}},
                 .immediate_values = {{0.1, 12_mi}, {12, 0_mi}, {99, 9_mi}},
                 .instructions = instructions,
@@ -75,7 +75,7 @@ int main()
 
     Logger::info("File\n");
 
-    const auto data = Raychel::get<VMData>(data_or_error);
+    const auto data = Raychel::get<RaychelScript::VM::VMData>(data_or_error);
 
     for (const auto& [value, address] : data.config_block.input_identifiers) {
         Logger::info('\t', address, " -> ", value, '\n');

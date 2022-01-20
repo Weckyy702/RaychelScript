@@ -388,7 +388,7 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    VMResult<T> execute(const Assembly::VMData& data, const std::vector<T>& input_variables) noexcept
+    VMResult<T> execute(const VMData& data, const std::vector<T>& input_variables) noexcept
     {
 #if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         Raychel::ScopedTimer<std::chrono::microseconds> timer{"Execution time"};
@@ -452,7 +452,7 @@ namespace RaychelScript::VM {
 
     namespace details {
 
-        static void dump_instructions(const Assembly::VMData& data, const auto instruction_pointer) noexcept
+        static void dump_instructions(const VMData& data, const auto instruction_pointer) noexcept
         {
             Logger::log("Instruction dump: (active instruction marked with '*'):\n");
             for (auto it = data.instructions.begin(); it != data.instructions.end(); it++) {
@@ -479,7 +479,7 @@ namespace RaychelScript::VM {
         }
 
         template <std::floating_point T>
-        static void dump_memory(const Assembly::VMData& data, const VMState<T>& state) noexcept
+        static void dump_memory(const VMData& data, const VMState<T>& state) noexcept
         {
             Logger::log("$A -> ", state.memory.at(0), '\n');
             for (std::size_t i = 1; i < state.memory_size; i++) {
@@ -519,7 +519,7 @@ namespace RaychelScript::VM {
     } // namespace details
 
     template <std::floating_point T>
-    static void dump_state(const VMState<T>& state, const Assembly::VMData& data) noexcept
+    static void dump_state(const VMState<T>& state, const VMData& data) noexcept
     {
         if (data.num_memory_locations != state.memory_size) {
             return;
@@ -529,7 +529,7 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    static void dump_state_fp_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
+    static void dump_state_fp_error(const VMData& data, const VMState<T>& state) noexcept
     {
         Logger::error("Floating-point error during execution: ", details::get_error_description(), "! Dumping state...\n");
         dump_state(state, data);

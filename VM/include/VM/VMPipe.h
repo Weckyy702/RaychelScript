@@ -44,7 +44,7 @@ namespace RaychelScript::Pipes {
         explicit Execute(std::vector<T> args) : args_{std::move(args)}
         {}
 
-        VM::VMResult<T> operator()(const Assembly::VMData& data) const noexcept
+        VM::VMResult<T> operator()(const VM::VMData& data) const noexcept
         {
             return VM::execute(data, args_);
         }
@@ -54,8 +54,8 @@ namespace RaychelScript::Pipes {
     };
 
     template <std::floating_point T>
-    PipeResult<std::pair<Assembly::VMData, VM::VMState<T>>>
-    operator|(const PipeResult<Assembly::VMData>& input, const Execute<T>& vm) noexcept
+    PipeResult<std::pair<VM::VMData, VM::VMState<T>>>
+    operator|(const PipeResult<VM::VMData>& input, const Execute<T>& vm) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         const auto state_or_error = vm(input.value());

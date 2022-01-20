@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     }
 
     {
-        const auto data_or_error = PipeResult<RaychelScript::Assembly::VMData>{RaychelScript::Assembly::read_rsbf(output_name)};
+        const auto data_or_error = PipeResult<RaychelScript::VM::VMData>{RaychelScript::Assembly::read_rsbf(output_name)};
 
         if (log_if_error(data_or_error)) {
             return 1;

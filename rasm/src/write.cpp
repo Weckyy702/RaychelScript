@@ -91,7 +91,7 @@ namespace RaychelScript::Assembly {
         return true;
     }
 
-    [[nodiscard]] bool write_rsbf(std::ostream& stream, const VMData& data) noexcept
+    [[nodiscard]] bool write_rsbf(std::ostream& stream, const VM::VMData& data) noexcept
     {
         if (!stream) {
             return false;
@@ -110,9 +110,6 @@ namespace RaychelScript::Assembly {
 
         //Immediate section
         TRY(write(stream, data.immediate_values));
-
-        //Function section
-        //TODO: implement external function calls
 
         //Text section
         RAYCHEL_ASSERT(data.instructions.size() < std::numeric_limits<std::uint32_t>::max());

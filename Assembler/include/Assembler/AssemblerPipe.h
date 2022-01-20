@@ -42,7 +42,7 @@ namespace RaychelScript::Pipes {
         }
     };
 
-    inline PipeResult<Assembly::VMData> operator|(const PipeResult<AST>& input, Assemble assembler) noexcept
+    inline PipeResult<VM::VMData> operator|(const PipeResult<AST>& input, Assemble assembler) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         return assembler(input.value());

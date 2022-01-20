@@ -235,7 +235,7 @@ namespace RaychelScript::Assembly {
             instructions.emplace_back(maybe_instruction.value());
         }
 
-        return VMData{
+        return VM::VMData{
             .config_block = {input_identifiers, output_identifiers},
             .immediate_values = maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
             .instructions = instructions,
