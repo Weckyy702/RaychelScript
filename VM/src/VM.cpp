@@ -413,6 +413,13 @@ namespace RaychelScript::VM {
         //Initialize state
         VMState<T> state{data.instructions, data.num_memory_locations};
 
+        //Check all instruction indecies before execution so we don't have to check for overflows during execution
+        for (const auto& instr : state.instructions) {
+            if (!instruction_access_in_range(instr, state)) {
+                return VMErrorCode::invalid_instruction_access;
+            }
+        }
+
         //initialize special variables
         {
             auto it = input_variables.begin();
@@ -423,13 +430,6 @@ namespace RaychelScript::VM {
 
         for (const auto& [value, index] : data.immediate_values) {
             get_location(state, index.value()) = static_cast<T>(value);
-        }
-
-        //Check all instruction indecies before execution so we don't have to check for overflows during execution
-        for (const auto& instr : state.instructions) {
-            if (!instruction_access_in_range(instr, state)) {
-                return VMErrorCode::invalid_instruction_access;
-            }
         }
 
         //main execution loop
