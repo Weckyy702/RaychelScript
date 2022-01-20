@@ -63,7 +63,5 @@ int main(int argc, char** argv)
         Logger::info(name, " = ", value, '\n');
     }
 
-    RaychelScript::VM::dump_state(state, data);
-
     return 0;
 }

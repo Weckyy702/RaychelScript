@@ -450,34 +450,88 @@ namespace RaychelScript::VM {
         return state;
     }
 
-    static std::string_view get_error_description() noexcept
+    namespace details {
+
+        static void dump_instructions(const Assembly::VMData& data, const auto instruction_pointer) noexcept
+        {
+            Logger::log("Instruction dump: (active instruction marked with '*'):\n");
+            for (auto it = data.instructions.begin(); it != data.instructions.end(); it++) {
+                if (it == std::prev(instruction_pointer)) {
+                    Logger::log('*');
+                } else {
+                    Logger::log(' ');
+                }
+                Logger::log(*it, '\n');
+            }
+        }
+
+        template <typename Container, std::floating_point T = typename Container::value_type>
+        static bool dump_value_with_maybe_name(std::size_t index, T value, const Container& container) noexcept
+        {
+            const auto it = std::find_if(container.begin(), container.end(), [&](const auto& descriptor) {
+                return std::cmp_equal(descriptor.second.value(), index);
+            });
+            if (it == container.end()) {
+                return false;
+            }
+            Logger::log(it->first, " -> ", value, '\n');
+            return true;
+        }
+
+        template <std::floating_point T>
+        static void dump_memory(const Assembly::VMData& data, const VMState<T>& state) noexcept
+        {
+            Logger::log("$A -> ", state.memory.at(0), '\n');
+            for (std::size_t i = 1; i < state.memory_size; i++) {
+                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
+                    continue;
+                }
+                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
+                    continue;
+                }
+                Logger::log('$', i, " -> ", state.memory.at(i), '\n');
+            }
+        }
+
+        static std::string_view get_error_description() noexcept
+        {
+            static std::mutex strerror_mtx;
+
+            if (errno != 0) {
+                std::lock_guard lck{strerror_mtx};
+                return std::strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+            }
+
+            if (std::fetestexcept(FE_DIVBYZERO) != 0) {
+                return "Division by zero";
+            }
+            if (std::fetestexcept(FE_INVALID) != 0) {
+                return "Argument is out of domain";
+            }
+            if (std::fetestexcept(FE_OVERFLOW) != 0) {
+                return "Floating point overflow";
+            }
+            if (std::fetestexcept(FE_UNDERFLOW) != 0) {
+                return "Floating point underflow";
+            }
+            return "Unknown error";
+        }
+    } // namespace details
+
+    template <std::floating_point T>
+    static void dump_state(const VMState<T>& state, const Assembly::VMData& data) noexcept
     {
-        static std::mutex strerror_mtx;
-
-        if (errno != 0) {
-            std::lock_guard lck{strerror_mtx};
-            return std::strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+        if (data.num_memory_locations != state.memory_size) {
+            return;
         }
-
-        if (std::fetestexcept(FE_DIVBYZERO) != 0) {
-            return "Division by zero";
-        }
-        if (std::fetestexcept(FE_INVALID) != 0) {
-            return "Argument is out of domain";
-        }
-        if (std::fetestexcept(FE_OVERFLOW) != 0) {
-            return "Floating point overflow";
-        }
-        if (std::fetestexcept(FE_UNDERFLOW) != 0) {
-            return "Floating point underflow";
-        }
-        return "Unknown error";
+        details::dump_instructions(data, state.instruction_pointer);
+        details::dump_memory(data, state);
     }
 
     template <std::floating_point T>
     static void dump_state_fp_error(const Assembly::VMData& data, const VMState<T>& state) noexcept
     {
-        Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
+        Logger::error("Floating-point error during execution: ", details::get_error_description(), "! Dumping state...\n");
         dump_state(state, data);
     }
 
