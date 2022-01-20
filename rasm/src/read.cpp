@@ -164,10 +164,10 @@ namespace RaychelScript::Assembly {
         }
 
         //since we always have the reserved A register, 0 is actually a sentinel value :)
-        std::size_t number_of_memory_locations{0};
+        std::uint8_t number_of_memory_locations{0};
 
         if (version > 2) {
-            TRY_READ(std::size_t, num_memory_locations, ReadingErrorCode::reading_failure);
+            TRY_READ(std::uint8_t, num_memory_locations, ReadingErrorCode::reading_failure);
             number_of_memory_locations = num_memory_locations;
         }
 

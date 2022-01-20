@@ -9,25 +9,23 @@
 #Pair::
 #data 1
 #data 2
-Syntax { type 1, type 2 }
+#Syntax { type 1, type 2 }
 
 u32 magic word
 
 u32 version number
 
+u8 number of memory locations
+
 #I/O section
 u32 number of input identifiers
-[ String input identifiers ]
+[ { String, u8 } input identifiers ]
 u32 number of output identifiers
-[ String output identifiers ]
+[ { String, u8 } output identifiers ]
 
 #Immediate section
 u32 number of immediate values
 [ { f64, u8 } immediate value data ]
-
-#Function section (not implemented)
-u32 number of function hashes
-[ u32 hash of function names ]
 
 #Text section
 u32 number of instrucions

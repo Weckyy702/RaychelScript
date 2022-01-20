@@ -64,7 +64,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     std::vector<T> get_output_values(const VMState<T>& state, const Assembly::VMData& data) noexcept
     {
-        if (state.memory.size() != data.num_memory_locations) {
+        if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
             return {};
         }
 
@@ -80,7 +80,7 @@ namespace RaychelScript::VM {
     template <std::floating_point T>
     std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const Assembly::VMData& data) noexcept
     {
-        if (state.memory_size != data.num_memory_locations) {
+        if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
             return {};
         }
 

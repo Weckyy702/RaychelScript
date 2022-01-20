@@ -221,9 +221,10 @@ namespace RaychelScript::Assembler {
             }
         }
 
-        [[nodiscard]] std::size_t number_of_memory_locations() const noexcept
+        [[nodiscard]] auto number_of_memory_locations() const noexcept
         {
-            return current_index_;
+            RAYCHEL_ASSERT(std::cmp_less_equal(current_index_, std::numeric_limits<std::uint8_t>::max()));
+            return static_cast<std::uint8_t>(current_index_);
         }
 
     private:
