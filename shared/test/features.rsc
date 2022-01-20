@@ -18,6 +18,6 @@ if e < 0 #conditional construct / comparison
     e /= -1 #unary minus
 endif
 
-while false #loop / literal false there is also true
+while j != 100 #loop
     j += 1
 endwhile
