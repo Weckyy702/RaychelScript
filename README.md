@@ -6,7 +6,7 @@ This language is not going to be the new JS and it is not intended to be. This i
 
 ## Syntax
 
-The syntax is deliberately simple and focussed on mathematical operations. It is intended to be easy to read and easy to parse.
+The syntax is deliberately simple and focused on mathematical operations. It is intended to be easy to read and easy to parse.
 My good friend [plexx-dev](https://github.com/plexx-dev) has published an awesome VSCode extension for RSC syntax highlighting. [Check it out!](https://github.com/plexx-dev/rsc-syntax-highlighting)
 
 ## Features
