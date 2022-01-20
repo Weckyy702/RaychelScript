@@ -47,7 +47,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(RaychelScriptParser PUBLIC 
+target_link_libraries(RaychelScriptParser PUBLIC
     RaychelScriptLexer
     RaychelLogger
 )

@@ -1,5 +1,6 @@
 find_package(RaychelLogger REQUIRED)
 find_package(RaychelMath REQUIRED)
+find_package(RaychelCore REQUIRED)
 
 set(RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR
     "include/Interpreter"
@@ -51,6 +52,7 @@ target_link_libraries(RaychelScriptInterpreter PUBLIC
     RaychelMath
     RaychelScriptBase
     RaychelLogger
+    RaychelCore
 )
 
 if(${RAYCHELSCRIPT_ENABLE_ASAN})
