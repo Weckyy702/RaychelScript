@@ -28,6 +28,7 @@ target_link_libraries(VM_test PUBLIC
     RaychelScriptLexer
     RaychelScriptParser
     RaychelScriptAssembler
+    RaychelScriptAssembly
     RaychelScriptVM
     RaychelLogger
 )

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
+find_package(RaychelMath REQUIRED)
 
 set(RAYCHELSCRIPT_VM_INCLUDE_DIR
     "include/VM/"
@@ -13,7 +14,6 @@ add_library(RaychelScriptVM SHARED
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMState.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMPipe.h"
     
-
     "src/VM.cpp"
 )
 
@@ -51,6 +51,7 @@ endif()
 target_link_libraries(RaychelScriptVM PUBLIC 
     RaychelLogger
     RaychelScriptBase
+    RaychelMath
 )
 
 if(${RAYCHELSCRIPT_ENABLE_ASAN})
