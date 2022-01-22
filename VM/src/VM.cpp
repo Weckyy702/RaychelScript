@@ -26,6 +26,8 @@
 * 
 */
 
+#define __STDC_WANT_LIB_EXT1__ 1 //We want to use strerror_s if possible
+
 #include "VM/VM.h"
 
 #include <cerrno>
@@ -33,6 +35,8 @@
 #include <cmath>
 #include <mutex>
 #include <utility>
+#include <string.h>
+
 #include "RaychelCore/ScopedTimer.h"
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
@@ -493,13 +497,25 @@ namespace RaychelScript::VM {
             }
         }
 
-        static std::string_view get_error_description() noexcept
+        static std::string_view errno_string() noexcept
         {
             static std::mutex strerror_mtx;
+            static char output_buffer[256]{};
 
+            std::lock_guard lck{strerror_mtx};
+
+#if defined(__STDC_LIB_EXT1__) || defined(_WIN32)
+           strerror_s(output_buffer, sizeof(output_buffer), errno);
+           return output_buffer;
+#else
+           return strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+#endif
+        }
+
+        static std::string_view get_error_description() noexcept
+        {
             if (errno != 0) {
-                std::lock_guard lck{strerror_mtx};
-                return std::strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+                return errno_string();
             }
 
             if (std::fetestexcept(FE_DIVBYZERO) != 0) {
