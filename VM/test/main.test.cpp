@@ -46,8 +46,8 @@ int main(int argc, char** argv)
         return Lex{{}, file_name} | Parse{} | Assemble{};
     }();
 
-    for (std::size_t i{0}; i != 1'000'000; i++) {
-        [[maybe_unused]] volatile auto res = data_or_error | RaychelScript::Pipes::Execute<double>{args};
+    if (log_if_error(data_or_error)) {
+        return 1;
     }
 
     const auto state_or_error = data_or_error | RaychelScript::Pipes::Execute<double>{args};

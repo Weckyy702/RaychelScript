@@ -33,9 +33,9 @@
 #include <cerrno>
 #include <cfenv>
 #include <cmath>
+#include <cstring>
 #include <mutex>
 #include <utility>
-#include <string.h>
 
 #include "RaychelCore/ScopedTimer.h"
 #include "RaychelMath/equivalent.h"
@@ -552,9 +552,9 @@ namespace RaychelScript::VM {
     namespace details {
         void _instantiate_vm_entry_points() noexcept
         {
-            execute<float>({}, {});
-            execute<double>({}, {});
-            execute<long double>({}, {});
+            (void)execute<float>({}, {});
+            (void)execute<double>({}, {});
+            (void)execute<long double>({}, {});
         }
     } // namespace details
 
