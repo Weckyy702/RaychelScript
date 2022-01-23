@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_VM_DATA_H
 #define RAYCHELSCRIPT_VM_DATA_H
 
-#include "shared/rasm/Instruction.h"
 #include "shared/AST/ConfigBlock.h"
+#include "shared/rasm/Instruction.h"
 
 #include <vector>
 namespace RaychelScript::VM {
@@ -55,6 +55,6 @@ namespace RaychelScript::VM {
         std::uint8_t num_memory_locations;
     };
 
-} // namespace RaychelScript::Assembly
+} // namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_DATA_H

@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_WRITE_H
 #define RAYCHELSCRIPT_ASSEMBLY_WRITE_H
 
-#include "shared/VM/VMData.h"
 #include "magic.h"
+#include "shared/VM/VMData.h"
 
 #include <fstream>
 #include <ostream>

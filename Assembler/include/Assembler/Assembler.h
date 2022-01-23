@@ -32,8 +32,8 @@
 
 #include "AssemblerErrorCode.h"
 
-#include "shared/VM/VMData.h"
 #include "shared/AST/AST.h"
+#include "shared/VM/VMData.h"
 
 #ifdef _WIN32
     #ifdef RaychelScriptAssembler_EXPORTS
@@ -47,8 +47,7 @@
 
 namespace RaychelScript::Assembler {
 
-    RAYCHELSCRIPT_ASSEMBLER_API [[nodiscard]] std::variant<AssemblerErrorCode, VM::VMData>
-    assemble(const AST& ast) noexcept;
+    RAYCHELSCRIPT_ASSEMBLER_API [[nodiscard]] std::variant<AssemblerErrorCode, VM::VMData> assemble(const AST& ast) noexcept;
 
 } //namespace RaychelScript::Assembler
 

@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_VM_STATE_H
 #define RAYCHELSCRIPT_VM_STATE_H
 
-#include "shared/rasm/Instruction.h"
 #include "shared/VM/VMData.h"
+#include "shared/rasm/Instruction.h"
 
 #include <concepts>
 #include <cstring>

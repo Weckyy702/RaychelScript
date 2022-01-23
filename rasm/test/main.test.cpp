@@ -26,10 +26,10 @@
 * 
 */
 
-#include "shared/rasm/Instruction.h"
 #include "rasm/WritePipe.h"
 #include "rasm/read.h"
 #include "rasm/write.h"
+#include "shared/rasm/Instruction.h"
 
 #include <iostream>
 #include <vector>
