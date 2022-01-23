@@ -499,16 +499,14 @@ namespace RaychelScript::VM {
 
         static std::string_view errno_string() noexcept
         {
-            static std::mutex strerror_mtx;
-            static char output_buffer[256]{};
+            static std::array<char, 255> output_buffer{};
 
-            std::lock_guard lck{strerror_mtx};
-
-#if defined(__STDC_LIB_EXT1__) || defined(_WIN32)
-           strerror_s(output_buffer, sizeof(output_buffer), errno);
-           return output_buffer;
+#ifdef _WIN32
+            strerror_s(output_buffer.data(), output_buffer.size(), errno);
+            return output_buffer.data();
 #else
-           return strerror(errno); //NOLINT(concurrency-mt-unsafe): we are holding a lock
+            strerror_r(errno, output_buffer.data(), output_buffer.size());
+            return output_buffer.data();
 #endif
         }
 
