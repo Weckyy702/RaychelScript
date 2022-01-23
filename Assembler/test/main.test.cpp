@@ -10,13 +10,13 @@ int main(int argc, char** argv)
 
     const auto script_name = [&]() -> std::string {
         if (argc > 1) {
-            return argv[1];
+            return argv[1]; //NOLINT
         }
         return "script.rsc";
     }();
     const auto output_name = [&]() -> std::string {
         if (argc > 2) {
-            return argv[2];
+            return argv[2]; //NOLINT
         }
         return "script.rsbf";
     }();

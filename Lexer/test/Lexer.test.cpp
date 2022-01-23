@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 
     const auto script_name = [&]() -> std::string {
         if (argc > 1) {
-            return argv[1];
+            return argv[1]; //NOLINT
         }
         return "script.rsc";
     }();

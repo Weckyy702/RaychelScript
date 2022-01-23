@@ -26,7 +26,7 @@
 * 
 */
 
-#define __STDC_WANT_LIB_EXT1__ 1 //We want to use strerror_s if possible
+#define __STDC_WANT_LIB_EXT1__ 1 //NOLINT(this enables strerror_s)
 
 #include "VM/VM.h"
 

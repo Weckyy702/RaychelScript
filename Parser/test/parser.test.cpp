@@ -57,6 +57,8 @@
 
 [[maybe_unused]] static void echo_AST_from_stdin() noexcept
 {
+    using namespace std::string_view_literals;
+
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
     Logger::log(
         R"(Welcome to the interactive RaychelScript parser!
@@ -72,7 +74,7 @@ If you wish to exit this mode, type "exit")",
         {
             std::string _line;
             for (;;) {
-                std::cout << (line.empty() ? ">>" : "->");
+                std::cout << (line.empty() ? ">>"sv : "->"sv);
                 std::getline(std::cin, _line);
 
                 if (_line.back() != '\\') {
