@@ -1,3 +1,6 @@
+#!!!: all data is written in native
+#endianness, so RSBF files are not portable!
+
 #Array::
 #u32 size of the array
 #array data
@@ -10,6 +13,13 @@
 #data 1
 #data 2
 #Syntax { type 1, type 2 }
+
+#Instruction layout
+#u8 opcode
+#u8 data1
+#u8 data2
+#u8 reserved (must always be zero)
+#!!! Written as a u32 in native endianness
 
 u32 magic word
 
