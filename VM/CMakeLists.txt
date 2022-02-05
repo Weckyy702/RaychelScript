@@ -35,6 +35,7 @@ else()
         -Wpedantic
         -Wconversion
         -Werror
+        -Wno-error=unknown-pragmas
     )
     if(${RAYCHELSCRIPT_ENABLE_ASAN})
     target_compile_options(RaychelScriptVM PUBLIC

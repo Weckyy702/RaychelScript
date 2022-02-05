@@ -43,8 +43,7 @@
 
 #define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 0
 
-//FIXME: this needs to be enabled, but -Werror doesn't like this unknown pragma
-//#pragma STDC FENV_ACCESS ON
+#pragma STDC FENV_ACCESS ON
 
 #define END_REGULAR_HANDLER                                                                                                      \
     update_instruction_pointer(state, 1);                                                                                        \
