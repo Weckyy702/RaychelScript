@@ -317,6 +317,9 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseExpressionResult handle_loop_footer(ParsingContext& ctx) noexcept;
 
+    [[nodiscard]] static ParseExpressionResult
+    handle_number(const Token& number_token, bool is_negative, ParsingContext& ctx) noexcept;
+
     [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
         namespace TT = TokenType;
@@ -420,6 +423,14 @@ namespace RaychelScript::Parser {
 
         //Misc
 
+        //Silly trick to parse -NUMBER as a negative number
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::number}); !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(
+                handler.indent(), "Found negative number expression at ", matches.front().front().location);
+
+            return handle_number(matches.at(1).front(), true, ctx);
+        }
+
         //Unary operators
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found unary minus expression at ", matches.front().front().location);
@@ -471,19 +482,7 @@ namespace RaychelScript::Parser {
                 " value=",
                 *matches.front().front().content);
 
-            const auto& token = matches.front().front();
-
-            const auto& value_str = *token.content;
-
-            double value{0};
-            //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
-            if (const auto [_, ec] = Raychel::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
-                ec != std::errc{}) {
-                Logger::error(handler.indent(), "Unable to interpret string '", value_str, "' as a number!\n");
-                return ParserErrorCode::invalid_numeric_constant;
-            }
-
-            return AST_Node{NumericConstantData{{}, value}};
+            return handle_number(matches.front().front(), false, ctx);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::identifer}); !matches.empty()) {
@@ -690,6 +689,22 @@ namespace RaychelScript::Parser {
         ctx.scopes.pop();
 
         return node;
+    }
+
+    [[nodiscard]] static ParseExpressionResult
+    handle_number(const Token& number_token, bool is_negative, ParsingContext& /**/) noexcept
+    {
+        const auto& value_str = *number_token.content;
+
+        double value{0};
+        //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic): converting from std::string to C-style string is a pain
+        if (const auto [_, ec] = Raychel::from_chars(value_str.c_str(), value_str.c_str() + value_str.size(), value);
+            ec != std::errc{}) {
+            Logger::error("Unable to interpret string '", value_str, "' as a number!\n");
+            return ParserErrorCode::invalid_numeric_constant;
+        }
+
+        return AST_Node{NumericConstantData{{}, is_negative ? -value : value}};
     }
 
     static void push_node(AST_Node&& node, AST& ast, ParsingContext& ctx) noexcept
