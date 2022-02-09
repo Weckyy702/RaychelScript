@@ -45,13 +45,12 @@
 
 #pragma STDC FENV_ACCESS ON
 
-#define END_REGULAR_HANDLER                                                                                                      \
-    update_instruction_pointer(state, 1);                                                                                        \
-    return VMErrorCode::ok
+#define RAYCHELSCRIPT_VM_END_REGULAR_HANDLER state.instruction_pointer++
 
-#define END_ARITHMETIC_HANDLER                                                                                                   \
-    set_state_flags(state);                                                                                                      \
+#define RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER                                                                                  \
     state.check_fp_flag = true;                                                                                                  \
+    RAYCHELSCRIPT_VM_END_REGULAR_HANDLER
+
 #define RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(name)                                                                          \
     template <std::floating_point T>                                                                                             \
     static void handle_##name(VMState<T>& state, [[maybe_unused]] const Assembly::Instruction& instruction) noexcept
@@ -101,8 +100,7 @@ namespace RaychelScript::VM {
         auto& lhs = get_location(state, instruction.data2());
 
         lhs = rhs;
-
-        END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(add)
@@ -113,7 +111,7 @@ namespace RaychelScript::VM {
 
         result = lhs + rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(sub)
@@ -124,7 +122,7 @@ namespace RaychelScript::VM {
 
         result = lhs - rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mul)
@@ -135,7 +133,7 @@ namespace RaychelScript::VM {
 
         result = lhs * rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(div)
@@ -146,7 +144,7 @@ namespace RaychelScript::VM {
 
         result = lhs / rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mag)
@@ -156,7 +154,7 @@ namespace RaychelScript::VM {
 
         result = std::abs(lhs);
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(fac)
@@ -170,7 +168,7 @@ namespace RaychelScript::VM {
 
         result = std::tgamma(lhs + 1);
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(pow)
@@ -181,7 +179,7 @@ namespace RaychelScript::VM {
 
         result = std::pow(lhs, rhs);
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(inc)
@@ -191,7 +189,7 @@ namespace RaychelScript::VM {
 
         lhs += rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(dec)
@@ -201,7 +199,7 @@ namespace RaychelScript::VM {
 
         lhs -= rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mas)
@@ -211,7 +209,7 @@ namespace RaychelScript::VM {
 
         lhs *= rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(das)
@@ -221,7 +219,7 @@ namespace RaychelScript::VM {
 
         lhs /= rhs;
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(pas)
@@ -231,13 +229,13 @@ namespace RaychelScript::VM {
 
         lhs = std::pow(lhs, rhs);
 
-        END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jpz)
     {
         if (state.flag) {
-            END_REGULAR_HANDLER;
+            RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
         }
 
         set_instruction_pointer(state, instruction.data1());
@@ -247,13 +245,13 @@ namespace RaychelScript::VM {
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jmp)
     {
         set_instruction_pointer(state, instruction.data1());
-        return VMErrorCode::ok;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(hlt)
     {
         state.halt_flag = true;
-        return VMErrorCode::ok;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(clt)
@@ -262,8 +260,7 @@ namespace RaychelScript::VM {
         const auto rhs = get_location(state, instruction.data2());
 
         state.flag = lhs < rhs;
-
-        END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(cgt)
@@ -272,8 +269,7 @@ namespace RaychelScript::VM {
         const auto rhs = get_location(state, instruction.data2());
 
         state.flag = lhs > rhs;
-
-        END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(ceq)
@@ -282,8 +278,7 @@ namespace RaychelScript::VM {
         const auto rhs = get_location(state, instruction.data2());
 
         state.flag = Raychel::equivalent(lhs, rhs);
-
-        END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(cne)
@@ -292,8 +287,7 @@ namespace RaychelScript::VM {
         const auto rhs = get_location(state, instruction.data2());
 
         state.flag = !Raychel::equivalent(lhs, rhs);
-
-        END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
     template <std::floating_point T>
