@@ -380,7 +380,7 @@ namespace RaychelScript::VM {
         return instruction.op_code() == OpCode::hlt;
     }
 
-    static bool handle_fp_exceptions() noexcept
+    [[nodiscard]] static bool has_fp_exception() noexcept
     {
         //NOLINTNEXTLINE(hicpp-signed-bitwise): we cannot change the STL spec :(
         return errno != 0 || fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT) != 0;
@@ -431,12 +431,13 @@ namespace RaychelScript::VM {
             get_location(state, index.value()) = static_cast<T>(value);
         }
 
+        feclearexcept(FE_ALL_EXCEPT); //clear the FP exception flags
         //main execution loop
         while (!state.halt_flag) {
             execute_next_instruction(state);
             if (state.check_fp_flag) {
                 state.check_fp_flag = false;
-                if (handle_fp_exceptions()) {
+                if (has_fp_exception()) {
                     dump_state_fp_error(data, state);
                     return VMErrorCode::fp_exception;
                 }
