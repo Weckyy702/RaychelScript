@@ -224,11 +224,11 @@ namespace RaychelScript::VM {
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jpz)
     {
         if (state.flag) {
+            state.flag = false;
             RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
         }
 
         set_instruction_pointer(state, instruction.data1());
-        return VMErrorCode::ok;
     }
 
     RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jmp)
