@@ -67,9 +67,9 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    static void update_instruction_pointer(VMState<T>& state, std::ptrdiff_t delta) noexcept
+    static void set_instruction_pointer(VMState<T>& state, std::uint8_t instr_index) noexcept
     {
-        state.instruction_pointer += delta;
+        state.instruction_pointer = state.instructions.begin() + instr_index;
     }
 
     template <std::floating_point T>
@@ -83,13 +83,6 @@ namespace RaychelScript::VM {
     [[nodiscard]] static T& get_result_location(VMState<T>& state) noexcept
     {
         return get_location(state, 0);
-    }
-
-    template <std::floating_point T>
-    void set_state_flags(VMState<T>& state) noexcept
-    {
-        //TODO: implement arithmetic flags. We don't seem to need any right now
-        (void)state;
     }
 
     //Instruction handlers
