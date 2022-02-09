@@ -101,7 +101,7 @@ namespace RaychelScript::Assembly {
             /*
             Instruction layout:
             |........|........|........|........|
-             OpCode   DATA1    DATA2    reserved
+             OpCode   DATA1    DATA2    zero
             */
 
             std::uint32_t instr = 0U;
