@@ -394,7 +394,7 @@ namespace RaychelScript::VM {
     VMResult<T> execute(const VMData& data, const std::vector<T>& input_variables) noexcept
     {
 #if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
-        Raychel::ScopedTimer<std::chrono::microseconds> timer{"Execution time"};
+        const auto start = std::chrono::high_resolution_clock::now();
 #endif
         //Check for the correct number of input identifiers
         if (input_variables.size() != data.config_block.input_identifiers.size()) {
@@ -450,6 +450,11 @@ namespace RaychelScript::VM {
             }
         }
 
+#if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
+        const auto end = std::chrono::high_resolution_clock::now();
+
+        Logger::info(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count(), "us\n");
+#endif
         return state;
     }
 
