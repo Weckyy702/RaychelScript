@@ -52,7 +52,9 @@
 #define END_ARITHMETIC_HANDLER                                                                                                   \
     set_state_flags(state);                                                                                                      \
     state.check_fp_flag = true;                                                                                                  \
-    END_REGULAR_HANDLER
+#define RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(name)                                                                          \
+    template <std::floating_point T>                                                                                             \
+    static void handle_##name(VMState<T>& state, [[maybe_unused]] const Assembly::Instruction& instruction) noexcept
 
 namespace RaychelScript::VM {
 
@@ -92,8 +94,7 @@ namespace RaychelScript::VM {
 
     //Instruction handlers
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_mov(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mov)
     {
         const auto rhs = get_location(state, instruction.data1());
         auto& lhs = get_location(state, instruction.data2());
@@ -103,8 +104,7 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_add(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(add)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -115,8 +115,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_sub(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(sub)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -127,8 +126,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_mul(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mul)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -139,8 +137,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_div(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(div)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -151,8 +148,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_mag(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mag)
     {
         const auto lhs = get_location(state, instruction.data1());
         auto& result = get_result_location(state);
@@ -162,8 +158,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_fac(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(fac)
     {
         const auto lhs = get_location(state, instruction.data1());
         auto& result = get_result_location(state);
@@ -177,8 +172,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_pow(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(pow)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -189,8 +183,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_inc(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(inc)
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
@@ -200,8 +193,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_dec(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(dec)
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
@@ -211,8 +203,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_mas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(mas)
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
@@ -222,8 +213,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_das(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(das)
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
@@ -233,8 +223,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_pas(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(pas)
     {
         auto& lhs = get_location(state, instruction.data1());
         const auto& rhs = get_location(state, instruction.data2());
@@ -244,8 +233,7 @@ namespace RaychelScript::VM {
         END_ARITHMETIC_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_jpz(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jpz)
     {
         if (state.flag) {
             END_REGULAR_HANDLER;
@@ -255,23 +243,19 @@ namespace RaychelScript::VM {
         return VMErrorCode::ok;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_jmp(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(jmp)
     {
         set_instruction_pointer(state, instruction.data1());
         return VMErrorCode::ok;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode
-    handle_hlt(VMState<T>& state, [[maybe_unused]] const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(hlt)
     {
         state.halt_flag = true;
         return VMErrorCode::ok;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_clt(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(clt)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -281,8 +265,7 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_cgt(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(cgt)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -292,8 +275,7 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_ceq(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(ceq)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
@@ -303,8 +285,7 @@ namespace RaychelScript::VM {
         END_REGULAR_HANDLER;
     }
 
-    template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode handle_cne(VMState<T>& state, const Assembly::Instruction& instruction) noexcept
+    RAYCHELSCRIPT_VM_INSTRUCTION_HANDLER_FUNC(cne)
     {
         const auto lhs = get_location(state, instruction.data1());
         const auto rhs = get_location(state, instruction.data2());
