@@ -18,7 +18,7 @@ int main(int argc, char** argv)
         if (argc > 2) {
             return argv[2]; //NOLINT
         }
-        return "script.rsbf";
+        return "out.rsbf";
     }();
 
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
