@@ -26,7 +26,7 @@
 * 
 */
 
-#define __STDC_WANT_LIB_EXT1__ 1 //NOLINT(this enables strerror_s)
+#define __STDC_WANT_LIB_EXT1__ 1 //NOLINT: this enables strerror_s
 
 #include "VM/VM.h"
 
@@ -356,7 +356,7 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState<T>& state)
+    [[nodiscard]] static bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState<T>& state)
     {
         using Assembly::OpCode;
 
@@ -421,9 +421,11 @@ namespace RaychelScript::VM {
         }
 
         feclearexcept(FE_ALL_EXCEPT); //clear the FP exception flags
+
         //main execution loop
         while (!state.halt_flag) {
             execute_next_instruction(state);
+            
             if (state.check_fp_flag) {
                 state.check_fp_flag = false;
                 if (has_fp_exception()) {
