@@ -61,9 +61,10 @@ namespace RaychelScript::VM {
     //helper functions
 
     template <std::floating_point T>
-    static void set_instruction_pointer(VMState<T>& state, std::uint8_t instr_index) noexcept
+    static void set_error_state(VMState<T>& state, VMErrorCode error_code) noexcept
     {
-        state.instruction_pointer = state.instructions.begin() + instr_index;
+        state.error_code = error_code;
+        state.halt_flag = true;
     }
 
     template <std::floating_point T>
@@ -296,53 +297,73 @@ namespace RaychelScript::VM {
     }
 
     template <std::floating_point T>
-    [[nodiscard]] static VMErrorCode execute_with_state(VMState<T>& state) noexcept
+    static void execute_next_instruction(VMState<T>& state) noexcept
     {
         const auto& instr = *state.instruction_pointer;
 
         switch (instr.op_code()) {
             case Assembly::OpCode::mov:
-                return handle_mov(state, instr);
+                handle_mov(state, instr);
+                break;
             case Assembly::OpCode::add:
-                return handle_add(state, instr);
+                handle_add(state, instr);
+                break;
             case Assembly::OpCode::sub:
-                return handle_sub(state, instr);
+                handle_sub(state, instr);
+                break;
             case Assembly::OpCode::mul:
-                return handle_mul(state, instr);
+                handle_mul(state, instr);
+                break;
             case Assembly::OpCode::div:
-                return handle_div(state, instr);
+                handle_div(state, instr);
+                break;
             case Assembly::OpCode::mag:
-                return handle_mag(state, instr);
+                handle_mag(state, instr);
+                break;
             case Assembly::OpCode::fac:
-                return handle_fac(state, instr);
+                handle_fac(state, instr);
+                break;
             case Assembly::OpCode::pow:
-                return handle_pow(state, instr);
+                handle_pow(state, instr);
+                break;
             case Assembly::OpCode::inc:
-                return handle_inc(state, instr);
+                handle_inc(state, instr);
+                break;
             case Assembly::OpCode::dec:
-                return handle_dec(state, instr);
+                handle_dec(state, instr);
+                break;
             case Assembly::OpCode::mas:
-                return handle_mas(state, instr);
+                handle_mas(state, instr);
+                break;
             case Assembly::OpCode::das:
-                return handle_das(state, instr);
+                handle_das(state, instr);
+                break;
             case Assembly::OpCode::pas:
-                return handle_pas(state, instr);
+                handle_pas(state, instr);
+                break;
             case Assembly::OpCode::jpz:
-                return handle_jpz(state, instr);
+                handle_jpz(state, instr);
+                break;
             case Assembly::OpCode::jmp:
-                return handle_jmp(state, instr);
+                handle_jmp(state, instr);
+                break;
             case Assembly::OpCode::hlt:
-                return handle_hlt(state, instr);
+                handle_hlt(state, instr);
+                break;
             case Assembly::OpCode::clt:
-                return handle_clt(state, instr);
+                handle_clt(state, instr);
+                break;
             case Assembly::OpCode::cgt:
-                return handle_cgt(state, instr);
+                handle_cgt(state, instr);
+                break;
             case Assembly::OpCode::ceq:
-                return handle_ceq(state, instr);
+                handle_ceq(state, instr);
+                break;
             case Assembly::OpCode::cne:
-                return handle_cne(state, instr);
+                handle_cne(state, instr);
+                break;
             default:
-                return VMErrorCode::unknow_op_code;
+                set_error_state(state, VMErrorCode::unknow_op_code);
         }
     }
 
@@ -418,10 +439,7 @@ namespace RaychelScript::VM {
 
         //main execution loop
         while (!state.halt_flag) {
-            if (const auto ec = execute_with_state(state); ec != VMErrorCode::ok) {
-                dump_state(state, data);
-                return ec;
-            }
+            execute_next_instruction(state);
             if (state.check_fp_flag) {
                 state.check_fp_flag = false;
                 if (handle_fp_exceptions()) {
@@ -434,8 +452,13 @@ namespace RaychelScript::VM {
 #if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         const auto end = std::chrono::high_resolution_clock::now();
 
-        Logger::info(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count(), "us\n");
+        Logger::info(std::chrono::duration_cast<std::chrono::nanos>(end - start).count(), "us\n");
 #endif
+
+        if (state.error_code != VMErrorCode::ok) {
+            return state.error_code;
+        }
+
         return state;
     }
 
