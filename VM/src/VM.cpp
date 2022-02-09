@@ -155,10 +155,6 @@ namespace RaychelScript::VM {
         const auto lhs = get_location(state, instruction.data1());
         auto& result = get_result_location(state);
 
-        if (lhs < 0 && Raychel::is_integer(lhs)) {
-            return VMErrorCode::invalid_argument;
-        }
-
         result = std::tgamma(lhs + 1);
 
         RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
