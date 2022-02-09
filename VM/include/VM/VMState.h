@@ -28,6 +28,7 @@
 #ifndef RAYCHELSCRIPT_VM_STATE_H
 #define RAYCHELSCRIPT_VM_STATE_H
 
+#include "VMErrorCode.h"
 #include "shared/VM/VMData.h"
 #include "shared/rasm/Instruction.h"
 
@@ -45,15 +46,17 @@ namespace RaychelScript::VM {
         using InstructionBuffer = std::vector<Assembly::Instruction>;
         using InstructionPointer = typename InstructionBuffer::const_iterator;
 
-        VMState(const InstructionBuffer& buffer, std::size_t number_of_memory_locations)
-            : instructions{buffer}, instruction_pointer{buffer.begin()}, memory_size{number_of_memory_locations}
+        VMState(InstructionBuffer buffer, std::size_t number_of_memory_locations)
+            : instructions{std::move(buffer)}, instruction_pointer{instructions.begin()}, memory_size{number_of_memory_locations}
         {}
 
-        const InstructionBuffer& instructions;
+        InstructionBuffer instructions;
         InstructionPointer instruction_pointer;
 
         std::array<T, std::numeric_limits<std::uint8_t>::max()> memory{};
         std::size_t memory_size;
+
+        VMErrorCode error_code{VMErrorCode::ok};
 
         //flags
         bool flag{false};
