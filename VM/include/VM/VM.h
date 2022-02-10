@@ -28,40 +28,7 @@
 #ifndef RAYCHELSCRIPT_VM_H
 #define RAYCHELSCRIPT_VM_H
 
-#include "VMErrorCode.h"
-#include "VMState.h"
-
-#include "shared/VM/VMData.h"
-
-#include <variant>
-#include <vector>
-
-#ifdef _WIN32
-    #ifdef RaychelScriptVM_EXPORTS
-        #define RAYCHELSCRIPT_VM_API __declspec(dllexport)
-    #else
-        #define RAYCHELSCRIPT_VM_API __declspec(dllimport)
-    #endif
-#else
-    #define RAYCHELSCRIPT_VM_API
-#endif
-
-namespace RaychelScript::VM {
-
-    template <std::floating_point T>
-    using VMResult = std::variant<VMErrorCode, VMState<T>>;
-
-    template <std::floating_point T>
-    RAYCHELSCRIPT_VM_API [[nodiscard]] VMResult<T> execute(const VMData& data, const std::vector<T>& input_variables) noexcept;
-
-    namespace details {
-        inline void _instantiate_entry_points_header() noexcept
-        {
-            (void)execute<float>({}, {});
-            (void)execute<double>({}, {});
-            (void)execute<long double>({}, {});
-        }
-    }; //namespace details
-} //namespace RaychelScript::VM
+#include "Execute.h"
+#include "DumpState.h"
 
 #endif //!RAYCHELSCRIPT_VM_H

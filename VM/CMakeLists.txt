@@ -8,28 +8,28 @@ set(RAYCHELSCRIPT_VM_INCLUDE_DIR
     "include/VM/"
 )
 
-add_library(RaychelScriptVM SHARED
+add_library(RaychelScriptVM INTERFACE
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VM.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMErrorCode.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMState.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMPipe.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/DumpState.h"
-    
-    "src/VM.cpp"
+    "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/Execute.h"
+    "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/InstructionHandlers.h"
 )
 
-target_include_directories(RaychelScriptVM PUBLIC
+target_include_directories(RaychelScriptVM INTERFACE
     "include"
 )
 
-target_compile_features(RaychelScriptVM PUBLIC cxx_std_20)
+target_compile_features(RaychelScriptVM INTERFACE cxx_std_20)
 
 if(${MSVC})
     target_compile_options(RaychelScriptVM PUBLIC
         /W4
     )
 else()
-    target_compile_options(RaychelScriptVM PUBLIC
+    target_compile_options(RaychelScriptVM INTERFACE
         -Wall
         -Wextra
         -Wshadow
@@ -38,34 +38,13 @@ else()
         -Werror
         -Wno-error=unknown-pragmas
     )
-    if(${RAYCHELSCRIPT_ENABLE_ASAN})
-    target_compile_options(RaychelScriptVM PUBLIC
-        -fsanitize=address
-    )
-endif()
-if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-    target_compile_options(RaychelScriptVM PUBLIC
-        -fsanitize=undefined
-    )
-endif()
 endif()
 
-target_link_libraries(RaychelScriptVM PUBLIC 
+target_link_libraries(RaychelScriptVM INTERFACE
     RaychelLogger
     RaychelScriptBase
     RaychelMath
 )
-
-if(${RAYCHELSCRIPT_ENABLE_ASAN})
-    target_link_options(RaychelScriptVM PUBLIC
-        -fsanitize=address
-    )
-endif()
-if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-    target_link_options(RaychelScriptVM PUBLIC
-        -fsanitize=undefined
-    )
-endif()
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})
     add_subdirectory(test)
