@@ -13,6 +13,7 @@ add_library(RaychelScriptVM SHARED
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMErrorCode.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMState.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMPipe.h"
+    "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/DumpState.h"
     
     "src/VM.cpp"
 )
