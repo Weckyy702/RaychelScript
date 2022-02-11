@@ -1,5 +1,5 @@
 # RaychelScript: A Lightweight scripting language for mathematical operations
-
+[![Build Status](https://app.travis-ci.com/Weckyy702/RaychelScript.svg?branch=main)](https://app.travis-ci.com/Weckyy702/RaychelScript)
 ## Disclaimer
 
 This language is not going to be the new JS and it is not intended to be. This is a toy project for fun and education.
