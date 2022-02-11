@@ -1,3 +1,4 @@
+#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 1
 #include "VM/VM.h"
 
 #include "Assembler/AssemblerPipe.h"

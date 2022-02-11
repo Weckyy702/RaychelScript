@@ -28,7 +28,7 @@
 #ifndef RAYCHELSCRIPT_VM_H
 #define RAYCHELSCRIPT_VM_H
 
-#include "Execute.h"
 #include "DumpState.h"
+#include "Execute.h"
 
 #endif //!RAYCHELSCRIPT_VM_H
