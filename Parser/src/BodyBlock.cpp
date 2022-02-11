@@ -33,7 +33,7 @@
 #if __has_include(<ranges>) && RAYCHEL_ACTIVE_COMPILER != RAYCHEL_COMPILER_CLANG
     #include <ranges>
 #else
-    #pragma message("Could not find the <ranges> header. Using a workaround that will be a little less elegant")
+    #pragma message("Unable to use ranges header. Using a workaround that is a little less elegant")
     #define RAYCHELSCRIPT_NO_RANGES_HEADER 1
 #endif
 #include <variant>

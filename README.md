@@ -23,8 +23,7 @@ This languages intended purpose is as a scripting language for use in my engine 
 
 ### Compiler support
 
-- I have tested GCC 11.1.0 on linux 5.15 and MSVC on Windows 10.
-- Clang seems to have trouble with the STL ranges library from libstdc++.
+- I have tested GCC 11.1.0 and Clang 14 on linux 5.16 and MSVC on Windows 10.
 
 ### GNU/Linux
 
