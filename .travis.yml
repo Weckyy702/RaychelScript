@@ -1,0 +1,10 @@
+dist: focal
+
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+script:
+  - docker build --no-cache --build-arg COMPILER=${CXX_FOR_BUILD} .
