@@ -1,4 +1,6 @@
-find_package(RaychelLogger REQUIRED)
+if(NOT ${RAYCHEL_CORE_EXTERNAL})
+    find_package(RaychelLogger REQUIRED)
+endif()
 
 file(GLOB PARSER_TEST_SOURCE_FILES "*.test.cpp")
 

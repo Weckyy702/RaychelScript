@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
+if(NOT ${RAYCHEL_CORE_EXTERNAL})
 find_package(RaychelCore REQUIRED)
 find_package(RaychelLogger REQUIRED)
+endif()
 
 set(RAYCHELSCRIPT_ASSEMBLER_INCLUDE_DIR
     "include/Assembler/"

@@ -44,6 +44,8 @@ if(${RAYCHELSCRIPT_ENABLE_UBSAN})
     message(STATUS "Enabled UBSAN instrumentation")
 endif()
 
+include(cmake/find_dependencies.cmake)
+
 add_subdirectory(shared)
 
 if(${RAYCHELSCRIPT_BUILD_LEXER})

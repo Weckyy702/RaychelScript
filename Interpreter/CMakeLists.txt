@@ -1,6 +1,11 @@
+if(NOT ${RAYCHEL_CORE_EXTERNAL})
 find_package(RaychelLogger REQUIRED)
-find_package(RaychelMath REQUIRED)
 find_package(RaychelCore REQUIRED)
+endif()
+
+if(NOT ${RAYCHEL_MATH_EXTERNAL})
+    find_package(RaychelMath REQUIRED)
+endif()
 
 set(RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR
     "include/Interpreter"

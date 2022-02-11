@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
-find_package(RaychelCore REQUIRED)
-find_package(RaychelLogger REQUIRED)
+if(NOT ${RAYCHEL_CORE_EXTERNAL})
+    find_package(RaychelCore REQUIRED)
+    find_package(RaychelLogger REQUIRED)
+endif()
 
 set(RAYCHELSCRIPT_BASE_INCLUDE_DIR "include/shared")
 

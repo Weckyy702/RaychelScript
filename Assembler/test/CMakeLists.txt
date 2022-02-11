@@ -1,4 +1,6 @@
+if(NOT ${RAYCHEL_CORE_EXTERNAL})
 find_package(RaychelLogger REQUIRED)
+endif()
 
 file(GLOB ASSEMBLER_TEST_SOURCE_FILES "*.test.cpp")
 
