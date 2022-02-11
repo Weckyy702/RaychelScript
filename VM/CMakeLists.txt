@@ -40,6 +40,18 @@ else()
     )
 endif()
 
+if(${RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING})
+    target_compile_definitions(RaychelScriptVM INTERFACE
+        RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING=1
+    )
+endif()
+
+if(${RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP})
+    target_compile_definitions(RaychelScriptVM INTERFACE
+        RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP=1
+    )
+endif()
+
 target_link_libraries(RaychelScriptVM INTERFACE
     RaychelLogger
     RaychelScriptBase

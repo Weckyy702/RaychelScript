@@ -16,6 +16,9 @@ option(RAYCHELSCRIPT_ENABLE_UBSAN "Enable UBSAN instrumentation" ON)
 
 option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" OFF)
 
+option(RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING "VM: enable logging execution time" OFF)
+option(RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP "VM: dump state when a floating-point exception is thrown during execution" ON)
+
 if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
     set(RAYCHELSCRIPT_BUILD_LEXER ON)
     set(RAYCHELSCRIPT_BUILD_PARSER ON)
