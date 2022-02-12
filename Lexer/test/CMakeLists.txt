@@ -1,4 +1,4 @@
-if(NOT ${RAYCHEL_CORE_EXTERNAL})
+if(NOT ${RAYCHEL_LOGGER_EXTERNAL})
     find_package(RaychelLogger REQUIRED)
 endif()
 

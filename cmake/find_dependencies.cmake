@@ -20,6 +20,23 @@ include(FetchContent)
 #     endif()
 # endif()
 
+find_package(RaychelLogger QUIET)
+
+if(NOT RaychelLogger_FOUND)
+
+message(STATUS "Could not find a local installation of RaychelCore, downloading one off github...")
+
+    FetchContent_Declare(RAYCHEL_LOGGER
+        GIT_REPOSITORY "https://github.com/Weckyy702/RaychelLogger"
+        GIT_TAG "main"
+    )
+
+    FetchContent_MakeAvailable(RAYCHEL_LOGGER)
+
+    set(RAYCHEL_LOGGER_EXTERNAL true)
+
+endif()
+
 find_package(RaychelCore QUIET)
 
 if(NOT RaychelCore_FOUND)

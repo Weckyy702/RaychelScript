@@ -1,6 +1,9 @@
+if(NOT ${RAYCHEL_LOGGER_EXTERNAL})
+    find_package(RaychelLogger REQUIRED)
+endif()
+
 if(NOT ${RAYCHEL_CORE_EXTERNAL})
     find_package(RaychelCore REQUIRED)
-    find_package(RaychelLogger REQUIRED)
 endif()
 
 set(RAYCHELSCRIPT_LEXER_INCLUDE_DIR
