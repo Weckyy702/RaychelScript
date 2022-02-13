@@ -29,6 +29,7 @@
 #define RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 
 #include "OpCode.h"
+#include "MemoryIndex.h"
 
 #include <optional>
 #include <ostream>
@@ -36,45 +37,6 @@
 namespace RaychelScript::Assembly {
 
     //TODO: cramming all the instruction data into just 32 bits feels a bit silly. Maybe we should just use 32-bit memory indecies
-
-    class MemoryIndex
-    {
-
-    public:
-        [[nodiscard]] constexpr std::uint8_t value() const noexcept
-        {
-            return data_;
-        }
-
-        constexpr MemoryIndex() = default;
-
-    private:
-        template <std::integral T>
-        explicit constexpr MemoryIndex(T index) : data_{static_cast<std::uint8_t>(index)}
-        {}
-
-        template <std::integral T>
-        friend constexpr MemoryIndex make_memory_index(T value);
-
-        std::uint8_t data_{};
-    };
-
-    template <std::integral T>
-    constexpr MemoryIndex make_memory_index(T value)
-    {
-        RAYCHEL_ASSERT(value >= 0 && value < T{std::numeric_limits<std::uint8_t>::max()});
-        return MemoryIndex{value};
-    }
-
-    constexpr MemoryIndex operator""_mi(unsigned long long value) //NOLINT(google-runtime-int): we cannot change the C++ spec :(
-    {
-        return make_memory_index(value);
-    }
-
-    inline std::ostream& operator<<(std::ostream& os, const MemoryIndex& index)
-    {
-        return os << '$' << static_cast<std::uint32_t>(index.value());
-    }
 
     class Instruction
     {
