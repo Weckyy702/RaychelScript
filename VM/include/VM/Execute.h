@@ -230,6 +230,7 @@ namespace RaychelScript::VM {
             get_location(state, index.value()) = static_cast<T>(value);
         }
 
+        //NOLINTNEXTLINE(hicpp-signed-bitwise)
         feclearexcept(FE_ALL_EXCEPT); //clear the FP exception flags
 
         //main execution loop
