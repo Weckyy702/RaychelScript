@@ -31,8 +31,6 @@
 #include <ostream>
 #include <string_view>
 
-#include "RaychelCore/Raychel_assert.h"
-
 namespace RaychelScript::Assembler {
 
     enum class AssemblerErrorCode {
@@ -60,7 +58,7 @@ namespace RaychelScript::Assembler {
             case AssemblerErrorCode::invalid_scope_pop:
                 return "Tried to pop a scope when there was no scope left on the stack";
         }
-        RAYCHEL_ASSERT_NOT_REACHED;
+        return "unknown reason";
     }
 
     inline std::ostream& operator<<(std::ostream& os, AssemblerErrorCode ec)
