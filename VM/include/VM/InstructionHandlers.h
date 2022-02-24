@@ -236,6 +236,7 @@ namespace RaychelScript::VM {
         if (state.flag) {
             state.flag = false;
             RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
+            return;
         }
 
         set_instruction_pointer(state, instruction.data1());
@@ -245,7 +246,6 @@ namespace RaychelScript::VM {
     RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(Assembly::OpCode::jmp)
     {
         set_instruction_pointer(state, instruction.data1());
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
     RAYCHELSCRIPT_VM_END_INSTRUCTION_HANDLER
 
