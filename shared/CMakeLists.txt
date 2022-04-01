@@ -35,8 +35,6 @@ add_library(RaychelScriptBase INTERFACE
 
     "${RAYCHELSCRIPT_BASE_INCLUDE_DIR}/rasm/OpCode.h"
     "${RAYCHELSCRIPT_BASE_INCLUDE_DIR}/rasm/Instruction.h"
-    "${RAYCHELSCRIPT_BASE_INCLUDE_DIR}/rasm/MemoryIndex.h"
-    "${RAYCHELSCRIPT_BASE_INCLUDE_DIR}/rasm/BasicAssemblingContext.h"
 
     "${RAYCHELSCRIPT_BASE_INCLUDE_DIR}/VM/VMData.h"
 )
