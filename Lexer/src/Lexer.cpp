@@ -188,11 +188,11 @@ namespace RaychelScript::Lexer {
             return LexerErrorCode::no_input;
         }
 
-        const auto tokens_and_error = _lex_raw(source_stream);
-        if (tokens_and_error.second != LexerErrorCode::ok) {
-            return tokens_and_error.second;
+        const auto [tokens, error_code] = _lex_raw(source_stream);
+        if (error_code != LexerErrorCode::ok) {
+            return error_code;
         }
-        return combine_tokens_into_lines(tokens_and_error.first);
+        return combine_tokens_into_lines(tokens);
     }
 
     SourceTokens lex_until_invalid_or_eof(std::istream& source_stream) noexcept
