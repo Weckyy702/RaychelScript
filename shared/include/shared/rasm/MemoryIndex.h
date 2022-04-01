@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_RASM_MEMORY_INDEX_H
 #define RAYCHELSCRIPT_RASM_MEMORY_INDEX_H
 
-#include <cstdint>
 #include <concepts>
+#include <cstdint>
 
 #include "RaychelCore/Raychel_assert.h"
 
@@ -74,6 +74,6 @@ namespace RaychelScript::Assembly {
         return os << '$' << static_cast<std::uint32_t>(index.value());
     }
 
-} //namespace RaychelScript
+} // namespace RaychelScript::Assembly
 
 #endif //!RAYCHELSCRIPT_RASM_MEMORY_INDEX_H

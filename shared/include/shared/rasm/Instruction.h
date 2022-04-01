@@ -28,8 +28,8 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 #define RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 
-#include "OpCode.h"
 #include "MemoryIndex.h"
+#include "OpCode.h"
 
 #include <optional>
 #include <ostream>
