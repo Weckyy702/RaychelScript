@@ -177,11 +177,9 @@ raychelscript_main:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("mulsd xmm0, " << memory_index_to_native(tag, instruction.data2()));
                     return NativeAssemblerErrorCode::ok;
-                    return NativeAssemblerErrorCode::ok;
                 case Op::div:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("divsd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    return NativeAssemblerErrorCode::ok;
                     return NativeAssemblerErrorCode::ok;
                 case Op::mag:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
@@ -189,6 +187,7 @@ raychelscript_main:
                     TRY_WRITE("pandn xmm0, xmm1");
                     return NativeAssemblerErrorCode::ok;
                 case Op::fac:
+                    return NativeAssemblerErrorCode::unknown_instruction;
                 case Op::pow:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("movsd xmm1, " << memory_index_to_native(tag, instruction.data2()));
