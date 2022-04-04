@@ -41,6 +41,11 @@
         if (const auto ec = write_boilerplate_begin(tag, data, state); ec != NativeAssemblerErrorCode::ok) {                     \
             return ec;                                                                                                           \
         }                                                                                                                        \
+        /*We have to do this pass to ensure that every JMP will always have a valid jump target*/                                \
+        for (const auto instr : data.instructions) {                                                                             \
+            if (instr.op_code() == Assembly::OpCode::jmp || instr.op_code() == Assembly::OpCode::jpz)                            \
+                state.jump_indecies.emplace(instr.data1());                                                                      \
+        }                                                                                                                        \
                                                                                                                                  \
         for (; state.instruction_index != data.instructions.size(); ++state.instruction_index) {                                 \
             const auto instruction = data.instructions.at(state.instruction_index);                                              \
@@ -235,12 +240,12 @@ raychelscript_main:
                     return NativeAssemblerErrorCode::ok;
                 case Op::jpz:
                     TRY_WRITE("test rax, rax");
-                    TRY_WRITE("jz label" << static_cast<std::size_t>(instruction.data1()));
+                    TRY_WRITE("jz label" << static_cast<std::uint32_t>(instruction.data1()));
                     TRY_WRITE("xor rax, rax");
-                    state.jump_indecies.emplace(instruction.data1());
                     return NativeAssemblerErrorCode::ok;
                 case Op::jmp:
-                    return NativeAssemblerErrorCode::unknown_instruction;
+                    TRY_WRITE("jmp label" << static_cast<std::uint32_t>(instruction.data1()));
+                    return NativeAssemblerErrorCode::ok;
                 case Op::hlt:
                     return NativeAssemblerErrorCode::ok;
                 default:
