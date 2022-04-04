@@ -38,7 +38,7 @@
     #undef TRY_WRITE
 #endif
 #define TRY_WRITE(exp)                                                                                                           \
-    if (!(state.state << exp << '\n')) {                                                                                         \
+    if (!(state.output_stream << exp << '\n')) {                                                                                 \
         return NativeAssemblerErrorCode::stream_write_error;                                                                     \
     }
 #ifdef TRY
@@ -53,7 +53,7 @@ namespace RaychelScript::NativeAssembler {
 
     struct NativeAssemblerState
     {
-        std::ostream& state;
+        std::ostream& output_stream;
         std::size_t instruction_index{0};
         std::set<std::size_t> jump_indecies{};
     };
