@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for PipeResult class
 * \date 2021-12-19
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_PIPE_RESULT_H
 #define RAYCHELSCRIPT_PIPE_RESULT_H
@@ -65,6 +65,10 @@ namespace RaychelScript {
         enum class VMErrorCode;
     } // namespace VM
 
+    namespace NativeAssembler {
+        enum class NativeAssemblerErrorCode;
+    } // namespace NativeAssembler
+
 } // namespace RaychelScript
 
 namespace RaychelScript::Pipes {
@@ -78,6 +82,7 @@ namespace RaychelScript::Pipes {
         read_error,
         assembler_error,
         vm_error,
+        native_assembler_error
     };
 
     namespace details {
@@ -111,6 +116,10 @@ namespace RaychelScript::Pipes {
 
         template <>
         struct _error_type_for<VM::VMErrorCode> : _base<ErrorType::vm_error>
+        {};
+
+        template <>
+        struct _error_type_for<NativeAssembler::NativeAssemblerErrorCode> : _base<ErrorType::native_assembler_error>
         {};
 
         class ErrorContainer
@@ -289,6 +298,10 @@ namespace RaychelScript::Pipes {
                 break;
             case ErrorType::vm_error:
                 Logger::error("VM error: ", result.template to_error_code<VM::VMErrorCode>(), '\n');
+                break;
+            case ErrorType::native_assembler_error:
+                Logger::error(
+                    "Native Assembler error: ", result.template to_error_code<NativeAssembler::NativeAssemblerErrorCode>(), '\n');
         }
         return true;
     }
