@@ -59,10 +59,10 @@ int main(int argc, char** argv)
 
     const auto [data, state] = state_or_error.value();
 
-    const auto output = RaychelScript::VM::get_output_variables(state, data);
-    for (const auto& [name, value] : output) {
-        Logger::info(name, " = ", value, '\n');
+    for (const auto value : state.memory) {
+        std::cout << value << ' ';
     }
+    std::cout << '\n';
 
     return 0;
 }
