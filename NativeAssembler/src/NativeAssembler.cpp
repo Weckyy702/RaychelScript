@@ -99,7 +99,7 @@ namespace RaychelScript::NativeAssembler {
         }
 
         [[nodiscard]] static auto
-        write_boilerplate_begin(X86_64_Tag /*unused*/, const VM::VMData& data, NativeAssemblerState& state) noexcept
+        write_boilerplate_begin(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
             TRY_WRITE("%define RAYCHELSCRIPT_NUM_INPUT_IDS " << data.config_block.input_identifiers.size())
             TRY_WRITE(R"_asm_(
@@ -124,9 +124,8 @@ raychelscript_setup:
                 if (value == 0) {
                     continue;
                 }
-                const auto rdi_offset = static_cast<std::uint32_t>(address.value() - 1) * 8;
                 TRY_WRITE("mov rax, " << get_double_bit_representation(value) << "; = " << value);
-                TRY_WRITE("mov qword [rdi+" << rdi_offset << "], rax");
+                TRY_WRITE("mov " << memory_index_to_native(tag, address.value()) << ", rax");
             }
             TRY_WRITE(R"_asm_(
     ;end loading constants
