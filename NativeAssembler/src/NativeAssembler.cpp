@@ -135,7 +135,7 @@ raychelscript_setup:
 setup_done:
     ret
 raychelscript_main:
-    mov r14, 1
+    mov r14, 2
     mov r10, [rel raychelscript_memory_initialized_flag wrt ..gottpoff]
     cmp byte [fs:r10], 0
     cmove rax, r14
