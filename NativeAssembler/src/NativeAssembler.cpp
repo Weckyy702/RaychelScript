@@ -253,14 +253,23 @@ raychelscript_main:
         }
 
         static auto
-        write_boilerplate_end(X86_64_Tag /*unused*/, const VM::VMData& /*unused*/, NativeAssemblerState& state) noexcept
+        write_boilerplate_end(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
             TRY_WRITE(R"_asm_(
     ;end generated code
     xor rax, rax
 main_done:
     ret
-raychelscript_cleanup:
+raychelscript_cleanup:)_asm_");
+
+            std::size_t i{0};
+            for(const auto&[_, address] : data.config_block.output_identifiers) {
+                TRY_WRITE("mov rax, " << memory_index_to_native(tag, address.value()));
+                TRY_WRITE("mov qword[rsi+" << i << "], rax");
+                i+=8;
+            }
+
+            TRY_WRITE(R"_asm_(
     xor rax, rax
     mov rcx, 256
     rep stosq
