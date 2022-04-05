@@ -8,6 +8,7 @@ option(RAYCHELSCRIPT_BUILD_INTERPRETER "Build the RaychelScript interpreter" OFF
 option(RAYCHELSCRIPT_BUILD_RASM_LIB "Build the RASM library" OFF)
 option(RAYCHELSCRIPT_BUILD_ASSEMBLER "Build the RASM assembler" OFF)
 option(RAYCHELSCRIPT_BUILD_NATIVE_ASSEMBLER "Build the native assembler" OFF)
+option(RAYCHELSCRIPT_BUILD_NATIVE_RUNTIME "Build the runtime for native scripts" OFF)
 option(RAYCHELSCRIPT_BUILD_VM "Build the RASM virtual machine" OFF)
 
 option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
@@ -28,6 +29,7 @@ if(${RAYCHELSCRIPT_BUILD_TOOLCHAIN})
     set(RAYCHELSCRIPT_BUILD_RASM_LIB ON)
     set(RAYCHELSCRIPT_BUILD_ASSEMBLER ON)
     set(RAYCHELSCRIPT_BUILD_VM ON)
+    set(RAYCHELSCRIPT_BUILD_NATIVE_RUNTIME ON)
     set(RAYCHELSCRIPT_BUILD_NATIVE_ASSEMBLER ON)
 endif()
 
@@ -78,6 +80,11 @@ endif()
 if(${RAYCHELSCRIPT_BUILD_NATIVE_ASSEMBLER})
     message(STATUS "Adding RaychelScript native Assembler...")
     add_subdirectory(NativeAssembler)
+endif()
+
+if(${RAYCHELSCRIPT_BUILD_NATIVE_RUNTIME})
+    message(STATUS "Adding RaychelScript Runtime...")
+    add_subdirectory(NativeRuntime)
 endif()
 
 if(${RAYCHELSCRIPT_BUILD_VM})
