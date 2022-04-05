@@ -264,9 +264,11 @@ raychelscript_cleanup:
     xor rax, rax
     mov rcx, 256
     rep stosq
+    mov r14, [rel raychelscript_memory_initialized_flag wrt ..gottpoff]
+    mov byte[fs:r14], 0
     ret
 section .tdata
-raychelscript_memory_initialized_flag: db 0)_asm_")
+raychelscript_memory_initialized_flag: db 0)_asm_");
 
             return NativeAssemblerErrorCode::ok;
         }
