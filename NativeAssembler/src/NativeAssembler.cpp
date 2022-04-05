@@ -94,54 +94,30 @@ namespace RaychelScript::NativeAssembler {
         [[nodiscard]] static std::string memory_index_to_native(X86_64_Tag /*unused*/, std::uint8_t memory_index) noexcept
         {
             std::stringstream ss;
-            ss << "qword [rdi+" << static_cast<std::uint32_t>(memory_index - 1) * 8 << ']';
+            ss << "qword [rsp+" << static_cast<std::uint32_t>(memory_index - 1) * 8 << ']';
             return ss.str();
         }
 
         [[nodiscard]] static auto
         write_boilerplate_begin(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
-            TRY_WRITE("%define RAYCHELSCRIPT_NUM_INPUT_IDS " << data.config_block.input_identifiers.size())
             TRY_WRITE(R"_asm_(
 section .text
 
-global raychelscript_main
-global raychelscript_setup
-global raychelscript_cleanup
-global raychelscript_memory_initialized_flag
+global raychelscript_entry
+global raychelscript_input_vector_size
+global raychelscript_output_vector_size
 
-raychelscript_setup:
-    mov r8, 1
-    cmp rdx, RAYCHELSCRIPT_NUM_INPUT_IDS
-    cmovne rax, r8
-    jne setup_done
-    mov rax, rdi
-    mov rcx, rdx
-    rep movsq
-    mov rdi, rax
-    ;begin loading constants)_asm_");
+raychelscript_entry:)_asm_");
+            TRY_WRITE("sub rsp, " << static_cast<std::uint32_t>(data.num_memory_locations-1) * 8);
+            for(const auto&[_, address] : data.config_block.input_identifiers) {
+                TRY_WRITE("mov rax, qword[rdi+" << static_cast<std::uint32_t>(address.value()-1)*8 << ']');
+                TRY_WRITE("mov " << memory_index_to_native(tag, address.value()) << ", rax");
+            }
             for (const auto& [value, address] : data.immediate_values) {
-                if (value == 0) {
-                    continue;
-                }
                 TRY_WRITE("mov rax, " << get_double_bit_representation(value) << "; = " << value);
                 TRY_WRITE("mov " << memory_index_to_native(tag, address.value()) << ", rax");
             }
-            TRY_WRITE(R"_asm_(
-    ;end loading constants
-    mov r10, [rel raychelscript_memory_initialized_flag wrt ..gottpoff]
-    mov byte [fs:r10], 1
-    xor rax, rax
-setup_done:
-    ret
-raychelscript_main:
-    mov r14, 2
-    mov r10, [rel raychelscript_memory_initialized_flag wrt ..gottpoff]
-    cmp byte [fs:r10], 0
-    cmove rax, r14
-    je main_done
-    xor rax, rax
-    ;begin generated code)_asm_")
             return NativeAssemblerErrorCode::ok;
         }
 
@@ -190,9 +166,7 @@ raychelscript_main:
                 case Op::pow:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("movsd xmm1, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("mov r13, rdi");
                     TRY_WRITE("call pow wrt ..plt");
-                    TRY_WRITE("mov rdi, r13");
                     return NativeAssemblerErrorCode::ok;
                 case Op::inc:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
@@ -255,29 +229,17 @@ raychelscript_main:
         static auto
         write_boilerplate_end(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
-            TRY_WRITE(R"_asm_(
-    ;end generated code
-    xor rax, rax
-main_done:
-    ret
-raychelscript_cleanup:)_asm_");
-
             std::size_t i{0};
             for(const auto&[_, address] : data.config_block.output_identifiers) {
                 TRY_WRITE("mov rax, " << memory_index_to_native(tag, address.value()));
                 TRY_WRITE("mov qword[rsi+" << i << "], rax");
                 i+=8;
             }
-
-            TRY_WRITE(R"_asm_(
-    xor rax, rax
-    mov rcx, 256
-    rep stosq
-    mov r14, [rel raychelscript_memory_initialized_flag wrt ..gottpoff]
-    mov byte[fs:r14], 0
-    ret
-section .tdata
-raychelscript_memory_initialized_flag: db 0)_asm_");
+            TRY_WRITE("add rsp, " << static_cast<std::uint32_t>(data.num_memory_locations-1)*8);
+            TRY_WRITE(R"_asm_(    ret
+section .rodata)_asm_");
+            TRY_WRITE("raychelscript_input_vector_size: dd " << static_cast<std::uint32_t>(data.config_block.input_identifiers.size()));
+            TRY_WRITE("raychelscript_output_vector_size: dd " << static_cast<std::uint32_t>(data.config_block.output_identifiers.size()));
 
             return NativeAssemblerErrorCode::ok;
         }
