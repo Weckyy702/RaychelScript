@@ -64,7 +64,7 @@ namespace RaychelScript::Runtime {
             return get_initialization_status() == RuntimeErrorCode::ok;
         }
 
-        template<std::uint32_t NumOutputs, std::forward_iterator It>
+        template <std::uint32_t NumOutputs, std::forward_iterator It>
         Result<NumOutputs> run(It begin, It end) const noexcept
         {
             return run<NumOutputs>(std::span{begin, end});
@@ -74,13 +74,13 @@ namespace RaychelScript::Runtime {
         Result<NumOutputs> run(std::span<const double> inputs) const noexcept
         {
             if (!initialized()) {
-                return { initialization_error_code_ };
+                return {initialization_error_code_};
             }
             if (NumOutputs != script_output_vector_size_) {
-                return { RuntimeErrorCode::mismatched_output_vector_size };
+                return {RuntimeErrorCode::mismatched_output_vector_size};
             }
             if (inputs.size() != script_input_vector_size_) {
-                return { RuntimeErrorCode::mismatched_input_vector_size };
+                return {RuntimeErrorCode::mismatched_input_vector_size};
             }
 
             std::array<double, NumOutputs> outputs{};

@@ -109,9 +109,9 @@ global raychelscript_input_vector_size
 global raychelscript_output_vector_size
 
 raychelscript_entry:)_asm_");
-            TRY_WRITE("sub rsp, " << static_cast<std::uint32_t>(data.num_memory_locations-1) * 8);
-            for(const auto&[_, address] : data.config_block.input_identifiers) {
-                TRY_WRITE("mov rax, qword[rdi+" << static_cast<std::uint32_t>(address.value()-1)*8 << ']');
+            TRY_WRITE("sub rsp, " << static_cast<std::uint32_t>(data.num_memory_locations - 1) * 8);
+            for (const auto& [_, address] : data.config_block.input_identifiers) {
+                TRY_WRITE("mov rax, qword[rdi+" << static_cast<std::uint32_t>(address.value() - 1) * 8 << ']');
                 TRY_WRITE("mov " << memory_index_to_native(tag, address.value()) << ", rax");
             }
             for (const auto& [value, address] : data.immediate_values) {
@@ -226,20 +226,22 @@ raychelscript_entry:)_asm_");
             return NativeAssemblerErrorCode::unknown_instruction;
         }
 
-        static auto
-        write_boilerplate_end(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
+        static auto write_boilerplate_end(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
             std::size_t i{0};
-            for(const auto&[_, address] : data.config_block.output_identifiers) {
+            for (const auto& [_, address] : data.config_block.output_identifiers) {
                 TRY_WRITE("mov rax, " << memory_index_to_native(tag, address.value()));
                 TRY_WRITE("mov qword[rsi+" << i << "], rax");
-                i+=8;
+                i += 8;
             }
-            TRY_WRITE("add rsp, " << static_cast<std::uint32_t>(data.num_memory_locations-1)*8);
+            TRY_WRITE("add rsp, " << static_cast<std::uint32_t>(data.num_memory_locations - 1) * 8);
             TRY_WRITE(R"_asm_(    ret
 section .rodata)_asm_");
-            TRY_WRITE("raychelscript_input_vector_size: dd " << static_cast<std::uint32_t>(data.config_block.input_identifiers.size()));
-            TRY_WRITE("raychelscript_output_vector_size: dd " << static_cast<std::uint32_t>(data.config_block.output_identifiers.size()));
+            TRY_WRITE(
+                "raychelscript_input_vector_size: dd " << static_cast<std::uint32_t>(data.config_block.input_identifiers.size()));
+            TRY_WRITE(
+                "raychelscript_output_vector_size: dd "
+                << static_cast<std::uint32_t>(data.config_block.output_identifiers.size()));
 
             return NativeAssemblerErrorCode::ok;
         }

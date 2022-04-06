@@ -26,6 +26,7 @@
 *
 */
 #include "RaychelCore/compat.h"
+
 #include <cstdint>
 
 #if RAYCHEL_ACTIVE_OS == RAYCHEL_OS_LINUX

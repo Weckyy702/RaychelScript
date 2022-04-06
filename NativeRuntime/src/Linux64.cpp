@@ -35,26 +35,28 @@ namespace RaychelScript::Runtime {
     void ScriptRunner::_try_initialize(std::string_view path_to_binary) noexcept
     {
         platform_specific_data_ = dlopen(std::string{path_to_binary}.data(), RTLD_LAZY);
-        if(platform_specific_data_ == nullptr) {
+        if (platform_specific_data_ == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::binary_not_found;
             return;
         }
 
         entry_point_ = reinterpret_cast<EntryPoint>(dlsym(platform_specific_data_, "raychelscript_entry"));
-        if(entry_point_ == nullptr) {
+        if (entry_point_ == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::entry_point_not_found;
             return;
         }
 
-        const auto input_vector_len_ptr = reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_input_vector_size"));
-        if(input_vector_len_ptr == nullptr) {
+        const auto input_vector_len_ptr =
+            reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_input_vector_size"));
+        if (input_vector_len_ptr == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::input_vector_length_not_found;
             return;
         }
         script_input_vector_size_ = *input_vector_len_ptr;
 
-        const auto output_vector_len_ptr = reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_output_vector_size"));
-        if(output_vector_len_ptr == nullptr) {
+        const auto output_vector_len_ptr =
+            reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_output_vector_size"));
+        if (output_vector_len_ptr == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::output_vector_length_not_found;
             return;
         }
@@ -65,10 +67,10 @@ namespace RaychelScript::Runtime {
 
     void ScriptRunner::_destroy() noexcept
     {
-        if(platform_specific_data_ == nullptr) {
+        if (platform_specific_data_ == nullptr) {
             return;
         }
         RAYCHEL_ASSERT(dlclose(platform_specific_data_) == 0);
     }
 
-}//namespace RaychelScript::Runtime
+} //namespace RaychelScript::Runtime
