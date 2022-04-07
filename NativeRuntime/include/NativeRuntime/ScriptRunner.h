@@ -54,6 +54,9 @@ namespace RaychelScript::Runtime {
             _try_initialize(path_to_binary);
         }
 
+        ScriptRunner(const ScriptRunner&) = delete;
+        const ScriptRunner& operator=(const ScriptRunner&) = delete;
+
         RuntimeErrorCode get_initialization_status() const noexcept
         {
             return initialization_error_code_;
