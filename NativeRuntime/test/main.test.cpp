@@ -31,9 +31,7 @@ int main(int argc, char** argv)
     }
 
     const auto start = std::chrono::high_resolution_clock::now();
-
     const auto [error_code, values] = runner.run<1>(input_vector);
-
     const auto end = std::chrono::high_resolution_clock::now();
 
     if (error_code != RaychelScript::Runtime::RuntimeErrorCode::ok) {

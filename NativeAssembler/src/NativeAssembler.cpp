@@ -172,7 +172,7 @@ raychelscript_entry:)_asm_");
                     return NativeAssemblerErrorCode::ok;
                 case Op::mag:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
-                    TRY_WRITE("movsd xmm1, 0x8000000000000000; clear sign bit");
+                    TRY_WRITE("movsd xmm1, 0x8000000000000000");
                     TRY_WRITE("pandn xmm0, xmm1");
                     return NativeAssemblerErrorCode::ok;
                 case Op::fac:
@@ -233,9 +233,8 @@ raychelscript_entry:)_asm_");
                     TRY_WRITE("jmp label" << static_cast<std::uint32_t>(instruction.data1()));
                     return NativeAssemblerErrorCode::ok;
                 case Op::hlt:
+                case Op::num_op_codes:
                     return NativeAssemblerErrorCode::ok;
-                default:
-                    break;
             }
             return NativeAssemblerErrorCode::unknown_instruction;
         }

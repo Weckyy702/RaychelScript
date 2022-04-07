@@ -46,7 +46,7 @@ namespace RaychelScript::Runtime {
             return;
         }
 
-        const auto input_vector_len_ptr =
+        const auto* input_vector_len_ptr =
             reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_input_vector_size"));
         if (input_vector_len_ptr == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::input_vector_length_not_found;
@@ -54,7 +54,7 @@ namespace RaychelScript::Runtime {
         }
         script_input_vector_size_ = *input_vector_len_ptr;
 
-        const auto output_vector_len_ptr =
+        const auto* output_vector_len_ptr =
             reinterpret_cast<std::uint32_t*>(dlsym(platform_specific_data_, "raychelscript_output_vector_size"));
         if (output_vector_len_ptr == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::output_vector_length_not_found;

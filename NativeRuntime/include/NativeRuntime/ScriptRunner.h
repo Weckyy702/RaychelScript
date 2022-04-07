@@ -88,7 +88,7 @@ namespace RaychelScript::Runtime {
 
             std::array<double, NumOutputs> outputs{};
 
-            RAYCHEL_ASSERT(entry_point_);
+            RAYCHEL_ASSERT(entry_point_ != nullptr);
             entry_point_(inputs.data(), outputs.data());
 
             return {RuntimeErrorCode::ok, outputs};
