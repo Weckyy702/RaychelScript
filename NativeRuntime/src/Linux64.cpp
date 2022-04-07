@@ -34,7 +34,7 @@ namespace RaychelScript::Runtime {
 
     void ScriptRunner::_try_initialize(std::string_view path_to_binary) noexcept
     {
-        platform_specific_data_ = dlopen(std::string{path_to_binary}.data(), RTLD_LAZY);
+        platform_specific_data_ = dlopen(std::string{path_to_binary}.data(), RTLD_NOW | RTLD_LOCAL);
         if (platform_specific_data_ == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::binary_not_found;
             return;
