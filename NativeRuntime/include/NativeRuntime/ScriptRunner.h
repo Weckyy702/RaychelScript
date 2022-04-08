@@ -33,7 +33,6 @@
 #include "RaychelCore/Raychel_assert.h"
 
 #include <span>
-#include <variant>
 
 namespace RaychelScript::Runtime {
 
@@ -44,7 +43,7 @@ namespace RaychelScript::Runtime {
         template <std::uint32_t NumOutputs>
         struct Result
         {
-            RuntimeErrorCode error_code;
+            RuntimeErrorCode error_code{};
             std::array<double, NumOutputs> values{};
         };
 
@@ -91,7 +90,7 @@ namespace RaychelScript::Runtime {
             RAYCHEL_ASSERT(entry_point_ != nullptr);
             entry_point_(inputs.data(), outputs.data());
 
-            return {RuntimeErrorCode::ok, outputs};
+            return {.values = outputs};
         }
 
         ~ScriptRunner() noexcept

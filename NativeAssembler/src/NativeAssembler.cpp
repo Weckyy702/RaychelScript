@@ -117,8 +117,8 @@ raychelscript_entry:
     mov r12, rdi
     mov rdi, rsp
     xor rax, rax
-    mov rcx, )_asm_" << static_cast<std::uint32_t>(data.num_memory_locations-1));
-        TRY_WRITE(R"_asm_(
+    mov rcx, )_asm_" << static_cast<std::uint32_t>(data.num_memory_locations - 1));
+            TRY_WRITE(R"_asm_(
     rep stosq
     mov rdi, r12
                 )_asm_");
