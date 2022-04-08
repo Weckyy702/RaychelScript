@@ -11,7 +11,7 @@ My good friend [plexx-dev](https://github.com/plexx-dev) has published an awesom
 
 ## Features
 
-This languages intended purpose is as a scripting language for use in my engine [RaychelCPU](https://github.com/Weckyy702/RaychelCPU). Therefore, its syntax and featureset are tailored towards high-throughput mathematical operations (like shaders).
+This languages intended purpose is as a scripting language for use in my engine [Raychel](https://github.com/weckyy702/raychel). Therefore, its syntax and featureset are tailored towards high-throughput mathematical operations (like shaders).
 
 ## Building
 
