@@ -208,7 +208,13 @@ raychelscript_entry:
                     TRY_WRITE("movsd " << memory_index_to_native(tag, instruction.data1()) << ", xmm0");
                     return NativeAssemblerErrorCode::ok;
                 case Op::pas:
-                    return NativeAssemblerErrorCode::unknown_instruction;
+                    TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
+                    TRY_WRITE("movsd xmm1, " << memory_index_to_native(tag, instruction.data2()));
+                    TRY_WRITE("push rsi");
+                    TRY_WRITE("call pow wrt ..plt");
+                    TRY_WRITE("pop rsi");
+                    TRY_WRITE("movsd " << memory_index_to_native(tag, instruction.data1()) << ", xmm0");
+                    return NativeAssemblerErrorCode::ok;
                 case Op::clt:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
