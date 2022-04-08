@@ -175,8 +175,8 @@ raychelscript_entry:
                     return NativeAssemblerErrorCode::ok;
                 case Op::mag:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
-                    TRY_WRITE("movsd xmm1, 0x8000000000000000");
-                    TRY_WRITE("pandn xmm0, xmm1");
+                    TRY_WRITE("movsd xmm1, qword [rel raychelscript_mag_op]");
+                    TRY_WRITE("pand xmm0, xmm1");
                     return NativeAssemblerErrorCode::ok;
                 case Op::fac:
                     return NativeAssemblerErrorCode::unknown_instruction;
@@ -267,6 +267,7 @@ section .rodata)_asm_");
             TRY_WRITE(
                 "raychelscript_output_vector_size: dd "
                 << static_cast<std::uint32_t>(data.config_block.output_identifiers.size()));
+            TRY_WRITE("raychelscript_mag_op: dq 0x7FFFFFFFFFFFFFFF");
 
             return NativeAssemblerErrorCode::ok;
         }
