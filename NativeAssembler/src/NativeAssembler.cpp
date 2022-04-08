@@ -108,16 +108,19 @@ global raychelscript_entry
 global raychelscript_input_vector_size
 global raychelscript_output_vector_size
 
-raychelscript_entry:)_asm_");
+extern pow
+
+raychelscript_entry:
+    push r12)_asm_");
             TRY_WRITE("sub rsp, " << static_cast<std::uint32_t>(data.num_memory_locations - 1) * 8);
             TRY_WRITE(R"_asm_(
-    mov r8, rdi
+    mov r12, rdi
     mov rdi, rsp
     xor rax, rax
     mov rcx, )_asm_" << static_cast<std::uint32_t>(data.num_memory_locations-1));
         TRY_WRITE(R"_asm_(
     rep stosq
-    mov rdi, r8
+    mov rdi, r12
                 )_asm_");
 
             for (const auto& [_, address] : data.config_block.input_identifiers) {
@@ -130,7 +133,7 @@ raychelscript_entry:)_asm_");
             }
             TRY_WRITE(R"_asm_(
     xor rax, rax
-    mov r8, 1
+    mov r12, 1
                 )_asm_");
             return NativeAssemblerErrorCode::ok;
         }
@@ -180,7 +183,9 @@ raychelscript_entry:)_asm_");
                 case Op::pow:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("movsd xmm1, " << memory_index_to_native(tag, instruction.data2()));
+                    TRY_WRITE("push rsi");
                     TRY_WRITE("call pow wrt ..plt");
+                    TRY_WRITE("pop rsi");
                     return NativeAssemblerErrorCode::ok;
                 case Op::inc:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
@@ -207,22 +212,22 @@ raychelscript_entry:)_asm_");
                 case Op::clt:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmovb rax, r8");
+                    TRY_WRITE("cmovb rax, r12");
                     return NativeAssemblerErrorCode::ok;
                 case Op::cgt:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmova rax, r8");
+                    TRY_WRITE("cmova rax, r12");
                     return NativeAssemblerErrorCode::ok;
                 case Op::ceq:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmove rax, r8");
+                    TRY_WRITE("cmove rax, r12");
                     return NativeAssemblerErrorCode::ok;
                 case Op::cne:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmovne rax, r8");
+                    TRY_WRITE("cmovne rax, r12");
                     return NativeAssemblerErrorCode::ok;
                 case Op::jpz:
                     TRY_WRITE("test rax, rax");
@@ -248,6 +253,7 @@ raychelscript_entry:)_asm_");
                 i += 8;
             }
             TRY_WRITE("add rsp, " << static_cast<std::uint32_t>(data.num_memory_locations - 1) * 8);
+            TRY_WRITE("pop r12");
             TRY_WRITE(R"_asm_(    ret
 section .rodata)_asm_");
             TRY_WRITE(
