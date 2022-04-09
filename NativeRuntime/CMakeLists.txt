@@ -53,7 +53,6 @@ endif()
 target_link_libraries(RaychelScriptRuntime PUBLIC
     RaychelLogger
     RaychelScriptBase
-    RaychelScriptAssembly
 )
 
 if(${RAYCHELSCRIPT_ENABLE_ASAN})
