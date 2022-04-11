@@ -31,6 +31,7 @@
 #include "RuntimeErrorCode.h"
 
 #include "RaychelCore/Raychel_assert.h"
+#include "RaychelCore/ClassMacros.h"
 
 #include <span>
 
@@ -48,13 +49,13 @@ namespace RaychelScript::Runtime {
         };
 
     public:
-        ScriptRunner(std::string_view path_to_binary) noexcept
+        explicit ScriptRunner(std::string_view path_to_binary) noexcept
         {
             _try_initialize(path_to_binary);
         }
 
-        ScriptRunner(const ScriptRunner&) = delete;
-        const ScriptRunner& operator=(const ScriptRunner&) = delete;
+        RAYCHEL_MAKE_NONCOPY(ScriptRunner)
+        RAYCHEL_MAKE_DEFAULT_MOVE(ScriptRunner)
 
         RuntimeErrorCode get_initialization_status() const noexcept
         {
