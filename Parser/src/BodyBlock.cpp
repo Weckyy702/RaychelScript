@@ -36,6 +36,7 @@
     #pragma message("Unable to use ranges header. Using a workaround that is a little less elegant")
     #define RAYCHELSCRIPT_NO_RANGES_HEADER 1
 #endif
+#include <algorithm>
 #include <variant>
 #include <vector>
 

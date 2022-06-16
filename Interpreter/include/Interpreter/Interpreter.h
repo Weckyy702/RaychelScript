@@ -41,6 +41,7 @@
 #include "InterpreterErrorCode.h"
 #include "InterpreterState.h"
 
+#include <algorithm>
 #include <concepts>
 #include <map>
 #include <optional>

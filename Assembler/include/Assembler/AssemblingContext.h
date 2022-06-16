@@ -23,16 +23,18 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 #define RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 
 #include "shared/rasm/Instruction.h"
 
+#include <algorithm>
 #include <stack>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace RaychelScript::Assembler {

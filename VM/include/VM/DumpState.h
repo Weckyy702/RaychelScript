@@ -31,6 +31,7 @@
 #include "VMState.h"
 #include "shared/VM/VMData.h"
 
+#include <algorithm>
 #include <concepts>
 #include <iterator>
 #include <utility>
