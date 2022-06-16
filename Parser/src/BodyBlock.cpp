@@ -308,6 +308,8 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
 
+    [[nodiscard]] static ParseExpressionResult handle_conditional_else(ParsingContext& ctx) noexcept;
+
     [[nodiscard]] static ParseExpressionResult handle_conditional_footer(ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
@@ -356,6 +358,11 @@ namespace RaychelScript::Parser {
 
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found conditional header at ", matches.front().front().location);
             return handle_conditional_header(matches.at(1), ctx);
+        }
+
+        //else
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::conditional_else}); !matches.empty()) {
+            return handle_conditional_else(ctx);
         }
 
         //conditional footer
@@ -612,7 +619,19 @@ namespace RaychelScript::Parser {
         }
 
         ctx.scopes.emplace(ConditionalConstructData{{}, std::move(condition_node)});
+        ctx.is_in_else_block = false;
 
+        return ParserErrorCode::ok;
+    }
+
+    [[nodiscard]] static ParseExpressionResult handle_conditional_else(ParsingContext& ctx) noexcept
+    {
+        if (ctx.scopes.empty() || ctx.scopes.top().type() != NodeType::conditional_construct) {
+            Logger::error("'else' keyword can only appear after 'if' construct!\n");
+            return ParserErrorCode::mismatched_else;
+        }
+
+        ctx.is_in_else_block = true;
         return ParserErrorCode::ok;
     }
 
@@ -722,7 +741,10 @@ namespace RaychelScript::Parser {
             case NodeType::conditional_construct:
             {
                 auto data = parent_node.to_node_data<ConditionalConstructData>();
-                data.body.emplace_back(std::move(node));
+                if (!ctx.is_in_else_block)
+                    data.body.emplace_back(std::move(node));
+                else
+                    data.else_body.emplace_back(std::move(node));
                 parent_node = AST_Node{std::move(data)};
                 break;
             }

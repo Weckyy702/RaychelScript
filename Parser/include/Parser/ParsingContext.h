@@ -40,7 +40,8 @@ namespace RaychelScript::Parser {
 
     struct ParsingContext
     {
-        std::stack<AST_Node, std::vector<AST_Node>> scopes;
+        bool is_in_else_block{false};
+        std::stack<AST_Node, std::vector<AST_Node>> scopes{};
     };
 
 } //namespace RaychelScript::Parser

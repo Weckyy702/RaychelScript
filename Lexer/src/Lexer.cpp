@@ -55,6 +55,9 @@ namespace RaychelScript::Lexer {
         if (token == "endwhile") {
             return TokenType::loop_footer;
         }
+        if(token == "else") {
+            return TokenType::conditional_else;
+        }
         return TokenType::identifer;
     }
 

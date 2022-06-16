@@ -118,8 +118,7 @@ namespace RaychelScript {
     {
         AST_Node condition_node;
         std::vector<AST_Node> body{};
-
-        //TODO: else blocks
+        std::vector<AST_Node> else_body{};
     };
 
     struct RelationalOperatorData : NodeDataBase<NodeType::relational_operator, ValueType::boolean>

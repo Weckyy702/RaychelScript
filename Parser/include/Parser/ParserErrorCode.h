@@ -45,6 +45,7 @@ namespace RaychelScript::Parser {
         invalid_declaration,
         invalid_numeric_constant,
         mismatched_conditional,
+        mismatched_else,
 
         //Semantic analysis error codes
         assign_to_non_value_ref,
@@ -80,6 +81,8 @@ namespace RaychelScript::Parser {
                 return "Invalid numeric constant"sv;
             case ParserErrorCode::mismatched_conditional:
                 return "Mismatched if/endif"sv;
+            case ParserErrorCode::mismatched_else:
+                return "Invalid else construct"sv;
             case ParserErrorCode::assign_to_non_value_ref:
                 return "Trying to assign to something that is not a value reference"sv;
             case ParserErrorCode::assign_rhs_not_number_type:

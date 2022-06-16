@@ -48,9 +48,10 @@ namespace RaychelScript {
             identifer = '1',
             declaration = '2',
             conditional_header = '3',
-            conditional_footer = '4',
-            loop_header = '5',
-            loop_footer = '6',
+            conditional_else = '4',
+            conditional_footer = '5',
+            loop_header = '6',
+            loop_footer = '7',
             plus = '+',
             minus = '-',
             star = '*',
@@ -83,6 +84,8 @@ namespace RaychelScript {
                 return "IDENTIFIER";
             case TT::conditional_header:
                 return "IF";
+            case TT::conditional_else:
+                return "ELSE";
             case TT::conditional_footer:
                 return "ENDIF";
             case TT::loop_header:

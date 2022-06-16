@@ -145,6 +145,9 @@ namespace RaychelScript {
             for (const auto& node : data.body) {
                 print_node(node, "body=");
             }
+            for(const auto& node : data.else_body) {
+                print_node(node, "else_body=");
+            }
         }
 
         inline void handle_relational_operator(const RelationalOperatorData& data) noexcept
