@@ -37,6 +37,7 @@
     #define RAYCHELSCRIPT_NO_RANGES_HEADER 1
 #endif
 #include <algorithm>
+#include <set>
 #include <variant>
 #include <vector>
 
@@ -336,6 +337,13 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_number(const Token& number_token, bool is_negative, ParsingContext& ctx) noexcept;
 
+    [[nodiscard]] static ParseExpressionResult handle_function_defintion(
+        const std::string& raw_name, LineView argument_tokens, LineView value_tokens, ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseExpressionResult
+    handle_function_call(const std::string& raw_name, LineView argument_tokens, ParsingContext& ctx) noexcept;
+
+    [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
     parse_statement_or_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
@@ -367,6 +375,25 @@ namespace RaychelScript::Parser {
 
             return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())});
         }
+
+        //Return statement
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::function_return, TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found return statement at ", matches.front().front().location);
+            if (!ctx.is_in_function_scope) {
+                Logger::error("Return statements can only appear inside a function body!\n");
+                return ParserErrorCode::return_in_invalid_scope;
+            }
+            auto expression_node_or_error = parse_expression(matches.at(1));
+            if (const auto* ec = std::get_if<ParserErrorCode>(&expression_node_or_error); ec)
+                return *ec;
+            auto expression_node = Raychel::get<AST_Node>(std::move(expression_node_or_error));
+            if (expression_node.value_type() != ValueType::number) {
+                Logger::error(
+                    "Return expression does not have 'number' type, has type '", expression_node.value_type(), "' instead!\n");
+                return ParserErrorCode::return_expression_not_number_type;
+            }
+            return AST_Node{FunctionReturnData{{}, std::move(expression_node)}};
         }
 
         //conditional header
@@ -423,8 +450,68 @@ namespace RaychelScript::Parser {
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::right_angle, TT::expression_});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG("Found greater-than expression at ", matches.at(1).front().location);
-            return handle_relational_operator(
-                matches.front(), matches.back(), RelationalOperatorData::Operation::greater_than, ctx);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::greater_than);
+        }
+
+        //Simple function definitions
+        if (const auto matches = match_token_pattern(
+                expression_tokens,
+                array{
+                    TT::function_header,
+                    TT::identifer,
+                    TT::left_paren,
+                    TT::expression_,
+                    TT::right_paren,
+                    TT::equal,
+                    TT::expression_});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(
+                handler.indent(),
+                "Found simple function definition at ",
+                matches.front().front().location,
+                " raw name='",
+                matches.at(1).front().content.value(),
+                '\'');
+
+            return handle_function_defintion(matches.at(1).at(0).content.value(), matches.at(3), matches.back(), ctx);
+        }
+
+        //Compex function definitions
+        if (const auto matches = match_token_pattern(
+                expression_tokens, array{TT::function_header, TT::identifer, TT::left_paren, TT::expression_, TT::right_paren});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(
+                handler.indent(),
+                "Found complex function definition at ",
+                matches.front().front().location,
+                " raw name='",
+                matches.at(1).front().content.value(),
+                '\'');
+
+            return handle_function_defintion(matches.at(1).at(0).content.value(), matches.at(3), {}, ctx);
+        }
+
+        //function footers
+        if (const auto matches = match_token_pattern(expression_tokens, array{TT::function_footer}); !matches.empty()) {
+            if (ctx.scopes.top().type != ScopeType::function) {
+                Logger::error(matches.at(0).at(0).location, ": endfn can only appear after a function definition!\n");
+                return ParserErrorCode::mismatched_endfn;
+            }
+            if (ctx.scopes.top().nodes.get().back().type() != NodeType::function_return) {
+                Logger::error(matches.at(0).at(0).location, ": function does not end with a return statement!\n");
+                return ParserErrorCode::missing_return;
+            }
+            ctx.scopes.pop();
+            ctx.is_in_function_scope = false;
+            return ParserErrorCode::ok;
+        }
+
+        //function calls
+        if (const auto matches =
+                match_token_pattern(expression_tokens, array{TT::identifer, TT::left_paren, TT::expression_, TT::right_paren});
+            !matches.empty()) {
+            RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found function call at ", matches.front().front().location);
+            return handle_function_call(matches.at(0).at(0).content.value(), matches.at(2), ctx);
         }
 
         //Operator-assign expressions
@@ -446,7 +533,7 @@ namespace RaychelScript::Parser {
 
         //Misc
 
-        //Silly trick to parse -NUMBER as a negative number
+        //negative numbers
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::number}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(), "Found negative number expression at ", matches.front().front().location);
@@ -529,8 +616,9 @@ namespace RaychelScript::Parser {
                 handler.indent(),
                 "Found variable declaration at ",
                 matches.front().front().location,
-                " name=",
-                *matches.at(1).front().content);
+                " name='",
+                *matches.at(1).front().content,
+                '\'');
 
             auto name = *matches.at(1).front().content;
             const bool is_const = matches.front().front().content == "let";
@@ -761,43 +849,150 @@ namespace RaychelScript::Parser {
         return AST_Node{NumericConstantData{{}, is_negative ? -value : value}};
     }
 
-    static void push_node(AST_Node&& node, AST& ast, ParsingContext& ctx) noexcept
+    [[nodiscard]] static std::optional<std::set<ArgumentData, std::less<>>> parse_arguments(LineView argument_tokens) noexcept
     {
-        if (ctx.scopes.empty()) {
-            ast.nodes.emplace_back(std::move(node));
-            return;
+        std::set<ArgumentData, std::less<>> arguments{};
+        if (argument_tokens.empty())
+            return arguments;
+
+        bool failed{false};
+        std::size_t argument_index{};
+        std::for_each(argument_tokens.begin(), argument_tokens.end(), [&](const Token& token) {
+            if (failed)
+                return;
+            if (token.type == TokenType::comma)
+                return;
+            if (token.type != TokenType::identifer) {
+                Logger::error("Unexpected token '", token_type_to_string(token.type), "' in argument list\n");
+                failed = true;
+                return;
+            }
+            auto argument_name = token.content.value();
+            if (arguments.contains(argument_name)) {
+                Logger::error("Duplicate argument name '", argument_name, "'\n");
+                failed = true;
+                return;
+            }
+            arguments.insert(ArgumentData{std::move(argument_name), argument_index});
+            ++argument_index;
+        });
+
+        if (failed)
+            return std::nullopt;
+
+        return arguments;
+    }
+
+    template <typename Container>
+    [[nodiscard]] static std::string mangle_function_name(const std::string& raw_name, const Container& arguments) noexcept
+    {
+        std::stringstream ss;
+        ss << raw_name << '_' << arguments.size();
+        return ss.str();
+    }
+
+    [[nodiscard]] static ParseExpressionResult handle_function_defintion(
+        const std::string& raw_name, LineView argument_tokens, LineView value_tokens, ParsingContext& ctx) noexcept
+    {
+        if (ctx.scopes.top().type != ScopeType::global) {
+            Logger::error("Function defintions can only appear at global scope!\n");
+            return ParserErrorCode::invalid_function_definition;
+        }
+        const auto maybe_arguments = parse_arguments(argument_tokens);
+        if (!maybe_arguments.has_value())
+            return ParserErrorCode::invalid_function_argument_list;
+
+        const auto mangled_name = mangle_function_name(raw_name, maybe_arguments.value());
+
+        const auto [where, did_insert] = ctx.functions.insert(std::make_pair(
+            mangled_name, FunctionData{.mangled_name = mangled_name, .arguments = maybe_arguments.value(), .body = {}}));
+
+        if (!did_insert) {
+            Logger::error("Duplicate function '", mangled_name, "'\n");
+            return ParserErrorCode::duplicate_function;
         }
 
-        //TODO: make this more efficent (if it starts causing slowdowns)
-        //we copy the data just to move it back, that is really silly
-
-        auto& parent_node = ctx.scopes.top();
-        switch (parent_node.type()) {
-            case NodeType::conditional_construct:
-            {
-                auto data = parent_node.to_node_data<ConditionalConstructData>();
-                if (!ctx.is_in_else_block)
-                    data.body.emplace_back(std::move(node));
-                else
-                    data.else_body.emplace_back(std::move(node));
-                parent_node = AST_Node{std::move(data)};
-                break;
-            }
-            case NodeType::loop:
-            {
-                auto data = parent_node.to_node_data<LoopData>();
-                data.body.emplace_back(std::move(node));
-                parent_node = AST_Node{std::move(data)};
-                break;
-            }
-            default:
-                RAYCHEL_ASSERT_NOT_REACHED;
+        if (value_tokens.empty()) {
+            ctx.scopes.push(Scope{ScopeType::function, where->second.body});
+            ctx.is_in_function_scope = true;
+            return ParserErrorCode::ok;
         }
+        TRY_GET_SUBEXPRESSION(value);
+
+        if (value_node.value_type() != ValueType::number) {
+            Logger::error(
+                "Simple function value expression does not have 'number' type, has type '",
+                value_node.value_type(),
+                "' instead!\n");
+            return ParserErrorCode::simple_function_value_not_number_type;
+        }
+
+        where->second.body.push_back(AST_Node{FunctionReturnData{{}, std::move(value_node)}});
+        return ParserErrorCode::ok;
+    }
+
+    [[nodiscard]] static std::variant<ParserErrorCode, std::vector<AST_Node>>
+    parse_supplied_argument_list(LineView argument_list_tokens) noexcept
+    {
+        std::vector<AST_Node> parsed_argument_expressions{};
+        auto it = argument_list_tokens.begin();
+        std::size_t argument_index{};
+
+        while (it != argument_list_tokens.end()) {
+            LineTokens argument_tokens{};
+            {
+                int paren_depth{0};
+                for (; it != argument_list_tokens.end(); ++it) {
+                    const auto& token = *it;
+                    if (is_opening_parenthesis(token.type))
+                        ++paren_depth;
+                    else if (is_closing_parenthesis(token.type))
+                        --paren_depth;
+                    if (token.type == TokenType::comma && paren_depth == 0) {
+                        ++it;
+                        break;
+                    }
+                    argument_tokens.emplace_back(token);
+                }
+            }
+
+            {
+                TRY_GET_SUBEXPRESSION(argument)
+                if (argument_node.value_type() != ValueType::number) {
+                    Logger::error(
+                        "Argument expression ",
+                        argument_index,
+                        " does not have 'number' type, has type '",
+                        argument_node.value_type(),
+                        "' instead!\n");
+                    return ParserErrorCode::function_argument_not_number_type;
+                }
+                parsed_argument_expressions.push_back(std::move(argument_node));
+            }
+        }
+
+        return parsed_argument_expressions;
+    }
+
+    static ParseExpressionResult
+    handle_function_call(const std::string& raw_name, LineView argument_tokens, ParsingContext& /*ctx*/) noexcept
+    {
+        auto argument_nodes_or_error = parse_supplied_argument_list(argument_tokens);
+        if (const auto* ec = std::get_if<ParserErrorCode>(&argument_nodes_or_error)) {
+            Logger::error("Invalid arguments to function call!\n");
+            return ParserErrorCode::invalid_function_argument_list;
+        }
+
+        auto argument_nodes = Raychel::get<std::vector<AST_Node>>(std::move(argument_nodes_or_error));
+
+        const auto mangled_name = mangle_function_name(raw_name, argument_nodes);
+
+        return AST_Node{FunctionCallData{{}, mangled_name, std::move(argument_nodes)}};
     }
 
     ParseResult parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
     {
-        ParsingContext ctx;
+        ParsingContext ctx{.functions = ast.functions};
         ParserErrorCode ec{};
 
         ctx.scopes.push(Scope{ScopeType::global, ast.nodes});

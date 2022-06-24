@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for ParserErrorCode enum
 * \date 2021-11-30
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_PARSER_ERROR_CODE_H
 #define RAYCHELSCRIPT_PARSER_ERROR_CODE_H
@@ -46,6 +46,13 @@ namespace RaychelScript::Parser {
         invalid_numeric_constant,
         mismatched_conditional,
         mismatched_else,
+        mismatched_loop,
+        mismatched_header_footer_type,
+        invalid_function_argument_list,
+        mismatched_endfn,
+        duplicate_function,
+        invalid_function_definition,
+        return_in_invalid_scope,
 
         //Semantic analysis error codes
         assign_to_non_value_ref,
@@ -57,14 +64,15 @@ namespace RaychelScript::Parser {
         relational_op_lhs_not_number_type,
         relational_op_rhs_not_number_type,
         loop_condition_not_boolean_type,
-        mismatched_loop,
-        mismatched_header_footer_type,
+        simple_function_value_not_number_type,
+        function_argument_not_number_type,
+        return_expression_not_number_type,
+        missing_return,
     };
 
     constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
-        using RaychelScript::Parser::ParserErrorCode;
 
         switch (ec) {
             case ParserErrorCode::ok:
@@ -83,6 +91,16 @@ namespace RaychelScript::Parser {
                 return "Mismatched if/endif"sv;
             case ParserErrorCode::mismatched_else:
                 return "Invalid else construct"sv;
+            case ParserErrorCode::invalid_function_argument_list:
+                return "Invalid function argument list"sv;
+            case ParserErrorCode::mismatched_endfn:
+                return "Mismatched fn/endfn"sv;
+            case ParserErrorCode::duplicate_function:
+                return "Dupliate function definition"sv;
+            case ParserErrorCode::invalid_function_definition:
+                return "Function definition at non-global scope"sv;
+            case ParserErrorCode::return_in_invalid_scope:
+                return "Return statement at non-function scope"sv;
             case ParserErrorCode::assign_to_non_value_ref:
                 return "Trying to assign to something that is not a value reference"sv;
             case ParserErrorCode::assign_rhs_not_number_type:
@@ -105,6 +123,14 @@ namespace RaychelScript::Parser {
                 return "Mismatched while/endwhile"sv;
             case ParserErrorCode::mismatched_header_footer_type:
                 return "Type of construct header does not match type of construct footer"sv;
+            case ParserErrorCode::simple_function_value_not_number_type:
+                return "Value expression of simple function definition does not have 'number' type"sv;
+            case ParserErrorCode::function_argument_not_number_type:
+                return "Argument expression of function call does not have 'number' type"sv;
+            case ParserErrorCode::return_expression_not_number_type:
+                return "Subexpression of return statement does not have 'number' type"sv;
+            case ParserErrorCode::missing_return:
+                return "Function does not end with a return statement"sv;
         }
         return "<Unknown reason>"sv;
     }
