@@ -238,7 +238,7 @@ namespace RaychelScript::Pipes {
                 return;
             }
 
-            maybe_value_ = Raychel::get<T>(value_or_error);
+            maybe_value_.emplace(Raychel::get<T>(std::forward<std::variant<E, T>>(value_or_error)));
         }
 
         PipeResult(const details::ErrorContainer& error) //NOLINT we want this constructor to be implicit
