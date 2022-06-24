@@ -82,11 +82,10 @@ using ParseExpressionResult = std::variant<RaychelScript::Parser::ParserErrorCod
 
 namespace RaychelScript::Parser {
 
-    //FIXME: tis brokne :(
-
     template <typename TokenIt, typename PatternIt>
     [[nodiscard]] static bool handle_subexpression(
-        TokenIt& token_it, const TokenIt& token_end, PatternIt& pattern_it, const PatternIt& pattern_end, LineTokens& match)
+        TokenIt& token_it, const TokenIt& token_end, PatternIt& pattern_it, const PatternIt& pattern_end, LineTokens& match,
+        int& paren_depth)
     {
         if (pattern_it == std::prev(pattern_end)) {
             for (auto it = token_it; it != token_end; it++) {
@@ -98,7 +97,6 @@ namespace RaychelScript::Parser {
         }
 
         const auto escape_token = *std::next(pattern_it);
-        int paren_depth{0};
         for (auto it = token_it; it != token_end; it++) {
             if (is_opening_parenthesis(it->type)) {
                 paren_depth++;
@@ -117,9 +115,9 @@ namespace RaychelScript::Parser {
 
     /**
     * \brief Match a token against a provided pattern.
-    * 
+    *
     * \tparam N size of the pattern.
-    * 
+    *
     *  The purpose of this function is to provide regex-like matching of token sequences.
     *  TokenType::expression_ is used like a wildcard and will mach all tokens up to the next token in the pattern.
     *  TokenType::arith_op_ is used to find all arithmetic operators as defined by is_arith_op().
@@ -128,8 +126,15 @@ namespace RaychelScript::Parser {
     requires(N != 0) [[nodiscard]] static SourceTokens
         match_token_pattern(LineView tokens, const std::array<TokenType::TokenType, N>& pattern) noexcept
     {
-        if (tokens.size() < N) {
-            return {}; //The token list must be at least as long as the pattern
+        const auto number_of_subexpressions = static_cast<std::size_t>(std::count_if(
+            pattern.begin(), pattern.end(), [](TokenType::TokenType type) { return type == TokenType::expression_; }));
+
+        if (tokens.size() < N - number_of_subexpressions) {
+            return {}; //The token list must be at least as long as the pattern minus possibly empty subexpressions
+        }
+
+        if (number_of_subexpressions == 0 && tokens.size() != N) {
+            return {}; //If there are no subexpressions and there are more tokens than in the pattern, it cannot match
         }
 
         const auto token_matched = [](TokenType::TokenType type, TokenType::TokenType expected) {
@@ -138,6 +143,8 @@ namespace RaychelScript::Parser {
 
         auto pattern_it = pattern.begin();
         auto token_it = tokens.begin();
+
+        int paren_depth{};
 
         SourceTokens matches;
 
@@ -148,11 +155,16 @@ namespace RaychelScript::Parser {
             auto& match = matches.emplace_back();
 
             if (expected == TokenType::expression_) {
-                if (!handle_subexpression(token_it, tokens.end(), pattern_it, pattern.end(), match)) {
+                if (!handle_subexpression(token_it, tokens.end(), pattern_it, pattern.end(), match, paren_depth)) {
                     return {};
                 }
                 continue;
             }
+
+            if (is_opening_parenthesis(current.type))
+                ++paren_depth;
+            else if (is_closing_parenthesis(current.type))
+                --paren_depth;
 
             if (token_matched(current.type, expected)) {
                 match.emplace_back(current);
