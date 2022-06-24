@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for AST utility functions
 * \date 2021-12-05
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_WALK_AST_H
 #define RAYCHELSCRIPT_WALK_AST_H
@@ -35,6 +35,11 @@
 #include <functional>
 
 namespace RaychelScript {
+
+    namespace details {
+        template <typename T>
+        inline const std::function null_handler = [](const T&) {};
+    }
 
     struct NodeHandlers
     {
@@ -56,23 +61,27 @@ namespace RaychelScript {
               handle_relational_operator{std::forward<F>(f)},
               handle_inline_state_push{std::forward<F>(f)},
               handle_inline_state_pop{std::forward<F>(f)},
-              handle_loop{std::forward<F>(f)}
+              handle_loop{std::forward<F>(f)},
+              handle_function_call{std::forward<F>(f)},
+              handle_function_return(std::forward<F>(f))
         {}
 
         //NOLINTEND(clang-analyzer-cplusplus.Move)
 
-        Handler<AssignmentExpressionData> handle_assignment;
-        Handler<VariableDeclarationData> handle_variable_decl;
-        Handler<VariableReferenceData> handle_variable_ref;
-        Handler<ArithmeticExpressionData> handle_arithmetic_operator;
-        Handler<UpdateExpressionData> handle_update_expression;
-        Handler<NumericConstantData> handle_numeric_constant;
-        Handler<UnaryExpressionData> handle_unary_operator;
-        Handler<ConditionalConstructData> handle_conditional_construct;
-        Handler<RelationalOperatorData> handle_relational_operator;
-        Handler<InlinePushData> handle_inline_state_push;
-        Handler<InlinePopData> handle_inline_state_pop;
-        Handler<LoopData> handle_loop;
+        Handler<AssignmentExpressionData> handle_assignment{details::null_handler<AssignmentExpressionData>};
+        Handler<VariableDeclarationData> handle_variable_decl{details::null_handler<VariableDeclarationData>};
+        Handler<VariableReferenceData> handle_variable_ref{details::null_handler<VariableReferenceData>};
+        Handler<ArithmeticExpressionData> handle_arithmetic_operator{details::null_handler<ArithmeticExpressionData>};
+        Handler<UpdateExpressionData> handle_update_expression{details::null_handler<UpdateExpressionData>};
+        Handler<NumericConstantData> handle_numeric_constant{details::null_handler<NumericConstantData>};
+        Handler<UnaryExpressionData> handle_unary_operator{details::null_handler<UnaryExpressionData>};
+        Handler<ConditionalConstructData> handle_conditional_construct{details::null_handler<ConditionalConstructData>};
+        Handler<RelationalOperatorData> handle_relational_operator{details::null_handler<RelationalOperatorData>};
+        Handler<InlinePushData> handle_inline_state_push{details::null_handler<InlinePushData>};
+        Handler<InlinePopData> handle_inline_state_pop{details::null_handler<InlinePopData>};
+        Handler<LoopData> handle_loop{details::null_handler<LoopData>};
+        Handler<FunctionCallData> handle_function_call{details::null_handler<FunctionCallData>};
+        Handler<FunctionReturnData> handle_function_return{details::null_handler<FunctionReturnData>};
     };
 
     namespace details {
@@ -186,6 +195,10 @@ namespace RaychelScript {
                 return handlers.handle_inline_state_pop(node.to_node_data<InlinePopData>());
             case NodeType::loop:
                 return handlers.handle_loop(node.to_node_data<LoopData>());
+            case NodeType::function_call:
+                return handlers.handle_function_call(node.to_node_data<FunctionCallData>());
+            case NodeType::function_return:
+                return handlers.handle_function_return(node.to_node_data<FunctionReturnData>());
         }
     }
 

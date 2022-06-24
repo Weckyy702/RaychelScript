@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for ast printing functions
 * \date 2021-12-05
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_PRINT_AST_H
 #define RAYCHELSCRIPT_PRINT_AST_H
@@ -145,7 +145,7 @@ namespace RaychelScript {
             for (const auto& node : data.body) {
                 print_node(node, "body=");
             }
-            for(const auto& node : data.else_body) {
+            for (const auto& node : data.else_body) {
                 print_node(node, "else_body=");
             }
         }
@@ -182,6 +182,21 @@ namespace RaychelScript {
             for (const auto& body_node : data.body) {
                 print_node(body_node, "body=");
             }
+        }
+
+        inline void handle_function_call(const FunctionCallData& data, std::string_view indent) noexcept
+        {
+            Logger::log("CALL\n", indent, "..name='", data.mangled_callee_name, "'\n");
+
+            for (const auto& node : data.argument_expressions) {
+                print_node(node, "arg=");
+            }
+        }
+
+        inline void handle_function_return(const FunctionReturnData& data) noexcept
+        {
+            Logger::log("RETURN\n");
+            print_node(data.return_value, "expr=");
         }
 
     } // namespace details
@@ -269,6 +284,14 @@ namespace RaychelScript {
 
             case RS::NodeType::loop:
                 details::handle_loop(node.to_node_data<LoopData>());
+                break;
+
+            case RS::NodeType::function_call:
+                details::handle_function_call(node.to_node_data<FunctionCallData>(), handler.indent());
+                break;
+
+            case RS::NodeType::function_return:
+                details::handle_function_return(node.to_node_data<FunctionReturnData>());
         }
     }
 
@@ -281,6 +304,14 @@ namespace RaychelScript {
         IndentHandler::reset_indent();
 
         for_each_top_node(ast, [](auto& node) { print_node(node, ""); });
+
+        IndentHandler::reset_indent();
+        for (const auto& [mangled_name, function] : ast.functions) {
+            Logger::log(mangled_name, ":\n");
+            for (const auto& node : function.body) {
+                print_node(node, "");
+            }
+        }
     }
 
 } //namespace RaychelScript
