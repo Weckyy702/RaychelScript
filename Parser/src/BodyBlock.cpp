@@ -990,7 +990,7 @@ namespace RaychelScript::Parser {
         return AST_Node{FunctionCallData{{}, mangled_name, std::move(argument_nodes)}};
     }
 
-    ParseResult parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept
+    ParseResult parse_body_block(const SourceTokens& source_tokens, AST ast) noexcept
     {
         ParsingContext ctx{.functions = ast.functions};
         ParserErrorCode ec{};

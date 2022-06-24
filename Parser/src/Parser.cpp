@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Implementation file for Parsing functions
 * \date 2021-12-04
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -68,7 +68,7 @@ namespace RaychelScript::Parser {
     }
 
     //see BodyBlock.cpp for details
-    ParseResult parse_body_block(const SourceTokens& source_tokens, AST& ast) noexcept;
+    ParseResult parse_body_block(const SourceTokens& source_tokens, AST ast) noexcept;
 
     //see ConfigBlock.cpp for details
     [[nodiscard]] bool parse_config_block(const SourceTokens& config_tokens, AST& ast) noexcept;
@@ -124,7 +124,6 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::invalid_config;
         }
 
-#if 0 //Enable this block if empty input/output specifications should be an error
         if (ast.config_block.input_identifiers.empty()) {
             Logger::error("Invalid config block! Missing input specification!\n");
             return ParserErrorCode::invalid_config;
@@ -134,9 +133,8 @@ namespace RaychelScript::Parser {
             Logger::error("Invalid config block! Missing output specification!\n");
             return ParserErrorCode::invalid_config;
         }
-#endif
 
-        return parse_body_block(body_tokens, ast);
+        return parse_body_block(body_tokens, std::move(ast));
     }
 
     ParseResult _parse_no_config_check(const SourceTokens& source_tokens) noexcept
