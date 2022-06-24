@@ -60,12 +60,15 @@
     #define RAYCHELSCRIPT_PARSER_DEBUG(...) Logger::debug(__VA_ARGS__, '\n')
 #endif
 
-#define TRY_GET_NODE(name)                                                                                                       \
-    const auto name##_node_or_error = parse_expression(name##_tokens, ctx);                                                      \
+#define TRY_GET_INTERNAL(name, parser_call)                                                                                      \
+    auto name##_node_or_error = parser_call;                                                                                     \
     if (const auto* ec = std::get_if<ParserErrorCode>(&(name##_node_or_error)); ec) {                                            \
         return *ec;                                                                                                              \
     }                                                                                                                            \
-    auto name##_node = Raychel::get<AST_Node>((name##_node_or_error));
+    auto name##_node = Raychel::get<AST_Node>(std::move((name##_node_or_error)));
+
+#define TRY_GET_CHILD_NODE(name) TRY_GET_INTERNAL(name, parse_statement_or_expression(name##_tokens, ctx))
+#define TRY_GET_SUBEXPRESSION(name) TRY_GET_INTERNAL(name, parse_expression(name##_tokens))
 
 using LineTokens = std::vector<RaychelScript::Token>;
 #ifndef RAYCHELSCRIPT_NO_RANGES_HEADER
@@ -323,7 +326,9 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_number(const Token& number_token, bool is_negative, ParsingContext& ctx) noexcept;
 
-    [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
+
+    [[nodiscard]] static ParseExpressionResult
+    parse_statement_or_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {
         namespace TT = TokenType;
         using std::array;
@@ -341,7 +346,7 @@ namespace RaychelScript::Parser {
 #endif
 
         if (expression_tokens.empty()) {
-            Logger::error(handler.indent(), "parse_expression got empty token list!\n");
+            Logger::error(handler.indent(), "parse_statement_or_expression got empty token list!\n");
             return ParserErrorCode::no_input;
         }
 
@@ -350,7 +355,8 @@ namespace RaychelScript::Parser {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(), "Found parenthesised expression at ", expression_tokens.front().location);
 
-            return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())}, ctx);
+            return parse_expression(LineView{std::next(expression_tokens.begin()), std::prev(expression_tokens.end())});
+        }
         }
 
         //conditional header
@@ -527,11 +533,36 @@ namespace RaychelScript::Parser {
         return ParserErrorCode::invalid_construct;
     }
 
-    [[nodiscard]] static ParseExpressionResult
-    handle_assignment_expression(LineView lhs_tokens, LineView rhs_tokens, ParsingContext& ctx) noexcept
+    [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens) noexcept
     {
-        TRY_GET_NODE(lhs);
-        TRY_GET_NODE(rhs);
+        std::map<std::string, FunctionData> function_sink{};
+        std::vector<AST_Node> node_sink{};
+        ParsingContext dummy{function_sink};
+        dummy.scopes.push(Scope{ScopeType::global, node_sink});
+        auto node_or_error = parse_statement_or_expression(expression_tokens, dummy);
+
+        if (!function_sink.empty()) {
+            Logger::error(expression_tokens.at(0).location, ": Function declarations are not allowed in an expression!\n");
+            return ParserErrorCode::invalid_construct;
+        }
+        if (!node_sink.empty()) {
+            Logger::error(expression_tokens.front().location, ": Statements (if/loop) are not allowed in an expression!\n");
+            return ParserErrorCode::invalid_construct;
+        }
+        if (const auto* maybe_node = std::get_if<AST_Node>(&node_or_error); maybe_node) {
+            if (maybe_node->value_type() == ValueType::none) {
+                Logger::error(
+                    expression_tokens.front().location, ": Constructs returning 'none' are not allowed in an expression!\n");
+                return ParserErrorCode::invalid_construct;
+            }
+        }
+        return node_or_error;
+    }
+
+    [[nodiscard]] static ParseExpressionResult handle_assignment_expression(LineView lhs_tokens, LineView rhs_tokens) noexcept
+    {
+        TRY_GET_SUBEXPRESSION(lhs);
+        TRY_GET_SUBEXPRESSION(rhs);
 
         if (!lhs_node.is_lvalue()) {
             Logger::error("Trying to assign to non-value reference!\n");
@@ -552,8 +583,8 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(lhs);
-        TRY_GET_NODE(rhs);
+        TRY_GET_SUBEXPRESSION(lhs);
+        TRY_GET_SUBEXPRESSION(rhs);
 
         if (lhs_node.value_type() != ValueType::number) {
             Logger::error(
@@ -577,14 +608,14 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult handle_update_expression(
         LineView identifier_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(identifier);
+        TRY_GET_SUBEXPRESSION(identifier);
 
         if (identifier_node.type() != NodeType::variable_ref) {
             Logger::error("Left-hand side of operator-assign expression is not an identifier!\n");
             return ParserErrorCode::op_assign_lhs_not_identifier;
         }
 
-        TRY_GET_NODE(rhs);
+        TRY_GET_SUBEXPRESSION(rhs);
 
         if (rhs_node.value_type() != ValueType::number) {
             Logger::error(
@@ -597,7 +628,7 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult
     handle_unary_epression(LineView rhs_tokens, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(rhs);
+        TRY_GET_SUBEXPRESSION(rhs);
 
         if (rhs_node.value_type() != ValueType::number) {
             Logger::error("Operand of unary operator does not have 'number' type, has '", rhs_node.value_type(), "' instead!\n");
@@ -609,7 +640,7 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(condition);
+        TRY_GET_SUBEXPRESSION(condition);
 
         if (condition_node.value_type() != ValueType::boolean) {
             Logger::error(
@@ -655,8 +686,8 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult handle_relational_operator(
         LineView lhs_tokens, LineView rhs_tokens, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(lhs);
-        TRY_GET_NODE(rhs);
+        TRY_GET_SUBEXPRESSION(lhs);
+        TRY_GET_SUBEXPRESSION(rhs);
 
         if (lhs_node.value_type() != ValueType::number) {
             Logger::error(
@@ -674,12 +705,12 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::relational_op_rhs_not_number_type;
         }
 
-        return AST_Node{RelationalOperatorData{{}, std::move(lhs_node), std::move(rhs_node), op}};
+        return AST_Node{RelationalOperatorData{{}, lhs_node, rhs_node, op}};
     }
 
     [[nodiscard]] static ParseExpressionResult handle_loop_header(LineView condition_tokens, ParsingContext& ctx) noexcept
     {
-        TRY_GET_NODE(condition);
+        TRY_GET_SUBEXPRESSION(condition);
 
         if (condition_node.value_type() != ValueType::boolean) {
             Logger::error(
@@ -766,7 +797,7 @@ namespace RaychelScript::Parser {
             if (ec != ParserErrorCode::ok) {
                 return;
             }
-            auto top_node_or_error = parse_expression(tokens, ctx);
+            auto top_node_or_error = parse_statement_or_expression(tokens, ctx);
 
             if (const auto* error_code = std::get_if<ParserErrorCode>(&top_node_or_error); error_code) {
                 ec = *error_code;
