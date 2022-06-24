@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Implementation file for Assembler class
 * \date 2021-12-21
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 
 #include "Assembler/Assembler.h"
@@ -298,18 +298,26 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
+    assemble(const FunctionCallData& data, AssemblingContext& ctx) noexcept
+    {
+        (void)data;
+        (void)ctx;
+        return AssemblerErrorCode::not_implemented;
+    }
+
+    [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
+    assemble(const FunctionReturnData&, AssemblingContext&) noexcept
+    {
+        return AssemblerErrorCode::not_implemented;
+    }
+
+    [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
     assemble(const AST_Node& node, AssemblingContext& ctx) noexcept
     {
         std::variant<AssemblerErrorCode, Assembly::MemoryIndex> maybe_result{};
 
         apply_handler(node, NodeHandlers{[&](const auto& data) {
-                          auto memory_index_or_error = assemble(data, ctx);
-                          if (const auto* ec = std::get_if<AssemblerErrorCode>(&memory_index_or_error); ec) {
-                              maybe_result = *ec;
-                              return;
-                          }
-
-                          maybe_result = Raychel::get<Assembly::MemoryIndex>(std::move(memory_index_or_error));
+                          maybe_result = assemble(data, ctx);
                       }});
         return maybe_result;
     }
