@@ -38,10 +38,24 @@
 
 namespace RaychelScript::Parser {
 
+    enum class ScopeType {
+        global = 0,
+        conditional,
+        loop,
+        function,
+    };
+
+    struct Scope
+    {
+        ScopeType type{};
+        std::reference_wrapper<std::vector<AST_Node>> nodes;
+    };
+
     struct ParsingContext
     {
-        bool is_in_else_block{false};
-        std::stack<AST_Node, std::vector<AST_Node>> scopes{};
+        std::stack<Scope> scopes{};
+        std::stack<std::reference_wrapper<ConditionalConstructData>> conditionals{};
+        bool new_scope_started : 1 {false};
     };
 
 } //namespace RaychelScript::Parser

@@ -619,39 +619,37 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::conditional_construct_condition_not_boolean_type;
         }
 
-        ctx.scopes.emplace(ConditionalConstructData{{}, std::move(condition_node)});
-        ctx.is_in_else_block = false;
+        AST_Node node{ConditionalConstructData{{}, std::move(condition_node)}};
 
-        return ParserErrorCode::ok;
+        ctx.conditionals.push(node.to_ref<ConditionalConstructData>());
+        ctx.scopes.push({ScopeType::conditional, node.to_ref<ConditionalConstructData>().body});
+        ctx.new_scope_started = true;
+
+        return node;
     }
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_else(ParsingContext& ctx) noexcept
     {
-        if (ctx.scopes.empty() || ctx.scopes.top().type() != NodeType::conditional_construct) {
+        if (ctx.scopes.top().type != ScopeType::conditional) {
             Logger::error("'else' keyword can only appear after 'if' construct!\n");
             return ParserErrorCode::mismatched_else;
         }
 
-        ctx.is_in_else_block = true;
+        ctx.scopes.top() = Scope{ScopeType::conditional, ctx.conditionals.top().get().else_body};
+
         return ParserErrorCode::ok;
     }
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_footer(ParsingContext& ctx) noexcept
     {
-        if (ctx.scopes.empty()) {
-            Logger::error("Mismatched if/endif: too many footers!\n");
-            return ParserErrorCode::mismatched_conditional;
-        }
-
-        if (ctx.scopes.top().type() != NodeType::conditional_construct) {
+        if (ctx.scopes.top().type != ScopeType::conditional) {
             Logger::error("Mismatched header/footer type: should have 'conditional' type!\n");
             return ParserErrorCode::mismatched_header_footer_type;
         }
 
-        auto node = ctx.scopes.top();
+        ctx.conditionals.pop();
         ctx.scopes.pop();
-
-        return node;
+        return ParserErrorCode::ok;
     }
 
     [[nodiscard]] static ParseExpressionResult handle_relational_operator(
@@ -688,27 +686,23 @@ namespace RaychelScript::Parser {
                 "Condition of while loop does not have 'boolean' type, has type '", condition_node.value_type(), "' instead!\n");
             return ParserErrorCode::loop_condition_not_boolean_type;
         }
-        ctx.scopes.emplace(LoopData{{}, condition_node});
 
-        return ParserErrorCode::ok;
+        AST_Node node{LoopData{{}, std::move(condition_node)}};
+
+        ctx.scopes.push(Scope{ScopeType::loop, node.to_ref<LoopData>().body});
+        ctx.new_scope_started = true;
+
+        return node;
     }
 
     [[nodiscard]] static ParseExpressionResult handle_loop_footer(ParsingContext& ctx) noexcept
     {
-        if (ctx.scopes.empty()) {
-            Logger::error("Mismatched while/endwhile: too many footers!\n");
-            return ParserErrorCode::mismatched_loop;
-        }
-
-        if (ctx.scopes.top().type() != NodeType::loop) {
+        if (ctx.scopes.top().type != ScopeType::loop) {
             Logger::error("Mismatched header/footer type: should have 'loop' type!\n");
             return ParserErrorCode::mismatched_header_footer_type;
         }
-
-        auto node = ctx.scopes.top();
         ctx.scopes.pop();
-
-        return node;
+        return ParserErrorCode::ok;
     }
 
     [[nodiscard]] static ParseExpressionResult
@@ -766,6 +760,8 @@ namespace RaychelScript::Parser {
         ParsingContext ctx;
         ParserErrorCode ec{};
 
+        ctx.scopes.push(Scope{ScopeType::global, ast.nodes});
+
         std::for_each(source_tokens.begin(), source_tokens.end(), [&](const LineTokens& tokens) {
             if (ec != ParserErrorCode::ok) {
                 return;
@@ -776,16 +772,27 @@ namespace RaychelScript::Parser {
                 ec = *error_code;
                 return;
             }
-            push_node(Raychel::get<AST_Node>(std::move(top_node_or_error)), ast, ctx);
+
+            if (ctx.new_scope_started) {
+                auto top_scope = ctx.scopes.top();
+                RAYCHEL_ASSERT(top_scope.type != ScopeType::global);
+                ctx.scopes.pop();
+                ctx.scopes.top().nodes.get().push_back(Raychel::get<AST_Node>(std::move(top_node_or_error)));
+                ctx.scopes.push(top_scope);
+
+                ctx.new_scope_started = false;
+            } else {
+                ctx.scopes.top().nodes.get().push_back(Raychel::get<AST_Node>(std::move(top_node_or_error)));
+            }
         });
 
         if (ec != ParserErrorCode::ok) {
             return ec;
         }
 
-        if (!ctx.scopes.empty()) {
+        if (ctx.scopes.size() != 1U) {
             Logger::error("Mismatched header/footer constructs: too many headers!\n");
-            return ParserErrorCode::mismatched_conditional;
+            return ParserErrorCode::mismatched_header_footer_type;
         }
 
         return ast;
