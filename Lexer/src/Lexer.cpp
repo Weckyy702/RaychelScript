@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Implementation file for Lexing functions
 * \date 2021-12-04
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #include "Lexer/Lexer.h"
 #include "shared/Lexing/Alphabet.h"
@@ -37,27 +37,26 @@ namespace RaychelScript::Lexer {
     TokenType::TokenType parse_token(const std::string& token) noexcept
     {
         //if the token starts with a digit, it must be a number
-        if (is_number_char(token.front())) {
+        if (is_number_char(token.front()))
             return TokenType::number;
-        }
-        if (token == "let" || token == "var") {
+        if (token == "let" || token == "var")
             return TokenType::declaration;
-        }
-        if (token == "if") {
+        if (token == "if")
             return TokenType::conditional_header;
-        }
-        if (token == "endif") {
-            return TokenType::conditional_footer;
-        }
-        if (token == "while") {
-            return TokenType::loop_header;
-        }
-        if (token == "endwhile") {
-            return TokenType::loop_footer;
-        }
-        if(token == "else") {
+        if (token == "else")
             return TokenType::conditional_else;
-        }
+        if (token == "endif")
+            return TokenType::conditional_footer;
+        if (token == "while")
+            return TokenType::loop_header;
+        if (token == "endwhile")
+            return TokenType::loop_footer;
+        if (token == "fn")
+            return TokenType::function_header;
+        if (token == "return")
+            return TokenType::function_return;
+        if (token == "endfn")
+            return TokenType::function_footer;
         return TokenType::identifer;
     }
 
