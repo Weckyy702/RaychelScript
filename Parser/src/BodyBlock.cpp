@@ -310,17 +310,15 @@ namespace RaychelScript::Parser {
         }
     }
 
-    [[nodiscard]] static ParseExpressionResult
-    handle_assignment_expression(LineView lhs, LineView rhs, ParsingContext& ctx) noexcept;
+    [[nodiscard]] static ParseExpressionResult handle_assignment_expression(LineView lhs, LineView rhs) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
-    handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
-
-    [[nodiscard]] static ParseExpressionResult handle_update_expression(
-        LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept;
+    handle_math_op(LineView lhs, LineView rhs, ArithmeticExpressionData::Operation op) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
-    handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept;
+    handle_update_expression(LineView identifier_tokens, LineView rhs, ArithmeticExpressionData::Operation op) noexcept;
+
+    [[nodiscard]] static ParseExpressionResult handle_unary_epression(LineView rhs, UnaryExpressionData::Operation op) noexcept;
 
     [[nodiscard]] static ParseExpressionResult handle_conditional_header(LineView condition_tokens, ParsingContext& ctx) noexcept;
 
@@ -329,7 +327,7 @@ namespace RaychelScript::Parser {
     [[nodiscard]] static ParseExpressionResult handle_conditional_footer(ParsingContext& ctx) noexcept;
 
     [[nodiscard]] static ParseExpressionResult
-    handle_relational_operator(LineView lhs, LineView rhs, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept;
+    handle_relational_operator(LineView lhs, LineView rhs, RelationalOperatorData::Operation op) noexcept;
 
     [[nodiscard]] static ParseExpressionResult handle_loop_header(LineView condition, ParsingContext& ctx) noexcept;
 
@@ -406,21 +404,20 @@ namespace RaychelScript::Parser {
                 match_token_pattern(expression_tokens, array{TT::expression_, TT::equal, TT::equal, TT::expression_});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG("Found equals expression at ", matches.at(1).front().location);
-            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::equals, ctx);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::equals);
         }
 
         if (const auto matches =
                 match_token_pattern(expression_tokens, array{TT::expression_, TT::bang, TT::equal, TT::expression_});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG("Found not-equals expression at ", matches.at(1).front().location);
-            return handle_relational_operator(
-                matches.front(), matches.back(), RelationalOperatorData::Operation::not_equals, ctx);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::not_equals);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::left_angle, TT::expression_});
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG("Found less-than expression at ", matches.at(1).front().location);
-            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::less_than, ctx);
+            return handle_relational_operator(matches.front(), matches.back(), RelationalOperatorData::Operation::less_than);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::right_angle, TT::expression_});
@@ -436,7 +433,7 @@ namespace RaychelScript::Parser {
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found update expression at ", matches.front().front().location);
             return handle_update_expression(
-                matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type), ctx);
+                matches.front(), matches.back(), get_op_type_from_token_type(matches.at(1).front().type));
         }
 
         //Assignment expressions
@@ -444,7 +441,7 @@ namespace RaychelScript::Parser {
             !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found assignment expression at ", matches.at(1).front().location);
 
-            return handle_assignment_expression(matches.at(0), matches.at(2), ctx);
+            return handle_assignment_expression(matches.at(0), matches.at(2));
         }
 
         //Misc
@@ -461,21 +458,21 @@ namespace RaychelScript::Parser {
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::minus, TT::expression_}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(handler.indent(), "Found unary minus expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::minus, ctx);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::minus);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::plus, TT::expression_}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(), "Found unary factorial expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus, ctx);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::plus);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::expression_, TT::bang}); !matches.empty()) {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(), "Found unary factorial expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.front(), UnaryExpressionData::Operation::factorial, ctx);
+            return handle_unary_epression(matches.front(), UnaryExpressionData::Operation::factorial);
         }
 
         if (const auto matches = match_token_pattern(expression_tokens, array{TT::pipe, TT::expression_, TT::pipe});
@@ -483,7 +480,7 @@ namespace RaychelScript::Parser {
             RAYCHELSCRIPT_PARSER_DEBUG(
                 handler.indent(), "Found unary magnitude expression at ", matches.front().front().location);
 
-            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude, ctx);
+            return handle_unary_epression(matches.at(1), UnaryExpressionData::Operation::magnitude);
         }
 
         //Arithmetic operators
@@ -496,7 +493,7 @@ namespace RaychelScript::Parser {
             const auto lhs = LineView{expression_tokens.begin(), op_it};
             const auto rhs = LineView{std::next(op_it), expression_tokens.end()};
 
-            return handle_math_op(lhs, rhs, op, ctx);
+            return handle_math_op(lhs, rhs, op);
         }
 
         //Leaf nodes
@@ -593,7 +590,7 @@ namespace RaychelScript::Parser {
     }
 
     [[nodiscard]] static ParseExpressionResult
-    handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
+    handle_math_op(LineView lhs_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op) noexcept
     {
         TRY_GET_SUBEXPRESSION(lhs);
         TRY_GET_SUBEXPRESSION(rhs);
@@ -617,8 +614,8 @@ namespace RaychelScript::Parser {
         return AST_Node{ArithmeticExpressionData{{}, lhs_node, rhs_node, op}};
     }
 
-    [[nodiscard]] static ParseExpressionResult handle_update_expression(
-        LineView identifier_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op, ParsingContext& ctx) noexcept
+    [[nodiscard]] static ParseExpressionResult
+    handle_update_expression(LineView identifier_tokens, LineView rhs_tokens, ArithmeticExpressionData::Operation op) noexcept
     {
         TRY_GET_SUBEXPRESSION(identifier);
 
@@ -638,7 +635,7 @@ namespace RaychelScript::Parser {
     }
 
     [[nodiscard]] static ParseExpressionResult
-    handle_unary_epression(LineView rhs_tokens, UnaryExpressionData::Operation op, ParsingContext& ctx) noexcept
+    handle_unary_epression(LineView rhs_tokens, UnaryExpressionData::Operation op) noexcept
     {
         TRY_GET_SUBEXPRESSION(rhs);
 
@@ -695,8 +692,8 @@ namespace RaychelScript::Parser {
         return ParserErrorCode::ok;
     }
 
-    [[nodiscard]] static ParseExpressionResult handle_relational_operator(
-        LineView lhs_tokens, LineView rhs_tokens, RelationalOperatorData::Operation op, ParsingContext& ctx) noexcept
+    [[nodiscard]] static ParseExpressionResult
+    handle_relational_operator(LineView lhs_tokens, LineView rhs_tokens, RelationalOperatorData::Operation op) noexcept
     {
         TRY_GET_SUBEXPRESSION(lhs);
         TRY_GET_SUBEXPRESSION(rhs);
