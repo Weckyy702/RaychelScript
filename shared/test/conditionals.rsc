@@ -1,9 +1,10 @@
 [[config]]
 name conditionals
-input a b
+input _a b
 output c
 
 [[body]]
+var a = _a
 if a < 0
     a *= -1
 else
