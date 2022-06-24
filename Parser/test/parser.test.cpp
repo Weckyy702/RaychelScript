@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Implementation file for parser testing executable
 * \date 2021-12-04
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #include "Parser/ParserPipe.h"
 
@@ -104,11 +104,24 @@ If you wish to exit this mode, type "exit")",
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
 
-    echo_AST_from_stdin();
+    if (argc < 2)
+        echo_AST_from_stdin();
+    else {
+        std::ifstream input_stream{argv[1]};
+        const auto AST_or_error = RaychelScript::Parser::parse(input_stream);
 
+        if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&AST_or_error); ec) {
+            Logger::log("<ERROR>: ", *ec, '\n');
+            return 1;
+        }
+
+        const auto ast = Raychel::get<RaychelScript::AST>(AST_or_error);
+
+        pretty_print_ast(ast);
+    }
     return 0;
 }
