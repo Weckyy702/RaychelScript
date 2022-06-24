@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for NodeData structs
 * \date 2021-10-01
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_NODE_DATA_H
 #define RAYCHELSCRIPT_NODE_DATA_H
@@ -39,11 +39,11 @@ namespace RaychelScript {
 
     /**
     * \brief Base class for all types satisfying the NodeData concept
-    * 
+    *
     * \note Inheriting from this class is not required but encouraged
-    * 
+    *
     * \refitem NodeData
-    * 
+    *
     * \tparam _type Type of the node
     * \tparam _is_lvalue If the node is an lvalue (something that is assignable)
     */
@@ -85,20 +85,20 @@ namespace RaychelScript {
         Operation operation{};
     };
 
-    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::none, true, true>
+    struct VariableDeclarationData : NodeDataBase<NodeType::variable_decl, ValueType::variable_ref, true, true>
     {
-        std::string name;
-        bool is_const;
+        std::string name{};
+        bool is_const{};
     };
 
     struct VariableReferenceData : NodeDataBase<NodeType::variable_ref, ValueType::number, true>
     {
-        std::string name;
+        std::string name{};
     };
 
     struct NumericConstantData : NodeDataBase<NodeType::numeric_constant, ValueType::number, false>
     {
-        long double value;
+        long double value{};
     };
 
     struct UnaryExpressionData : NodeDataBase<NodeType::unary_operator, ValueType::number>
@@ -140,6 +140,17 @@ namespace RaychelScript {
     {
         AST_Node condition_node;
         std::vector<AST_Node> body{};
+    };
+
+    struct FunctionCallData : NodeDataBase<NodeType::function_call, ValueType::number, false, true>
+    {
+        std::string mangled_callee_name;
+        std::vector<AST_Node> argument_expressions;
+    };
+
+    struct FunctionReturnData : NodeDataBase<NodeType::function_return, ValueType::none, false, true>
+    {
+        AST_Node return_value;
     };
 
 } // namespace RaychelScript

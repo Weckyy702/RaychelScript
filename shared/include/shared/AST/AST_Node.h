@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header class for AST_Node interface and child classes
 * \date 2021-10-01
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_AST_NODE_H
 #define RAYCHELSCRIPT_AST_NODE_H
@@ -33,6 +33,7 @@
 #include <optional>
 #include <type_traits>
 
+#include "RaychelCore/ClassMacros.h"
 #include "RaychelCore/Raychel_assert.h"
 
 #include "NodeType.h"
@@ -63,10 +64,10 @@ namespace RaychelScript {
 
     /**
     * brief Class for representing parsed AST nodes
-    * 
+    *
     * This class represents a single Node in the AST. All the actual AST structure is handled by the NodeData held inside this object
     * An AST_Node can hold a value of any type that satisfies NodeData. It also holds the type of the data it contains
-    * 
+    *
     */
     class AST_Node
     {
@@ -90,6 +91,13 @@ namespace RaychelScript {
         {
             RAYCHEL_ASSERT(type_ == T::type);
             return std::any_cast<T>(data_);
+        }
+
+        template <NodeData T>
+        [[nodiscard]] T& to_ref() noexcept
+        {
+            RAYCHEL_ASSERT(type_ == T::type);
+            return std::any_cast<T&>(data_);
         }
 
         [[nodiscard]] ValueType value_type() const noexcept

@@ -1,11 +1,11 @@
 /**
-* \file NodeType.h
+* \file FunctionData.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for NodeType enum
-* \date 2021-10-01
+* \brief Header file for FunctionData class
+* \date 2022-06-17
 *
 * MIT License
-* Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
+* Copyright (c) [2022] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
 * in the Software without restriction, including without limitation the rights
@@ -25,26 +25,40 @@
 * SOFTWARE.
 *
 */
-#ifndef RAYCHELSCRIPT_NODE_TYPE_H
-#define RAYCHELSCRIPT_NODE_TYPE_H
+#ifndef RAYCHELSCRIPT_FUNCTION_DATA_H
+#define RAYCHELSCRIPT_FUNCTION_DATA_H
+
+#include "AST_Node.h"
+
+#include <set>
+#include <string>
 
 namespace RaychelScript {
-    enum class NodeType {
-        assignment,
-        variable_decl,
-        variable_ref,
-        arithmetic_operator,
-        update_expression,
-        numeric_constant,
-        unary_operator,
-        conditional_construct,
-        relational_operator,
-        inline_state_push,
-        inline_state_pop,
-        loop,
-        function_call,
-        function_return,
-    };
-} // namespace RaychelScript
 
-#endif //!RAYCHELSCRIPT_NODE_TYPE_H
+    struct ArgumentData
+    {
+        std::string name;
+        std::size_t index_in_argument_list{};
+
+        auto operator<=>(const ArgumentData& other) const noexcept = default;
+        bool operator<(const std::string& other_name) const noexcept
+        {
+            return name < other_name;
+        }
+    };
+
+    inline bool operator<(const std::string& a, const ArgumentData& b) noexcept
+    {
+        return b < a;
+    }
+
+    struct FunctionData
+    {
+        std::string mangled_name;
+        std::set<ArgumentData, std::less<>> arguments;
+        std::vector<AST_Node> body;
+    };
+
+} //namespace RaychelScript
+
+#endif //!RAYCHELSCRIPT_FUNCTION_DATA_H
