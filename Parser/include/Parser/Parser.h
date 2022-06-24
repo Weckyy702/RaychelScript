@@ -38,8 +38,6 @@
     #define RAYCHELSCRIPT_PARSER_API
 #endif
 
-#define RAYCHELSCRIPT_PARSER_DEPRECATED [[deprecated("Please consider using the pipes API")]]
-
 #include <istream>
 #include <string_view>
 #include <variant>
@@ -55,7 +53,7 @@ namespace RaychelScript::Parser {
 
     RAYCHELSCRIPT_PARSER_API ParseResult parse(const std::vector<std::vector<Token>>& source_tokens) noexcept;
 
-    RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(std::istream& source_stream) noexcept
+    inline ParseResult parse(std::istream& source_stream) noexcept
     {
         const auto tokens_or_error = Lexer::lex(source_stream);
         const auto* tokens = std::get_if<Lexer::SourceTokens>(&tokens_or_error);
@@ -65,24 +63,11 @@ namespace RaychelScript::Parser {
         return parse(*tokens);
     }
 
-#if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
-    #pragma warning(push)
-    #pragma warning(disable : 4996)
-#endif
-    RAYCHELSCRIPT_PARSER_DEPRECATED inline ParseResult parse(const std::string& source_text) noexcept
+    inline ParseResult parse(const std::string& source_text) noexcept
     {
         std::stringstream stream{source_text};
         return parse(stream);
     }
-
-#if RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_GCC
-    #pragma GCC diagnostic pop
-#elif RAYCHEL_ACTIVE_COMPILER == RAYCHEL_COMPILER_MSVC
-    #pragma warning(pop)
-#endif
 
     /**
     * \brief Parse the source tokens without checking for a valid config block
