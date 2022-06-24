@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for ValueType enum
 * \date 2021-11-30
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_VALUE_TYPE_H
 #define RAYCHELSCRIPT_VALUE_TYPE_H
@@ -36,7 +36,7 @@ namespace RaychelScript {
     /**
     * \brief Enum for representing expression types
     */
-    enum class ValueType { none, boolean, number };
+    enum class ValueType { none, boolean, number, variable_ref };
 
     [[nodiscard]] inline std::string_view value_type_to_string(ValueType type) noexcept
     {
@@ -49,6 +49,8 @@ namespace RaychelScript {
                 return "boolean"sv;
             case ValueType::number:
                 return "number"sv;
+            case ValueType::variable_ref:
+                return "assignable variable reference"sv;
         }
         return "<unknown type>"sv;
     }
