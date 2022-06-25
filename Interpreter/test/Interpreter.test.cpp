@@ -53,13 +53,10 @@ try_parse_argument(char const* const* const argv, int argument_index) noexcept
     return std::make_pair(std::move(argument_name), value);
 }
 
-int main(int /*argc*/, char** /*argv*/)
+int main(int argc, char** argv)
 {
     using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-
-    int argc = 6;
-    const char* argv[]{"Interpreter_test", "../../../shared/test/functions.rsc", "a", "-2", "b", "8"};
 
     if (argc < 2) {
         std::cout << "Usage: " << argv[0] << " <script_file> <arg1_name> <arg1_value> ... <argN_name> <argN_value>\n";
