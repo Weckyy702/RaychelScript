@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto state_or_error = data_or_error | RaychelScript::Pipes::Execute<double>{args};
+    const auto state_or_error = data_or_error | RaychelScript::Pipes::Execute{args};
 
     if (log_if_error(state_or_error)) {
         return 1;

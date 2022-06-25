@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for VMState class
 * \date 2021-12-27
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_VM_STATE_H
 #define RAYCHELSCRIPT_VM_STATE_H
@@ -41,7 +41,6 @@
 
 namespace RaychelScript::VM {
 
-    template <std::floating_point T>
     struct VMState
     {
         using InstructionBuffer = std::vector<Assembly::Instruction>;
@@ -54,7 +53,7 @@ namespace RaychelScript::VM {
         InstructionBuffer instructions;
         InstructionPointer instruction_pointer;
 
-        std::array<T, std::numeric_limits<std::uint8_t>::max()> memory{};
+        std::array<double, std::numeric_limits<std::uint8_t>::max()> memory{};
         std::size_t memory_size;
 
         VMErrorCode error_code{VMErrorCode::ok};
@@ -65,14 +64,13 @@ namespace RaychelScript::VM {
         bool check_fp_flag{false};
     };
 
-    template <std::floating_point T>
-    std::vector<T> get_output_values(const VMState<T>& state, const VM::VMData& data) noexcept
+    std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept
     {
         if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
             return {};
         }
 
-        std::vector<T> result;
+        std::vector<double> result;
         result.reserve(data.config_block.output_identifiers.size());
         for ([[maybe_unused]] const auto& [_, address] : data.config_block.output_identifiers) {
             result.emplace_back(state.memory.at(address.value()));
@@ -81,14 +79,13 @@ namespace RaychelScript::VM {
         return result;
     }
 
-    template <std::floating_point T>
-    std::vector<std::pair<std::string, T>> get_output_variables(const VMState<T>& state, const VM::VMData& data) noexcept
+    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept
     {
         if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
             return {};
         }
 
-        std::vector<std::pair<std::string, T>> result;
+        std::vector<std::pair<std::string, double>> result;
         result.reserve(data.config_block.output_identifiers.size());
         for (const auto& [name, address] : data.config_block.output_identifiers) {
             result.emplace_back(name, state.memory[address.value()]);
