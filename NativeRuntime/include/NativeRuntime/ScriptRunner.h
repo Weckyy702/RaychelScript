@@ -30,8 +30,8 @@
 
 #include "RuntimeErrorCode.h"
 
-#include "RaychelCore/Raychel_assert.h"
 #include "RaychelCore/ClassMacros.h"
+#include "RaychelCore/Raychel_assert.h"
 
 #include <span>
 

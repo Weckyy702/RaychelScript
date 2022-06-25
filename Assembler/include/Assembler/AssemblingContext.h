@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for AssemblingContext class
 * \date 2021-12-21
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -56,7 +56,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Return if the name has a memory index assigned to it
-        * 
+        *
         * \param name name of a variable
         * \return true The name has a memory index associated with it
         * \return false The name does not have a memory index associated with it
@@ -68,7 +68,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Return if the context has at least one scope on the stack
-        * 
+        *
         * \return true The context has at least one scope on the stack
         * \return false The context has no scopes on the stack
         */
@@ -79,7 +79,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Return if the index points to an intermediate location
-        * 
+        *
         * \param index Index of a memory location
         * \return true The index points to an intermediate value
         * \return false The index does not point to an intermediate value
@@ -93,7 +93,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Return the memory index associated with a name
-        * 
+        *
         * \param name Name of a variable
         * \return Assembly::MemoryIndex memory index for the name
         */
@@ -137,7 +137,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Add a new instruction to the buffer and return its index
-        * 
+        *
         * \tparam code op code of the instruction
         * \tparam Ts Constructor arguments for the instruction. Must match the number expected for the op code
         */
@@ -170,7 +170,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Allocate a new variable and return its memory index
-        * 
+        *
         * \param name Name of the variable
         */
         [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
@@ -184,7 +184,7 @@ namespace RaychelScript::Assembler {
 
         /**
         * \brief Allocate a new immediate value and return its memory index
-        * 
+        *
         * \param value immediate value
         */
         [[nodiscard]] auto allocate_immediate(double value) noexcept
@@ -232,7 +232,7 @@ namespace RaychelScript::Assembler {
     private:
         /**
         * \brief Return the memory index for the given value. If none is assigned yet, allocate a new one
-        * 
+        *
         * \tparam Container Type of the container
         * \tparam T value type of the container
         * \param container container to search in
