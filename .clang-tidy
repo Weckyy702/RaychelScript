@@ -10,6 +10,7 @@ Checks: " *,
           -altera-id-dependent-backward-branch,
           -altera-unroll-loops,
           -google-readability-todo,
+          -google-readability-braces-around-statements,
           -llvm-header-guard,
           -altera-struct-pack-align,
           -fuchsia-overloaded-operator,
@@ -18,12 +19,13 @@ Checks: " *,
           -abseil-string-find-str-contains,
           -bugprone-exception-escape,
           -fuchsia-trailing-return,
-          -readability-static-accessed-through-instance
+          -readability-static-accessed-through-instance,
+          -hicpp-braces-around-statements
 "
 
 CheckOptions:
-  - key:             misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
-    value:           '1'
+  - key:            misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value:          '1'
   - key:            readability-identifier-length.MinimumVariableNameLength
     value:          2
   - key:            readability-identifier-length.MinimumParameterNameLength
@@ -32,3 +34,5 @@ CheckOptions:
     value:          'c|n|f'
   - key:            readability-identifier-length.IgnoredLoopCounterNames
     value:          'c|i|j|k|n'
+  - key:            readability-braces-around-statements.ShortStatementLines
+    value:          2
