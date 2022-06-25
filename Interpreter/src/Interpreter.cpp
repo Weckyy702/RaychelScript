@@ -39,7 +39,7 @@
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
-#define RAYCHELSCRIPT_INTERPRETER_SILENT 0
+#define RAYCHELSCRIPT_INTERPRETER_SILENT 1
 
 #define RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(name)                                                                 \
     [[nodiscard]] InterpreterErrorCode handle_##name(State& state, const AST_Node& node) noexcept
@@ -220,13 +220,13 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
-    void push_scope(State& state, bool scope_inherits_from_parent, std::string_view name) noexcept
+    void push_scope(State& state, bool scope_inherits_from_parent, [[maybe_unused]] std::string_view name) noexcept
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("push_scope(): ", name, '\n');
         state.scopes.push_back(State::Scope{scope_inherits_from_parent});
     }
 
-    InterpreterErrorCode pop_scope(State& state, const std::string& name) noexcept
+    InterpreterErrorCode pop_scope(State& state, [[maybe_unused]] const std::string& name) noexcept
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_scope(): ", name, '\n');
 
