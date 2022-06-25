@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for Interpreter pipe API
 * \date 2021-12-04
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_INTERPRETER_PIPE_H
 #define RAYCHELSCRIPT_INTERPRETER_PIPE_H
@@ -36,25 +36,22 @@
 
 namespace RaychelScript::Pipes {
 
-    template <std::floating_point T = double>
     class Interpret
     {
     public:
-        explicit Interpret(const Interpreter::ParameterMap<T>& parameters) : parameters_{parameters}
+        explicit Interpret(std::map<std::string, double> parameters) : parameters_{std::move(parameters)}
         {}
 
-        Interpreter::ExecutionResult<T> operator()(const AST& ast) const noexcept
+        Interpreter::ExecutionResult operator()(const AST& ast) const noexcept
         {
             return Interpreter::interpret(ast, parameters_);
         }
 
     private:
-        Interpreter::ParameterMap<T> parameters_;
+        std::map<std::string, double> parameters_;
     };
 
-    template <std::floating_point T>
-    PipeResult<Interpreter::InterpreterState<ConstantDescriptor<T>, VariableDescriptor<T>>>
-    operator|(const PipeResult<AST>& input, const Interpret<T>& interpreter) noexcept
+    PipeResult<Interpreter::State> operator|(const PipeResult<AST>& input, const Interpret& interpreter) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         return interpreter(input.value());

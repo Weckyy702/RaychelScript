@@ -15,13 +15,12 @@ set(RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR
 )
 
 add_library(RaychelScriptInterpreter SHARED
-    "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/Concepts.h"
     "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/Interpreter.h"
     "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterErrorCode.h"
     "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterPipe.h"
     "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/InterpreterState.h"
     "${RAYCHELSCRIPT_INTERPRETER_INCLUDE_DIR}/StateFlags.h"
-    
+
     "src/Interpreter.cpp"
 )
 

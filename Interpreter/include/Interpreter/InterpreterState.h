@@ -1,9 +1,9 @@
 /**
-* \file InterpreterState.h
+* \file State.h
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for InterpreterState class
+* \brief Header file for State class
 * \date 2021-11-16
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,56 +23,63 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_INTERPRETER_STATE_H
 #define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
-#include <stack>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "Concepts.h"
 #include "StateFlags.h"
+
+namespace RaychelScript {
+    struct AST;
+} //namespace RaychelScript
 
 namespace RaychelScript::Interpreter {
 
-    template <Descriptor ConstantT, Descriptor VariableT>
-    struct InterpreterState
+    namespace details {
+        struct ValueData
+        {
+            std::size_t index_in_scope{};
+            std::size_t index_in_scope_chain{};
+            bool is_constant;
+        };
+    } // namespace details
+
+    struct State
     {
-
-        static_assert(
-            std::is_same_v<typename ConstantT::value_type, typename VariableT::value_type>,
-            "Constant value type and descriptor value type need to be the same!");
-
-        using RegisterType = typename ConstantT::value_type;
-        using ConstantContainer = std::vector<ConstantT>;
-        using VariableContainer = std::vector<VariableT>;
-        using DescriptorTable = std::unordered_map<std::string, DescriptorID>;
+        using DescriptorTable = std::unordered_map<std::string, details::ValueData>;
 
         struct Registers
         {
-            RegisterType a{}, b{};
-            RegisterType result{};
+            double a{}, b{};
+            double result{};
 
             StateFlags flags{StateFlags::none};
         };
 
-        struct Snapshot
+        struct Scope
         {
-            std::size_t end_of_outer_scope_constants;
-            std::size_t end_of_outer_scope_variables;
+            bool inherits_from_parent_scope;
+
+            std::vector<std::optional<double>> constants{};
+            std::vector<double> variables{};
+            DescriptorTable descriptor_table{};
         };
 
-        ConstantContainer constants;
-        VariableContainer variables;
-        Registers registers;
+        const AST& ast;
 
-        DescriptorTable _descriptor_table;
-        DescriptorID _current_descriptor;
-        std::stack<Snapshot, std::vector<Snapshot>> _stack_snapshots;
+        Registers registers{};
+        std::vector<Scope> scopes{};
+
+        std::optional<details::ValueData> _current_descriptor{};
         bool _load_references{false};
+
+        std::size_t indent{};
     };
 } //namespace RaychelScript::Interpreter
 
