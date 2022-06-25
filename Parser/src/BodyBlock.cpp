@@ -639,7 +639,7 @@ namespace RaychelScript::Parser {
         auto node_or_error = parse_statement_or_expression(expression_tokens, dummy);
 
         if (!function_sink.empty()) {
-            Logger::error(expression_tokens.at(0).location, ": Function declarations are not allowed in an expression!\n");
+            Logger::error(expression_tokens.front().location, ": Function declarations are not allowed in an expression!\n");
             return ParserErrorCode::invalid_construct;
         }
         if (!node_sink.empty()) {
@@ -978,7 +978,7 @@ namespace RaychelScript::Parser {
     handle_function_call(const std::string& raw_name, LineView argument_tokens, ParsingContext& /*ctx*/) noexcept
     {
         auto argument_nodes_or_error = parse_supplied_argument_list(argument_tokens);
-        if (const auto* ec = std::get_if<ParserErrorCode>(&argument_nodes_or_error)) {
+        if (const auto* ec = std::get_if<ParserErrorCode>(&argument_nodes_or_error); ec != nullptr) {
             Logger::error("Invalid arguments to function call!\n");
             return ParserErrorCode::invalid_function_argument_list;
         }
