@@ -8,7 +8,7 @@ This language is not going to be the new JS and it is not intended to be. This i
 
 The syntax is deliberately simple and focused on mathematical operations. It is intended to be easy to read and easy to parse.
 My good friend [plexx-dev](https://github.com/plexx-dev) has published an awesome VSCode extension for RSC syntax highlighting. [Check it out!](https://github.com/plexx-dev/rsc-syntax-highlighting)
-See the [expamples](#examples) for syntax examples.
+See the [examples](#interrobang-examples) for syntax examples.
 
 ## Features
 
@@ -25,7 +25,7 @@ This languages intended purpose is as a scripting language for use in my engine 
 ### Compiler support
 
 - I have tested GCC 11.1.0 and Clang 14 on linux 5.16 and MSVC on Windows 10.
-- ***I am primarily on a linux system, so changes that break Windows compatibility will likely go unnoticed. If you encounter build errors on windows, please [file a bug report](#i-found-a-bug-skull)***
+- ***I am primarily on a linux system, so changes that break Windows compatibility will likely go unnoticed. If you encounter build errors on windows, please [file a bug report](#skull-i-found-a-bug)***
 
 ### GNU/Linux
 
