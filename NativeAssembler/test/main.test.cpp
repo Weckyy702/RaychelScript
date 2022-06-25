@@ -13,7 +13,7 @@ int main(int argc, char** argv)
         Logger::error("Usage: ", argv[0], " <INPUT_FILE> <OUTPUT_FILE>\n");
         return 1;
     }
-    using namespace RaychelScript::Pipes;
+    using namespace RaychelScript::Pipes; //NOLINT(google-build-using-namespace)
 
     const auto data_or_error = Lex{lex_file, argv[1]} | Parse{} | Assemble{};
     if (log_if_error(data_or_error)) {

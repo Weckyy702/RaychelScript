@@ -64,36 +64,9 @@ namespace RaychelScript::VM {
         bool check_fp_flag{false};
     };
 
-    std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept
-    {
-        if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
-            return {};
-        }
+    std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept;
 
-        std::vector<double> result;
-        result.reserve(data.config_block.output_identifiers.size());
-        for ([[maybe_unused]] const auto& [_, address] : data.config_block.output_identifiers) {
-            result.emplace_back(state.memory.at(address.value()));
-        }
-
-        return result;
-    }
-
-    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept
-    {
-        if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
-            return {};
-        }
-
-        std::vector<std::pair<std::string, double>> result;
-        result.reserve(data.config_block.output_identifiers.size());
-        for (const auto& [name, address] : data.config_block.output_identifiers) {
-            result.emplace_back(name, state.memory[address.value()]);
-        }
-
-        return result;
-    }
-
+    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept;
 } //namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_STATE_H

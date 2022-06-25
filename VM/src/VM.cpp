@@ -32,11 +32,11 @@
 
 #include "RaychelMath/equivalent.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cfenv>
 #include <cmath>
 #include <variant>
-#include <algorithm>
 
 #define RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(code)                                                                        \
     static void handle_##code(VMState& state, const auto& instruction) noexcept

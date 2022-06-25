@@ -252,11 +252,11 @@ raychelscript_entry:
 
         static auto write_boilerplate_end(X86_64_Tag tag, const VM::VMData& data, NativeAssemblerState& state) noexcept
         {
-            std::size_t i{0};
+            std::size_t output_index{0};
             for (const auto& [_, address] : data.config_block.output_identifiers) {
                 TRY_WRITE("mov rax, " << memory_index_to_native(tag, address.value()));
-                TRY_WRITE("mov qword[rsi+" << i << "], rax");
-                i += 8;
+                TRY_WRITE("mov qword[rsi+" << output_index << "], rax");
+                output_index += 8;
             }
             TRY_WRITE("add rsp, " << static_cast<std::uint32_t>(data.num_memory_locations - 1) * 8);
             TRY_WRITE("pop r12");

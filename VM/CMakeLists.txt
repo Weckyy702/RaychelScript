@@ -23,6 +23,7 @@ add_library(RaychelScriptVM SHARED
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMPipe.h"
 
     "src/VM.cpp"
+    "src/VMState.cpp"
 )
 
 target_include_directories(RaychelScriptVM PUBLIC

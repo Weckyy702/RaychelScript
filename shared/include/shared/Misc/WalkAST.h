@@ -39,7 +39,7 @@ namespace RaychelScript {
     namespace details {
         template <typename T>
         inline const std::function null_handler = [](const T&) {};
-    }
+    } // namespace details
 
     struct NodeHandlers
     {

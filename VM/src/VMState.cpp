@@ -1,8 +1,8 @@
 /**
-* \file FunctionData.h
+* \file VMState.cpp
 * \author Weckyy702 (weckyy702@gmail.com)
-* \brief Header file for FunctionData class
-* \date 2022-06-17
+* \brief Implementation file for VMState class
+* \date 2022-06-25
 *
 * MIT License
 * Copyright (c) [2022] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
@@ -25,41 +25,38 @@
 * SOFTWARE.
 *
 */
-#ifndef RAYCHELSCRIPT_FUNCTION_DATA_H
-#define RAYCHELSCRIPT_FUNCTION_DATA_H
 
-#include "AST_Node.h"
+#include "VM/VMState.h"
 
-#include <set>
-#include <string>
-#include <vector>
-
-namespace RaychelScript {
-
-    struct ArgumentData
+namespace RaychelScript::VM {
+    std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept
     {
-        std::string name;
-        std::size_t index_in_argument_list{};
-
-        auto operator<=>(const ArgumentData& other) const noexcept = default;
-        bool operator<(const std::string& other_name) const noexcept
-        {
-            return name < other_name;
+        if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
+            return {};
         }
-    };
 
-    inline bool operator<(const std::string& a, const ArgumentData& b) noexcept
-    {
-        return b < a;
+        std::vector<double> result;
+        result.reserve(data.config_block.output_identifiers.size());
+        for ([[maybe_unused]] const auto& [_, address] : data.config_block.output_identifiers) {
+            result.emplace_back(state.memory.at(address.value()));
+        }
+
+        return result;
     }
 
-    struct FunctionData
+    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept
     {
-        std::string mangled_name;
-        std::set<ArgumentData, std::less<>> arguments;
-        std::vector<AST_Node> body;
-    };
+        if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
+            return {};
+        }
 
-} //namespace RaychelScript
+        std::vector<std::pair<std::string, double>> result;
+        result.reserve(data.config_block.output_identifiers.size());
+        for (const auto& [name, address] : data.config_block.output_identifiers) {
+            result.emplace_back(name, state.memory.at(address.value()));
+        }
 
-#endif //!RAYCHELSCRIPT_FUNCTION_DATA_H
+        return result;
+    }
+
+} //namespace RaychelScript::VM

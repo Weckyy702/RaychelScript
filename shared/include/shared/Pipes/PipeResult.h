@@ -132,6 +132,7 @@ namespace RaychelScript::Pipes {
                 : type_{_error_type_for<E>::value}, int_value_{static_cast<std::uintmax_t>(value)}
             {}
 
+            // clang-format off
             template <typename E>
             requires std::is_enum_v<E>
             ErrorContainer& operator=(E value) noexcept
@@ -140,6 +141,7 @@ namespace RaychelScript::Pipes {
                 int_value_ = static_cast<std::uintmax_t>(value);
                 return *this;
             }
+            // clang-format on
 
             template <typename E>
             requires std::is_enum_v<E>

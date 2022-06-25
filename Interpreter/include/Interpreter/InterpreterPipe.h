@@ -51,7 +51,7 @@ namespace RaychelScript::Pipes {
         std::map<std::string, double> parameters_;
     };
 
-    PipeResult<Interpreter::State> operator|(const PipeResult<AST>& input, const Interpret& interpreter) noexcept
+    inline PipeResult<Interpreter::State> operator|(const PipeResult<AST>& input, const Interpret& interpreter) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         return interpreter(input.value());

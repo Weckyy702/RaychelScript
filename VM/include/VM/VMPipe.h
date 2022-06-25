@@ -52,7 +52,8 @@ namespace RaychelScript::Pipes {
         std::vector<double> args_;
     };
 
-    PipeResult<std::pair<VM::VMData, VM::VMState>> operator|(const PipeResult<VM::VMData>& input, const Execute& vm) noexcept
+    inline PipeResult<std::pair<VM::VMData, VM::VMState>>
+    operator|(const PipeResult<VM::VMData>& input, const Execute& vm) noexcept
     {
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
         const auto state_or_error = vm(input.value());

@@ -306,7 +306,7 @@ namespace RaychelScript::Assembler {
     }
 
     [[nodiscard]] static std::variant<AssemblerErrorCode, Assembly::MemoryIndex>
-    assemble(const FunctionReturnData&, AssemblingContext&) noexcept
+    assemble(const FunctionReturnData& /*data*/, AssemblingContext& /*ctx*/) noexcept
     {
         return AssemblerErrorCode::not_implemented;
     }
@@ -316,9 +316,7 @@ namespace RaychelScript::Assembler {
     {
         std::variant<AssemblerErrorCode, Assembly::MemoryIndex> maybe_result{};
 
-        apply_handler(node, NodeHandlers{[&](const auto& data) {
-                          maybe_result = assemble(data, ctx);
-                      }});
+        apply_handler(node, NodeHandlers{[&](const auto& data) { maybe_result = assemble(data, ctx); }});
         return maybe_result;
     }
 

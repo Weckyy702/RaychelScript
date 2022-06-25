@@ -927,7 +927,7 @@ namespace RaychelScript::Parser {
             return ParserErrorCode::simple_function_value_not_number_type;
         }
 
-        where->second.body.push_back(AST_Node{FunctionReturnData{{}, std::move(value_node)}});
+        where->second.body.emplace_back(AST_Node{FunctionReturnData{{}, std::move(value_node)}});
         return ParserErrorCode::ok;
     }
 

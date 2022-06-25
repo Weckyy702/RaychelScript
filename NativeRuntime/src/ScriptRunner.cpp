@@ -29,6 +29,7 @@
 
 #include <cstdint>
 
+//NOLINTBEGIN(bugprone-suspicious-include)
 #if RAYCHEL_ACTIVE_OS == RAYCHEL_OS_LINUX
     #if INTPTR_MAX == INT64_MAX
         #include "Linux64.cpp"
@@ -40,3 +41,4 @@
 #else
     #error "Non-linux OS is not (yet) supported!"
 #endif
+//NOLINTEND(bugprone-suspicious-include)

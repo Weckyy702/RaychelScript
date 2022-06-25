@@ -39,7 +39,7 @@ namespace RaychelScript::Runtime {
 
     class ScriptRunner
     {
-        typedef void (*EntryPoint)(double const* const input_vector, double* const output_vector);
+        using EntryPoint = void (*)(double const* const input_vector, double* const output_vector);
 
         template <std::uint32_t NumOutputs>
         struct Result
@@ -57,12 +57,12 @@ namespace RaychelScript::Runtime {
         RAYCHEL_MAKE_NONCOPY(ScriptRunner)
         RAYCHEL_MAKE_DEFAULT_MOVE(ScriptRunner)
 
-        RuntimeErrorCode get_initialization_status() const noexcept
+        [[nodiscard]] RuntimeErrorCode get_initialization_status() const noexcept
         {
             return initialization_error_code_;
         }
 
-        bool initialized() const noexcept
+        [[nodiscard]] bool initialized() const noexcept
         {
             return get_initialization_status() == RuntimeErrorCode::ok;
         }
