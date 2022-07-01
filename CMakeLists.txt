@@ -48,6 +48,37 @@ if(${RAYCHELSCRIPT_ENABLE_UBSAN})
     message(STATUS "Enabled UBSAN instrumentation")
 endif()
 
+if(${MSVC})
+    set(RAYCHELSCRIPT_COMPILE_FLAGS
+        /W4
+        /WX
+    )
+else()
+    set(RAYCHELSCRIPT_COMPILE_FLAGS
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wpedantic
+        -Wconversion
+        -Werror
+    )
+    if(${RAYCHELSCRIPT_ENABLE_ASAN})
+        list(APPEND RAYCHELSCRIPT_COMPILE_FLAGS -fsanitize=address)
+    endif()
+    if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+        list(APPEND RAYCHELSCRIPT_COMPILE_FLAGS -fsanitize=undefined)
+    endif()
+endif()
+
+set(RAYCHELSCRIPT_LINK_FLAGS)
+
+if(${RAYCHELSCRIPT_ENABLE_ASAN})
+    list(APPEND RAYCHELSCRIPT_LINK_FLAGS -fsanitize=address)
+endif()
+if(${RAYCHELSCRIPT_ENABLE_UBSAN})
+    list(APPEND RAYCHELSCRIPT_LINK_FLAGS -fsanitize=undefined)
+endif()
+
 include(cmake/find_dependencies.cmake)
 
 add_subdirectory(shared)

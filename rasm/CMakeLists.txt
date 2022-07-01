@@ -29,46 +29,14 @@ target_include_directories(RaychelScriptAssembly PUBLIC
 
 target_compile_features(RaychelScriptAssembly PUBLIC cxx_std_20)
 
-if(${MSVC})
-    target_compile_options(RaychelScriptAssembly PUBLIC
-        /W4
-    )
-else()
-    target_compile_options(RaychelScriptAssembly PUBLIC
-        -Wall
-        -Wextra
-        -Wshadow
-        -Wpedantic
-        -Wconversion
-        -Werror
-    )
-    if(${RAYCHELSCRIPT_ENABLE_ASAN})
-    target_compile_options(RaychelScriptAssembly PUBLIC
-        -fsanitize=address
-    )
-endif()
-if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-    target_compile_options(RaychelScriptAssembly PUBLIC
-        -fsanitize=undefined
-    )
-endif()
-endif()
+target_compile_options(RaychelScriptAssembly PRIVATE ${RAYCHELSCRIPT_COMPILE_FLAGS})
 
-target_link_libraries(RaychelScriptAssembly PUBLIC 
+target_link_libraries(RaychelScriptAssembly PUBLIC
     RaychelLogger
     RaychelScriptBase
 )
 
-if(${RAYCHELSCRIPT_ENABLE_ASAN})
-    target_link_options(RaychelScriptAssembly PUBLIC
-        -fsanitize=address
-    )
-endif()
-if(${RAYCHELSCRIPT_ENABLE_UBSAN})
-    target_link_options(RaychelScriptAssembly PUBLIC
-        -fsanitize=undefined
-    )
-endif()
+target_link_options(RaychelScriptAssembly PUBLIC ${RAYCHELSCRIPT_LINK_FLAGS})
 
 if(${RAYCHELSCRIPT_BUILD_TESTS})
     add_subdirectory(test)

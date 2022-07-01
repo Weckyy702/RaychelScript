@@ -32,33 +32,12 @@ target_include_directories(RaychelScriptVM PUBLIC
 
 target_compile_features(RaychelScriptVM PUBLIC cxx_std_20)
 
-if(${MSVC})
-    target_compile_options(RaychelScriptVM PRIVATE
-        /W4
-    )
-else()
-    target_compile_options(RaychelScriptVM PRIVATE
-        -Wall
-        -Wextra
-        -Wshadow
-        -Wpedantic
-        -Wconversion
-        -Werror
-        -Wno-error=unknown-pragmas
-    )
-endif()
+target_compile_options(RaychelScriptVM PRIVATE
+    ${RAYCHELSCRIPT_COMPILE_FLAGS}
+    -Wno-error=unknown-pragmas
+)
 
-if(${RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING})
-    target_compile_definitions(RaychelScriptVM PRIVATE
-        RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING=1
-    )
-endif()
-
-if(${RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP})
-    target_compile_definitions(RaychelScriptVM PRIVATE
-        RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP=1
-    )
-endif()
+target_link_options(RaychelScriptVM PUBLIC ${RAYCHELSCRIPT_LINK_FLAGS})
 
 target_link_libraries(RaychelScriptVM PUBLIC
     RaychelLogger

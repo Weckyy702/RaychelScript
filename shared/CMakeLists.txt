@@ -41,21 +41,6 @@ target_include_directories(RaychelScriptBase INTERFACE
 
 target_compile_features(RaychelScriptBase INTERFACE cxx_std_20)
 
-if(${MSVC})
-    target_compile_options(RaychelScriptBase INTERFACE
-        /W4
-    )
-else()
-    target_compile_options(RaychelScriptBase INTERFACE
-        -Wall
-        -Wextra
-        -Wshadow
-        -Wpedantic
-        -Wconversion
-        -Werror
-    )
-endif()
-
 target_link_libraries(RaychelScriptBase INTERFACE
     RaychelCore
     RaychelLogger
