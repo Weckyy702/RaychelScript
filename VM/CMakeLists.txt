@@ -16,7 +16,7 @@ set(RAYCHELSCRIPT_VM_INCLUDE_DIR
     "include/VM/"
 )
 
-add_library(RaychelScriptVM SHARED
+add_library(RaychelScriptVM STATIC
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VM.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMErrorCode.h"
     "${RAYCHELSCRIPT_VM_INCLUDE_DIR}/VMState.h"
