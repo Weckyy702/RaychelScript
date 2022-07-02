@@ -67,6 +67,8 @@ namespace RaychelScript::VM {
     std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept;
 
     std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept;
+
+    void dump_state(const VMState& state, const VMData& data) noexcept;
 } //namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_STATE_H

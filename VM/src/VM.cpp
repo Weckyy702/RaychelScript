@@ -25,6 +25,7 @@
 * SOFTWARE.
 *
 */
+#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 1
 
 #pragma STDC FENV_ACCESS ON
 
@@ -336,13 +337,13 @@ namespace RaychelScript::VM {
     }
 
     namespace details {
-        [[nodiscard]] inline bool
+        [[nodiscard]] static bool
         instruction_indecies_in_range(const Assembly::Instruction& instruction, std::size_t size) noexcept
         {
             return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
         }
 
-        [[nodiscard]] bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
+        [[nodiscard]] static bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
         {
             using Assembly::OpCode;
 
@@ -355,7 +356,7 @@ namespace RaychelScript::VM {
             return instruction.op_code() == OpCode::hlt;
         }
 
-        [[nodiscard]] inline bool has_fp_exception() noexcept
+        [[nodiscard]] static bool has_fp_exception() noexcept
         {
             //NOLINTNEXTLINE(hicpp-signed-bitwise): we cannot change the STL spec :(
             return errno != 0 || fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT) != 0;
@@ -374,7 +375,7 @@ namespace RaychelScript::VM {
 #endif
         }
 
-        [[maybe_unused]] inline std::string_view get_error_description() noexcept
+        [[maybe_unused]] static std::string_view get_error_description() noexcept
         {
             if (errno != 0) {
                 return errno_string();
@@ -395,7 +396,7 @@ namespace RaychelScript::VM {
             return "Unknown error";
         }
 
-        void dump_state_fp_error([[maybe_unused]] const VMData& data, [[maybe_unused]] const VMState& state) noexcept
+        static void dump_state_fp_error([[maybe_unused]] const VMData& data, [[maybe_unused]] const VMState& state) noexcept
         {
 #if RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_DUMP
             Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
@@ -429,7 +430,7 @@ namespace RaychelScript::VM {
         //Initialize state
         VMState state{data.instructions, data.num_memory_locations};
 
-        //Check all instruction indecies before execution so we don't have to check for overflows during execution
+        //Check all instruction indecies before execution so we don't have to check for out-of-bounds accesses during execution
         for (const auto& instr : state.instructions) {
             if (!details::instruction_access_in_range(instr, state)) {
                 return VMErrorCode::invalid_instruction_access;
