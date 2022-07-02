@@ -61,6 +61,8 @@ else()
         -Wpedantic
         -Wconversion
         -Werror
+        -fno-exceptions
+        -fno-rtti
     )
     if(${RAYCHELSCRIPT_ENABLE_ASAN})
         list(APPEND RAYCHELSCRIPT_COMPILE_FLAGS -fsanitize=address)
