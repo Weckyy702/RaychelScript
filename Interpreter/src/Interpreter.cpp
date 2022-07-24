@@ -568,7 +568,10 @@ namespace RaychelScript::Interpreter {
         const auto* nodes_to_execute = &data.else_body;
 
         if (state.registers.flags == StateFlags::condition_was_true) {
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("condition evaluated to TRUE\n");
             nodes_to_execute = &data.body;
+        } else {
+            RAYCHELSCRIPT_INTERPRETER_DEBUG("condition evaluated to FALSE\n");
         }
 
         if (nodes_to_execute->empty()) {
@@ -673,6 +676,8 @@ namespace RaychelScript::Interpreter {
         //Evaluate the argument expressions in the parent scope
         std::vector<std::pair<std::string, double>> argument_values(function_data.arguments.size());
 
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("begin evaluating argument list for function ", data.mangled_callee_name, ":\n");
+
         for (const auto& [name, index] : function_data.arguments) {
             const auto& argument_node = data.argument_expressions.at(index);
 
@@ -680,6 +685,8 @@ namespace RaychelScript::Interpreter {
             TRY(execute_node(state, argument_node));
             argument_values.at(index) = std::make_pair(name, state.registers.result);
         }
+
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("end evaluating argument list for function ", data.mangled_callee_name, '\n');
 
         RAYCHEL_ANON_VAR details::PushScope{state, data.mangled_callee_name, false};
 
