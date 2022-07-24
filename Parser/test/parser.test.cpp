@@ -36,11 +36,10 @@
 #include "shared/IndentHandler.h"
 #include "shared/Misc/PrintAST.h"
 
-[[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& filename) noexcept
+[[maybe_unused]] static void parse_file_and_print_debug_info(const std::string& file_path) noexcept
 {
-    Logger::info("Parsing file '", filename, "'\n");
+    Logger::info("Parsing file '", file_path, "'\n");
     std::ifstream in_file{};
-    const auto file_path = "../../../shared/test/" + filename;
 
     const auto label = Logger::startTimer("parse time");
 
@@ -60,12 +59,11 @@
     using namespace std::string_view_literals;
 
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    Logger::log(
-        R"(Welcome to the interactive RaychelScript parser!
-Enter any valid expression and the AST will be echoed back to you.
-If you wish to exit this mode, type "exit")",
-        '\n');
-    std::string line;
+    Logger::log("Welcome to the interactive RaychelScript parser!\n"
+                "Enter any valid expression and the AST will be echoed back to you.\n"
+                "If you wish to exit this mode, type 'exit'\n"
+                "Lines ending with a backslash '\\' will be parsed together.\n");
+    std::string line{};
 
     for (;;) {
         line.clear();
@@ -82,8 +80,7 @@ If you wish to exit this mode, type "exit")",
                     break;
                 }
                 line += _line;
-                line.pop_back();
-                line.push_back('\n');
+                line.back() = '\n';
             }
         }
 
@@ -106,8 +103,6 @@ If you wish to exit this mode, type "exit")",
 
 int main(int argc, char** argv)
 {
-    Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-
     if (argc < 2)
         echo_AST_from_stdin();
     else {

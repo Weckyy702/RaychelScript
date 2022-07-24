@@ -192,7 +192,7 @@ namespace RaychelScript::Parser {
     * \param tokens List of tokens to scan
     * \return Iterator to the least precedent token, tokens.end() if no operator was found
     */
-    [[nodiscard]] static LineTokens::const_iterator find_arithmetic_operator(LineView tokens) noexcept
+    [[nodiscard]] static auto find_arithmetic_operator(LineView tokens) noexcept
     {
         //FIXME: handle unary operators
         if (tokens.empty()) {
