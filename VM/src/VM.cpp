@@ -34,6 +34,7 @@
 #include "RaychelMath/equivalent.h"
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <cfenv>
 #include <cmath>
@@ -266,74 +267,19 @@ namespace RaychelScript::VM {
     }
 
     void execute_next_instruction(VMState& state) noexcept
+    [[maybe_unused]] static void execute_next_instruction(VMState& state) noexcept
     {
+        constexpr std::array dispatch_table{handle_mov, handle_add, handle_sub, handle_mul, handle_div, handle_mag, handle_fac,
+                                            handle_pow, handle_inc, handle_dec, handle_mas, handle_das, handle_pas, handle_clt,
+                                            handle_cgt, handle_ceq, handle_cne, handle_jpz, handle_jmp, handle_hlt};
+
         const auto& instruction = *state.instruction_pointer;
 
-        switch (instruction.op_code()) {
-            case Assembly::OpCode::mov:
-                return handle_mov(state, instruction);
-
-            case Assembly::OpCode::add:
-                return handle_add(state, instruction);
-
-            case Assembly::OpCode::sub:
-                return handle_sub(state, instruction);
-
-            case Assembly::OpCode::mul:
-                return handle_mul(state, instruction);
-
-            case Assembly::OpCode::div:
-                return handle_div(state, instruction);
-
-            case Assembly::OpCode::mag:
-                return handle_mag(state, instruction);
-
-            case Assembly::OpCode::fac:
-                return handle_fac(state, instruction);
-
-            case Assembly::OpCode::pow:
-                return handle_pow(state, instruction);
-
-            case Assembly::OpCode::inc:
-                return handle_inc(state, instruction);
-
-            case Assembly::OpCode::dec:
-                return handle_dec(state, instruction);
-
-            case Assembly::OpCode::mas:
-                return handle_mas(state, instruction);
-
-            case Assembly::OpCode::das:
-                return handle_das(state, instruction);
-
-            case Assembly::OpCode::pas:
-                return handle_pas(state, instruction);
-
-            case Assembly::OpCode::clt:
-                return handle_clt(state, instruction);
-
-            case Assembly::OpCode::cgt:
-                return handle_cgt(state, instruction);
-
-            case Assembly::OpCode::ceq:
-                return handle_ceq(state, instruction);
-
-            case Assembly::OpCode::cne:
-                return handle_cne(state, instruction);
-
-            case Assembly::OpCode::jpz:
-                return handle_jpz(state, instruction);
-
-            case Assembly::OpCode::jmp:
-                return handle_jmp(state, instruction);
-
-            case Assembly::OpCode::hlt:
-                return handle_hlt(state, instruction);
-
-            case Assembly::OpCode::num_op_codes:
-                break;
+        if (instruction.op_code() >= Assembly::OpCode::num_op_codes) {
+            set_error_state(state, VMErrorCode::unknow_op_code);
+            return;
         }
-        set_error_state(state, VMErrorCode::unknow_op_code);
+        dispatch_table[static_cast<std::size_t>(instruction.op_code())](state, instruction);
     }
 
     namespace details {
