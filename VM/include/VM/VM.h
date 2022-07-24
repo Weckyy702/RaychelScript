@@ -31,13 +31,14 @@
 #include "VMErrorCode.h"
 #include "VMState.h"
 
+#include <span>
 #include <variant>
 
 namespace RaychelScript::VM {
 
     using VMResult = std::variant<VMErrorCode, VMState>;
 
-    VMResult execute(const VMData& data, const std::vector<double>& input_variables) noexcept;
+    VMResult execute(const VMData& data, std::span<const double> input_variables) noexcept;
 } // namespace RaychelScript::VM
 
 #endif //!RAYCHELSCRIPT_VM_H

@@ -38,6 +38,7 @@
 #include <cerrno>
 #include <cfenv>
 #include <cmath>
+#include <span>
 #include <variant>
 
 #define RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(code)                                                                        \
@@ -358,7 +359,7 @@ namespace RaychelScript::VM {
 #endif
     } // namespace details
 
-    VMResult execute(const VMData& data, const std::vector<double>& input_variables) noexcept
+    VMResult execute(const VMData& data, std::span<const double> input_variables) noexcept
     {
 #if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         const auto start = std::chrono::high_resolution_clock::now();
