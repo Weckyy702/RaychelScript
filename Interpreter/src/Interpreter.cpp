@@ -30,12 +30,11 @@
 #include "shared/AST/NodeData.h"
 
 #include <algorithm>
-#include <cerrno>
-#include <cfenv>
 #include <cmath>
 
 #include "RaychelCore/ClassMacros.h"
 
+#include "RaychelCore/Finally.h"
 #include "RaychelMath/equivalent.h"
 #include "RaychelMath/math.h"
 
@@ -110,29 +109,35 @@ namespace RaychelScript::Interpreter {
     [[nodiscard]] static double get_descriptor_value(State& state, details::ValueData descriptor) noexcept
     {
         if (descriptor.is_constant) {
-            return state.scopes.at(descriptor.index_in_scope_chain).constants.at(descriptor.index_in_scope).value_or(0);
+            return state.constants.at(descriptor.index).value_or(0);
         }
-        return state.scopes.at(descriptor.index_in_scope_chain).variables.at(descriptor.index_in_scope);
+        return state.variables.at(descriptor.index);
     }
 
     details::ValueData
     add_constant(State& state, const std::string& name, std::optional<double> initial_value = std::nullopt) noexcept
     {
-        RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new constant with name='", name, "', value=", initial_value.value_or(0.0), '\n');
+        RAYCHELSCRIPT_INTERPRETER_DEBUG(
+            "Adding new constant with name='",
+            name,
+            "', value=",
+            initial_value.value_or(0.0),
+            ", index=",
+            state.constants.size(),
+            '\n');
         auto& current_scope = state.scopes.back();
-        auto [it, _] = current_scope.descriptor_table.insert(
-            {name, details::ValueData{current_scope.constants.size(), state.scopes.size() - 1, true}});
-        current_scope.constants.push_back(initial_value);
+        auto [it, _] = current_scope.descriptor_table.insert({name, details::ValueData{state.constants.size(), true}});
+        state.constants.push_back(initial_value);
 
         return it->second;
     }
 
     details::ValueData add_variable(State& state, const std::string& name) noexcept
     {
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new variable with name='", name, ", index=", state.variables.size(), '\n');
         auto& current_scope = state.scopes.back();
-        auto [it, _] = current_scope.descriptor_table.insert(
-            {name, details::ValueData{current_scope.variables.size(), state.scopes.size() - 1, false}});
-        current_scope.variables.push_back(0.0);
+        auto [it, _] = current_scope.descriptor_table.insert({name, details::ValueData{state.variables.size(), false}});
+        state.variables.push_back(0.0);
 
         return it->second;
     }
@@ -176,13 +181,11 @@ namespace RaychelScript::Interpreter {
             " to ",
             state._current_descriptor->is_constant ? "constant" : "variable",
             " descriptor at index ",
-            state._current_descriptor->index_in_scope_chain,
-            ':',
-            state._current_descriptor->index_in_scope,
+            state._current_descriptor->index,
             '\n');
 
         if (state._current_descriptor->is_constant) {
-            auto& constant = state.scopes.back().constants.at(state._current_descriptor->index_in_scope);
+            auto& constant = state.constants.at(state._current_descriptor->index);
 
             if (constant.has_value()) {
                 Logger::error("Assigning to already-initialized constant!\n");
@@ -191,7 +194,7 @@ namespace RaychelScript::Interpreter {
 
             constant = value;
         } else {
-            auto& variable = state.scopes.back().variables.at(state._current_descriptor->index_in_scope);
+            auto& variable = state.variables.at(state._current_descriptor->index);
 
             variable = value;
         }
@@ -477,8 +480,7 @@ namespace RaychelScript::Interpreter {
             return InterpreterErrorCode::constant_reassign;
         }
 
-        double& value = state.scopes.at(state._current_descriptor->index_in_scope_chain)
-                            .variables.at(state._current_descriptor->index_in_scope);
+        double& value = state.variables.at(state._current_descriptor->index);
 
         switch (data.operation) {
             case Op::add:
@@ -712,6 +714,9 @@ namespace RaychelScript::Interpreter {
 
     [[nodiscard]] InterpreterErrorCode execute_node(State& state, const AST_Node& node) noexcept
     {
+        ++state.indent;
+        RAYCHEL_ANON_VAR Raychel::Finally{[&] { --state.indent; }};
+
         //skip executing all nodes until we leave the function
         if (state.registers.flags & StateFlags::return_from_function) {
             Logger::debug("\033[95mSkipping node\n");
@@ -757,8 +762,7 @@ namespace RaychelScript::Interpreter {
     {
         State state{.ast = ast};
 
-        state.scopes.push_back(
-            State::Scope{.inherits_from_parent_scope = false, .constants = {}, .variables = {}, .descriptor_table = {}});
+        state.scopes.push_back(State::Scope{.inherits_from_parent_scope = false, .descriptor_table = {}});
 
         TRY(populate_input_descriptors(state, ast, parameters));
 

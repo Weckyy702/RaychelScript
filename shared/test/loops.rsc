@@ -1,7 +1,7 @@
 [[config]]
 name loops
 input a b
-output c
+output i
 
 [[body]]
 

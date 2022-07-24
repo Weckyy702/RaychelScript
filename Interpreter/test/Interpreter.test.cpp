@@ -94,9 +94,9 @@ int main(int argc, char** argv)
     for (const auto& scope : state.scopes) {
         for (const auto& [name, descriptor] : scope.descriptor_table) {
             if (descriptor.is_constant) {
-                Logger::log("Constant ", name, " = ", scope.constants.at(descriptor.index_in_scope).value_or(0.0), '\n');
+                Logger::log("Constant ", name, " = ", state.constants.at(descriptor.index).value_or(0.0), '\n');
             } else {
-                Logger::log("Variable ", name, " = ", scope.variables.at(descriptor.index_in_scope), '\n');
+                Logger::log("Variable ", name, " = ", state.variables.at(descriptor.index), '\n');
             }
         }
     }

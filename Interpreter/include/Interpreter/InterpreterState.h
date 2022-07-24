@@ -44,8 +44,7 @@ namespace RaychelScript::Interpreter {
     namespace details {
         struct ValueData
         {
-            std::size_t index_in_scope{};
-            std::size_t index_in_scope_chain{};
+            std::size_t index{};
             bool is_constant;
         };
     } // namespace details
@@ -66,8 +65,6 @@ namespace RaychelScript::Interpreter {
         {
             bool inherits_from_parent_scope;
 
-            std::vector<std::optional<double>> constants{};
-            std::vector<double> variables{};
             DescriptorTable descriptor_table{};
         };
 
@@ -75,6 +72,9 @@ namespace RaychelScript::Interpreter {
 
         Registers registers{};
         std::vector<Scope> scopes{};
+
+        std::vector<std::optional<double>> constants{};
+        std::vector<double> variables{};
 
         std::optional<details::ValueData> _current_descriptor{};
         bool _load_references{false};
