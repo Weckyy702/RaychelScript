@@ -133,7 +133,6 @@ raychelscript_entry:
             }
             TRY_WRITE(R"_asm_(
     xor rax, rax
-    mov r12, 1
                 )_asm_");
             return NativeAssemblerErrorCode::ok;
         }
@@ -218,22 +217,22 @@ raychelscript_entry:
                 case Op::clt:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmovb rax, r12");
+                    TRY_WRITE("setb al");
                     return NativeAssemblerErrorCode::ok;
                 case Op::cgt:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmova rax, r12");
+                    TRY_WRITE("seta al");
                     return NativeAssemblerErrorCode::ok;
                 case Op::ceq:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmove rax, r12");
+                    TRY_WRITE("sete al");
                     return NativeAssemblerErrorCode::ok;
                 case Op::cne:
                     TRY_WRITE("movsd xmm0, " << memory_index_to_native(tag, instruction.data1()));
                     TRY_WRITE("comisd xmm0, " << memory_index_to_native(tag, instruction.data2()));
-                    TRY_WRITE("cmovne rax, r12");
+                    TRY_WRITE("setne al");
                     return NativeAssemblerErrorCode::ok;
                 case Op::jpz:
                     TRY_WRITE("test rax, rax");
