@@ -228,13 +228,29 @@ namespace RaychelScript::Interpreter {
         state.scopes.push_back(State::Scope{scope_inherits_from_parent});
     }
 
-    InterpreterErrorCode pop_scope(State& state, [[maybe_unused]] const std::string& name) noexcept
+    InterpreterErrorCode pop_scope(State& state, [[maybe_unused]] const std::string& scope_name) noexcept
     {
-        RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_scope(): ", name, '\n');
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_scope(): ", scope_name, '\n');
 
         if (state.scopes.size() == 1) {
             Logger::error("Cannot pop global scope!\n");
             return InterpreterErrorCode::pop_empy_stack;
+        }
+        const auto& scope = state.scopes.back();
+        for ([[maybe_unused]] const auto& [name, index] : scope.descriptor_table) {
+            RAYCHELSCRIPT_INTERPRETER_DEBUG(
+                "removing ",
+                (index.is_constant ? "constant" : "variable"),
+                " with name '",
+                name,
+                "' at index ",
+                index.index,
+                '\n');
+            if (index.is_constant) {
+                state.constants.erase(state.constants.begin() + static_cast<std::ptrdiff_t>(index.index));
+            } else {
+                state.variables.erase(state.variables.begin() + static_cast<std::ptrdiff_t>(index.index));
+            }
         }
         state.scopes.pop_back();
         state._current_descriptor.reset();
