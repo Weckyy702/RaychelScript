@@ -35,6 +35,7 @@ target_compile_features(RaychelScriptVM PUBLIC cxx_std_20)
 target_compile_options(RaychelScriptVM PRIVATE
     ${RAYCHELSCRIPT_COMPILE_FLAGS}
     -Wno-error=unknown-pragmas
+    -Wno-error=pedantic
 )
 
 target_link_options(RaychelScriptVM PUBLIC ${RAYCHELSCRIPT_LINK_FLAGS})

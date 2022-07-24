@@ -25,7 +25,7 @@
 * SOFTWARE.
 *
 */
-#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 1
+#define RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO 0
 
 #pragma STDC FENV_ACCESS ON
 
@@ -223,12 +223,14 @@ namespace RaychelScript::VM {
         set_instruction_pointer(state, instruction.data1());
     }
 
+#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
     RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(hlt)
     {
         (void)instruction;
         state.halt_flag = true;
         RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
+#endif
 
     RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(clt)
     {
@@ -266,7 +268,7 @@ namespace RaychelScript::VM {
         RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
-    void execute_next_instruction(VMState& state) noexcept
+#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
     [[maybe_unused]] static void execute_next_instruction(VMState& state) noexcept
     {
         constexpr std::array dispatch_table{handle_mov, handle_add, handle_sub, handle_mul, handle_div, handle_mag, handle_fac,
@@ -281,6 +283,7 @@ namespace RaychelScript::VM {
         }
         dispatch_table[static_cast<std::size_t>(instruction.op_code())](state, instruction);
     }
+#endif
 
     namespace details {
         [[nodiscard]] static bool
@@ -289,7 +292,8 @@ namespace RaychelScript::VM {
             return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
         }
 
-        [[nodiscard]] static bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
+        [[maybe_unused]] [[nodiscard]] static bool
+        instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
         {
             using Assembly::OpCode;
 
@@ -302,7 +306,8 @@ namespace RaychelScript::VM {
             return instruction.op_code() == OpCode::hlt;
         }
 
-        [[nodiscard]] static bool has_fp_exception() noexcept
+#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
+        [[maybe_unused]] [[nodiscard]] static bool has_fp_exception() noexcept
         {
             //NOLINTNEXTLINE(hicpp-signed-bitwise): we cannot change the STL spec :(
             return errno != 0 || fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT) != 0;
@@ -312,13 +317,13 @@ namespace RaychelScript::VM {
         {
             static std::array<char, 255> output_buffer{};
 
-#ifdef _WIN32
+    #ifdef _WIN32
             strerror_s(output_buffer.data(), output_buffer.size(), errno);
             return output_buffer.data();
-#else
+    #else
             strerror_r(errno, output_buffer.data(), output_buffer.size());
             return output_buffer.data();
-#endif
+    #endif
         }
 
         [[maybe_unused]] static std::string_view get_error_description() noexcept
@@ -342,13 +347,15 @@ namespace RaychelScript::VM {
             return "Unknown error";
         }
 
-        static void dump_state_fp_error([[maybe_unused]] const VMData& data, [[maybe_unused]] const VMState& state) noexcept
+        [[maybe_unused]] static void
+        dump_state_fp_error([[maybe_unused]] const VMData& data, [[maybe_unused]] const VMState& state) noexcept
         {
-#if RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_DUMP
+    #if RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_DUMP
             Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
             dump_state(state, data);
-#endif
+    #endif
         }
+#endif
     } // namespace details
 
     VMResult execute(const VMData& data, const std::vector<double>& input_variables) noexcept
@@ -395,6 +402,7 @@ namespace RaychelScript::VM {
             get_location(state, index.value()) = value;
         }
 
+#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
         //NOLINTNEXTLINE(hicpp-signed-bitwise)
         feclearexcept(FE_ALL_EXCEPT); //clear the FP exception flags
 
@@ -410,6 +418,84 @@ namespace RaychelScript::VM {
                 }
             }
         }
+#else
+        {
+            constexpr std::array jump_table{&&mov, &&add, &&sub, &&mul, &&div, &&mag, &&fac, &&pow, &&inc, &&dec,           &&mas,
+                                            &&das, &&pas, &&clt, &&cgt, &&ceq, &&cne, &&jpz, &&jmp, &&hlt, &&invalid_opcode};
+            const auto next_instruction = [&] {
+                if (state.instruction_pointer->op_code() >= Assembly::OpCode::num_op_codes) {
+                    return jump_table.back();
+                }
+                return jump_table[static_cast<std::size_t>(state.instruction_pointer->op_code())];
+            };
+
+            goto* next_instruction();
+
+        mov:
+            handle_mov(state, *state.instruction_pointer);
+            goto* next_instruction();
+        add:
+            handle_add(state, *state.instruction_pointer);
+            goto* next_instruction();
+        sub:
+            handle_sub(state, *state.instruction_pointer);
+            goto* next_instruction();
+        mul:
+            handle_mul(state, *state.instruction_pointer);
+            goto* next_instruction();
+        div:
+            handle_div(state, *state.instruction_pointer);
+            goto* next_instruction();
+        mag:
+            handle_mag(state, *state.instruction_pointer);
+            goto* next_instruction();
+        fac:
+            handle_fac(state, *state.instruction_pointer);
+            goto* next_instruction();
+        pow:
+            handle_pow(state, *state.instruction_pointer);
+            goto* next_instruction();
+        inc:
+            handle_inc(state, *state.instruction_pointer);
+            goto* next_instruction();
+        dec:
+            handle_dec(state, *state.instruction_pointer);
+            goto* next_instruction();
+        mas:
+            handle_mas(state, *state.instruction_pointer);
+            goto* next_instruction();
+        das:
+            handle_das(state, *state.instruction_pointer);
+            goto* next_instruction();
+        pas:
+            handle_pas(state, *state.instruction_pointer);
+            goto* next_instruction();
+        clt:
+            handle_clt(state, *state.instruction_pointer);
+            goto* next_instruction();
+        cgt:
+            handle_cgt(state, *state.instruction_pointer);
+            goto* next_instruction();
+        ceq:
+            handle_ceq(state, *state.instruction_pointer);
+            goto* next_instruction();
+        cne:
+            handle_cne(state, *state.instruction_pointer);
+            goto* next_instruction();
+        jpz:
+            handle_jpz(state, *state.instruction_pointer);
+            goto* next_instruction();
+        jmp:
+            handle_jmp(state, *state.instruction_pointer);
+            goto* next_instruction();
+        invalid_opcode:
+            return VMErrorCode::unknow_op_code;
+        hlt:
+        {
+            //nothing to do here :)
+        }
+        }
+#endif
 
 #if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         const auto end = std::chrono::high_resolution_clock::now();
