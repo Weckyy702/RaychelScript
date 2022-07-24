@@ -512,11 +512,11 @@ namespace RaychelScript::VM {
 
     namespace details {
 
-        static void dump_instructions(const VMState& state, const auto instruction_pointer) noexcept
+        static void dump_instructions(const VMState& state) noexcept
         {
             Logger::log("Instruction dump: (active instruction marked with '*'):\n");
             for (auto it = state.instructions.begin(); it != state.instructions.end(); it++) {
-                if (it == std::prev(instruction_pointer)) {
+                if (it == std::prev(state.instruction_pointer)) {
                     Logger::log('*');
                 } else {
                     Logger::log(' ');
@@ -533,13 +533,13 @@ namespace RaychelScript::VM {
             if (it == container.end()) {
                 return false;
             }
-            Logger::log(it->first, " -> ", value, '\n');
+            Logger::log(' ', it->first, " = ", value, '\n');
             return true;
         }
 
         static void dump_memory(const VMData& data, const VMState& state) noexcept
         {
-            Logger::log("$A -> ", state.memory.at(0), '\n');
+            Logger::log("$A = ", state.memory.at(0), '\n');
             for (std::size_t i = 1; i < state.memory_size; i++) {
                 if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
                     continue;
@@ -547,7 +547,7 @@ namespace RaychelScript::VM {
                 if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
                     continue;
                 }
-                Logger::log('$', i, " -> ", state.memory.at(i), '\n');
+                Logger::log('$', i, " = ", state.memory.at(i), '\n');
             }
         }
     } // namespace details
@@ -557,7 +557,7 @@ namespace RaychelScript::VM {
         if (data.num_memory_locations != state.memory_size) {
             return;
         }
-        details::dump_instructions(state, state.instruction_pointer);
+        details::dump_instructions(state);
         details::dump_memory(data, state);
     }
 
