@@ -42,7 +42,7 @@
 #include <variant>
 
 #define RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(code)                                                                        \
-    static void handle_##code(VMState& state, const auto& instruction) noexcept
+    static void handle_##code(VMState& state, const Assembly::Instruction& instruction) noexcept
 
 #define RAYCHELSCRIPT_VM_END_REGULAR_HANDLER ++state.instruction_pointer;
 
@@ -293,8 +293,7 @@ namespace RaychelScript::VM {
             return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
         }
 
-        [[maybe_unused]] [[nodiscard]] static bool
-        instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
+        [[nodiscard]] static bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
         {
             using Assembly::OpCode;
 
