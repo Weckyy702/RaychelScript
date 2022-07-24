@@ -34,12 +34,13 @@
 #include "RaychelCore/Raychel_assert.h"
 
 #include <span>
+#include <utility>
 
 namespace RaychelScript::Runtime {
 
     class ScriptRunner
     {
-        using EntryPoint = void (*)(double const* const input_vector, double* const output_vector);
+        using EntryPoint = void (*)(double const* const input_vector, double* const output_vector) noexcept;
 
         template <std::uint32_t NumOutputs>
         struct Result
@@ -82,7 +83,7 @@ namespace RaychelScript::Runtime {
             if (NumOutputs != script_output_vector_size_) {
                 return {RuntimeErrorCode::mismatched_output_vector_size};
             }
-            if (inputs.size() != script_input_vector_size_) {
+            if (std::cmp_not_equal(inputs.size(), script_input_vector_size_)) {
                 return {RuntimeErrorCode::mismatched_input_vector_size};
             }
 
