@@ -144,7 +144,6 @@ namespace RaychelScript::Interpreter {
 
     void clear_value_registers(State& state) noexcept
     {
-        state.registers.a = state.registers.b = 0;
         state.registers.result = 0;
         state._current_descriptor.reset();
     }
@@ -416,42 +415,65 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
+#if !RAYCHELSCRIPT_INTERPRETER_SILENT
+    [[nodiscard]] static std::string_view arith_op_to_string(ArithmeticExpressionData::Operation op)
+    {
+        using Op = ArithmeticExpressionData::Operation;
+        using namespace std::string_view_literals;
+
+        switch (op) {
+            case Op::add:
+                return "ADD"sv;
+            case Op::subtract:
+                return "SUBTRACT"sv;
+            case Op::multiply:
+                return "MULTIPLY"sv;
+            case Op::divide:
+                return "DIVIDE"sv;
+            case Op::power:
+                return "POWER"sv;
+        }
+        return "<UNKNOWN>"sv;
+    }
+#endif
+
     RAYCHELSCRIPT_INTERPRETER_DEFINE_NODE_HANDLER_FUNC(arithmetic_operation)
     {
         using Op = ArithmeticExpressionData::Operation;
-        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_arithmetic_operation()\n");
 
         const auto data = node.to_node_data<ArithmeticExpressionData>();
+
+        RAYCHELSCRIPT_INTERPRETER_DEBUG("handle_arithmetic_operation(): ", arith_op_to_string(data.operation), '\n');
 
         state._load_references = true;
 
         TRY(execute_node(state, data.lhs));
 
-        state.registers.a = state.registers.result;
+        const auto first = state.registers.result;
 
         state._load_references = true;
         TRY(execute_node(state, data.rhs));
 
-        state.registers.b = state.registers.result;
+        const auto second = state.registers.result;
 
         switch (data.operation) {
             case Op::add:
-                state.registers.result = state.registers.a + state.registers.b;
+                state.registers.result = first + second;
                 break;
             case Op::subtract:
-                state.registers.result = state.registers.a - state.registers.b;
+                state.registers.result = first - second;
                 break;
             case Op::multiply:
-                state.registers.result = state.registers.a * state.registers.b;
+                state.registers.result = first * second;
                 break;
             case Op::divide:
                 if (state.registers.flags & StateFlags::zero) {
                     return InterpreterErrorCode::divide_by_zero;
                 }
-                state.registers.result = state.registers.a / state.registers.b;
+                state.registers.result = first / second;
                 break;
             case Op::power:
-                state.registers.result = std::pow(state.registers.a, state.registers.b);
+                state.registers.result = std::pow(first, second);
                 break;
             default:
                 return InterpreterErrorCode::invalid_arithmetic_operation;
@@ -597,26 +619,23 @@ namespace RaychelScript::Interpreter {
 
         state._load_references = true;
         TRY(execute_node(state, data.lhs));
-        state.registers.a = state.registers.result;
+        const auto first = state.registers.result;
 
         TRY(execute_node(state, data.rhs));
-        state.registers.b = state.registers.result;
+        const auto second = state.registers.result;
 
         switch (data.operation) {
             case Op::equals:
-                state.registers.flags =
-                    Raychel::equivalent(state.registers.a, state.registers.b) ? StateFlags::condition_was_true : StateFlags::none;
+                state.registers.flags = Raychel::equivalent(first, second) ? StateFlags::condition_was_true : StateFlags::none;
                 break;
             case Op::not_equals:
-                state.registers.flags = !Raychel::equivalent(state.registers.a, state.registers.b)
-                                            ? StateFlags::condition_was_true
-                                            : StateFlags::none;
+                state.registers.flags = !Raychel::equivalent(first, second) ? StateFlags::condition_was_true : StateFlags::none;
                 break;
             case Op::less_than:
-                state.registers.flags = state.registers.a < state.registers.b ? StateFlags::condition_was_true : StateFlags::none;
+                state.registers.flags = first < second ? StateFlags::condition_was_true : StateFlags::none;
                 break;
             case Op::greater_than:
-                state.registers.flags = state.registers.a > state.registers.b ? StateFlags::condition_was_true : StateFlags::none;
+                state.registers.flags = first > second ? StateFlags::condition_was_true : StateFlags::none;
                 break;
             default:
                 return InterpreterErrorCode::invalid_relational_operation;

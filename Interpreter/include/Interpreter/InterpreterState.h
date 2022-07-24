@@ -55,7 +55,6 @@ namespace RaychelScript::Interpreter {
 
         struct Registers
         {
-            double a{}, b{};
             double result{};
 
             StateFlags flags{StateFlags::none};

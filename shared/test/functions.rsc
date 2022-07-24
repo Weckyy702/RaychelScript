@@ -1,6 +1,6 @@
 [[config]]
 input a b
-output c
+output c, d
 
 [[body]]
 
@@ -22,5 +22,5 @@ fn g(x, y)
     return x
 endfn
 
-c = f(g(a, b), f(12))
+d = f(g(a, b), f(12))
 c = eleven() * twelve() + f(g(b, a))
