@@ -18,9 +18,9 @@ This languages intended purpose is as a scripting language for use in my engine 
 
 ### Dependencies
 
-- RaychelCore
-- RaychelLogger
-- RaychelMath
+- [RaychelCore](https://github.com/Weckyy702/RaychelCore)
+- [RaychelLogger](https://github.com/Weckyy702/RaychelLogger)
+- [RaychelMath](https://github.com/Weckyy702/RaychelMath)
 
 ### Compiler support
 
