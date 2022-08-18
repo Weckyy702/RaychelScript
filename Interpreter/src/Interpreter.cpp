@@ -725,6 +725,7 @@ namespace RaychelScript::Interpreter {
 
     [[nodiscard]] Interpreter::ExecutionResult interpret(const AST& ast, const std::map<std::string, double>& parameters) noexcept
     {
+        const auto start = std::chrono::high_resolution_clock::now();
         State state{.ast = ast};
 
         state.scopes.push_back(Scope{.inherits_from_parent_scope = false, .lookup_table = {}});
@@ -742,6 +743,7 @@ namespace RaychelScript::Interpreter {
 
             TRY(execute_node(state, node));
         }
+        Logger::info(duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count(), "µs\n");
 
         return state;
     }
