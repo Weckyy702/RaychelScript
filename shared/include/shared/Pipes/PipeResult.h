@@ -249,10 +249,28 @@ namespace RaychelScript::Pipes {
             RAYCHEL_ASSERT(error.type() != ErrorType::no_error);
         }
 
-        [[nodiscard]] T value() const noexcept
+        [[nodiscard]] const T& value() const& noexcept
         {
             RAYCHEL_ASSERT(!is_error());
             return maybe_value_.value();
+        }
+
+        [[nodiscard]] T& value() & noexcept
+        {
+            RAYCHEL_ASSERT(!is_error());
+            return maybe_value_.value();
+        }
+
+        [[nodiscard]] T&& value() && noexcept
+        {
+            RAYCHEL_ASSERT(!is_error());
+            return std::move(maybe_value_.value());
+        }
+
+        [[nodiscard]] const T&& value() const&& noexcept
+        {
+            RAYCHEL_ASSERT(!is_error());
+            return std::move(maybe_value_.value());
         }
 
         explicit operator bool() const noexcept
