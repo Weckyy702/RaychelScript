@@ -120,8 +120,8 @@ namespace RaychelScript {
         std::any data_;
 
         ValueType value_type_;
-        bool is_lvalue_;
-        bool has_side_effect_;
+        bool is_lvalue_ : 1;
+        bool has_side_effect_ : 1;
     };
 
 } // namespace RaychelScript
