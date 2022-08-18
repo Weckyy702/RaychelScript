@@ -73,63 +73,64 @@ namespace RaychelScript::Parser {
     constexpr std::string_view error_code_to_reason_string(ParserErrorCode ec) noexcept
     {
         using namespace std::string_view_literals;
+        using enum ParserErrorCode; //<3
 
         switch (ec) {
-            case ParserErrorCode::ok:
+            case ok:
                 return "Everything's fine :)"sv;
-            case ParserErrorCode::no_input:
+            case no_input:
                 return "No Input"sv;
-            case ParserErrorCode::invalid_config:
+            case invalid_config:
                 return "Error in configuration block"sv;
-            case ParserErrorCode::invalid_construct:
+            case invalid_construct:
                 return "Invalid construct"sv;
-            case ParserErrorCode::invalid_declaration:
+            case invalid_declaration:
                 return "Invalid variable declaration"sv;
-            case ParserErrorCode::invalid_numeric_constant:
+            case invalid_numeric_constant:
                 return "Invalid numeric constant"sv;
-            case ParserErrorCode::mismatched_conditional:
+            case mismatched_conditional:
                 return "Mismatched if/endif"sv;
-            case ParserErrorCode::mismatched_else:
+            case mismatched_else:
                 return "Invalid else construct"sv;
-            case ParserErrorCode::invalid_function_argument_list:
+            case invalid_function_argument_list:
                 return "Invalid function argument list"sv;
-            case ParserErrorCode::mismatched_endfn:
+            case mismatched_endfn:
                 return "Mismatched fn/endfn"sv;
-            case ParserErrorCode::duplicate_function:
+            case duplicate_function:
                 return "Dupliate function definition"sv;
-            case ParserErrorCode::invalid_function_definition:
+            case invalid_function_definition:
                 return "Function definition at non-global scope"sv;
-            case ParserErrorCode::return_in_invalid_scope:
+            case return_in_invalid_scope:
                 return "Return statement at non-function scope"sv;
-            case ParserErrorCode::assign_to_non_value_ref:
+            case assign_to_non_value_ref:
                 return "Trying to assign to something that is not a value reference"sv;
-            case ParserErrorCode::assign_rhs_not_number_type:
+            case assign_rhs_not_number_type:
                 return "Right-hand side of assignment expressio does not have 'number' type"sv;
-            case ParserErrorCode::arith_op_not_number_type:
+            case arith_op_not_number_type:
                 return "Operand in arithmetic expression does not have 'number' type"sv;
-            case ParserErrorCode::op_assign_lhs_not_identifier:
+            case op_assign_lhs_not_identifier:
                 return "Left-hand side of operator-assign expression is not an identifier"sv;
-            case ParserErrorCode::unary_op_rhs_not_number_type:
+            case unary_op_rhs_not_number_type:
                 return "Operand of unary operator does not have 'number' type"sv;
-            case ParserErrorCode::conditional_construct_condition_not_boolean_type:
+            case conditional_construct_condition_not_boolean_type:
                 return "Condition expression of conditional construct does not have 'boolean' type"sv;
-            case ParserErrorCode::relational_op_lhs_not_number_type:
+            case relational_op_lhs_not_number_type:
                 return "Left-hand side of relational operator does not have 'number' type"sv;
-            case ParserErrorCode::relational_op_rhs_not_number_type:
+            case relational_op_rhs_not_number_type:
                 return "Right-hand side of relational operator does not have 'number' type"sv;
-            case ParserErrorCode::loop_condition_not_boolean_type:
+            case loop_condition_not_boolean_type:
                 return "Condition of loop does not have 'boolean' type"sv;
-            case ParserErrorCode::mismatched_loop:
+            case mismatched_loop:
                 return "Mismatched while/endwhile"sv;
-            case ParserErrorCode::mismatched_header_footer_type:
+            case mismatched_header_footer_type:
                 return "Type of construct header does not match type of construct footer"sv;
-            case ParserErrorCode::simple_function_value_not_number_type:
+            case simple_function_value_not_number_type:
                 return "Value expression of simple function definition does not have 'number' type"sv;
-            case ParserErrorCode::function_argument_not_number_type:
+            case function_argument_not_number_type:
                 return "Argument expression of function call does not have 'number' type"sv;
-            case ParserErrorCode::return_expression_not_number_type:
+            case return_expression_not_number_type:
                 return "Subexpression of return statement does not have 'number' type"sv;
-            case ParserErrorCode::missing_return:
+            case missing_return:
                 return "Function does not end with a return statement"sv;
         }
         return "<Unknown reason>"sv;
