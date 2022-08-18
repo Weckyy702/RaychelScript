@@ -58,54 +58,6 @@ constexpr std::string_view debug_indent{
 
 namespace RaychelScript::Interpreter {
 
-    enum class IterationDecision {
-        continue_,
-        break_,
-    };
-
-    template <std::invocable<const State::Scope&> F>
-    bool for_each_scope(const State& state, F&& f) noexcept
-    {
-        auto scope_it = std::prev(state.scopes.end());
-        do {
-            const auto& scope = *scope_it;
-
-            if (f(scope) != IterationDecision::continue_) {
-                return true;
-            }
-
-            if (!scope.inherits_from_parent_scope) {
-                break; //we need to stop traversing the scope chain here
-            }
-        } while (scope_it-- != state.scopes.begin());
-        return false;
-    }
-
-    //helper functions
-    [[nodiscard]] static bool has_identifier(const State& state, const std::string& name) noexcept
-    {
-        return for_each_scope(state, [&](const State::Scope& scope) {
-            if (scope.descriptor_table.find(name) != scope.descriptor_table.end()) {
-                return IterationDecision::break_;
-            }
-            return IterationDecision::continue_;
-        });
-    }
-
-    [[nodiscard]] static std::optional<details::ValueData> find_identifier(const State& state, const std::string& name) noexcept
-    {
-        std::optional<details::ValueData> maybe_descriptor{};
-        for_each_scope(state, [&](const State::Scope& scope) {
-            if (const auto it = scope.descriptor_table.find(name); it != scope.descriptor_table.end()) {
-                maybe_descriptor = it->second;
-                return IterationDecision::break_;
-            }
-            return IterationDecision::continue_;
-        });
-
-        return maybe_descriptor;
-    }
-
     [[nodiscard]] static double get_descriptor_value(State& state, details::ValueData descriptor) noexcept
     {
         if (descriptor.is_constant) {
@@ -126,7 +78,7 @@ namespace RaychelScript::Interpreter {
             state.constants.size(),
             '\n');
         auto& current_scope = state.scopes.back();
-        auto [it, _] = current_scope.descriptor_table.insert({name, details::ValueData{state.constants.size(), true}});
+        auto [it, _] = current_scope.lookup_table.insert({name, details::ValueData{state.constants.size(), true}});
         state.constants.push_back(initial_value);
 
         return it->second;
@@ -136,7 +88,7 @@ namespace RaychelScript::Interpreter {
     {
         RAYCHELSCRIPT_INTERPRETER_DEBUG("Adding new variable with name='", name, ", index=", state.variables.size(), '\n');
         auto& current_scope = state.scopes.back();
-        auto [it, _] = current_scope.descriptor_table.insert({name, details::ValueData{state.variables.size(), false}});
+        auto [it, _] = current_scope.lookup_table.insert({name, details::ValueData{state.variables.size(), false}});
         state.variables.push_back(0.0);
 
         return it->second;
@@ -222,22 +174,25 @@ namespace RaychelScript::Interpreter {
         return InterpreterErrorCode::ok;
     }
 
-    void push_scope(State& state, bool scope_inherits_from_parent, [[maybe_unused]] std::string_view name) noexcept
+    void State::push_scope(bool scope_inherits_from_parent, [[maybe_unused]] std::string_view name) noexcept
     {
+        [[maybe_unused]] auto& state = *this;
         RAYCHELSCRIPT_INTERPRETER_DEBUG("push_scope(): ", name, '\n');
-        state.scopes.push_back(State::Scope{scope_inherits_from_parent});
+        scopes.push_back(Scope{scope_inherits_from_parent});
     }
 
-    InterpreterErrorCode pop_scope(State& state, [[maybe_unused]] const std::string& scope_name) noexcept
+    void State::pop_scope([[maybe_unused]] std::string_view scope_name) noexcept
     {
+        [[maybe_unused]] auto& state = *this;
         RAYCHELSCRIPT_INTERPRETER_DEBUG("pop_scope(): ", scope_name, '\n');
 
-        if (state.scopes.size() == 1) {
+        if (scopes.size() == 1) {
             Logger::error("Cannot pop global scope!\n");
-            return InterpreterErrorCode::pop_empy_stack;
+            return;
         }
-        const auto& scope = state.scopes.back();
-        for ([[maybe_unused]] const auto& [name, index] : scope.descriptor_table) {
+
+        const auto& scope = scopes.back();
+        for ([[maybe_unused]] const auto& [name, index] : scope.lookup_table) {
             RAYCHELSCRIPT_INTERPRETER_DEBUG(
                 "removing ",
                 (index.is_constant ? "constant" : "variable"),
@@ -247,47 +202,14 @@ namespace RaychelScript::Interpreter {
                 index.index,
                 '\n');
             if (index.is_constant) {
-                state.constants.erase(state.constants.begin() + static_cast<std::ptrdiff_t>(index.index));
+                constants.erase(constants.begin() + static_cast<std::ptrdiff_t>(index.index));
             } else {
-                state.variables.erase(state.variables.begin() + static_cast<std::ptrdiff_t>(index.index));
+                variables.erase(variables.begin() + static_cast<std::ptrdiff_t>(index.index));
             }
         }
-        state.scopes.pop_back();
-        state._current_descriptor.reset();
-
-        return InterpreterErrorCode::ok;
+        scopes.pop_back();
+        _current_descriptor.reset();
     }
-
-    namespace details {
-        /**
-        * \brief RAII wrapper around the push/pop_scope functions
-        */
-        class PushScope
-        {
-
-            RAYCHEL_MAKE_NONCOPY_NONMOVE(PushScope)
-
-        public:
-            explicit PushScope(State& state, std::string_view name, bool scope_inherits_from_parent = true)
-                : state_{state}, name_{name}
-            {
-                push_scope(state_, scope_inherits_from_parent, name);
-                ++state.indent;
-            }
-
-            ~PushScope() noexcept
-            {
-                --state_.indent;
-                RAYCHEL_ASSERT(pop_scope(state_, name_) == InterpreterErrorCode::ok);
-            }
-
-        private:
-            State& state_;
-            std::string name_;
-        };
-    } // namespace details
-
-    //setup functions
 
     [[nodiscard]] InterpreterErrorCode
     populate_input_descriptors(State& state, const AST& ast, const std::map<std::string, double>& input_identifiers) noexcept
@@ -311,7 +233,7 @@ namespace RaychelScript::Interpreter {
                     return;
                 }
 
-                if (has_identifier(state, identifier)) {
+                if (has_identifier(state.scopes, identifier)) {
                     Logger::error("An identifier with name '", identifier, "' already exists!\n");
                     result = InterpreterErrorCode::duplicate_name;
                     return;
@@ -333,7 +255,7 @@ namespace RaychelScript::Interpreter {
     {
         for (const auto& name : ast.config_block.output_identifiers) {
 
-            if (has_identifier(state, name)) {
+            if (has_identifier(state.scopes, name)) {
                 Logger::error("An identifier with name '", name, "' already exists!\n");
                 return InterpreterErrorCode::duplicate_name;
             }
@@ -384,7 +306,7 @@ namespace RaychelScript::Interpreter {
 
         const auto data = node.to_node_data<VariableDeclarationData>();
 
-        if (has_identifier(state, data.name)) {
+        if (has_identifier(state.scopes, data.name)) {
             Logger::error("Duplicate identifier '", data.name, "'!\n");
             return InterpreterErrorCode::duplicate_name;
         }
@@ -412,7 +334,7 @@ namespace RaychelScript::Interpreter {
         RAYCHELSCRIPT_INTERPRETER_DEBUG(
             "handle_variable_reference(): ", state._load_references ? "LOAD " : "STORE ", data.name, '\n');
 
-        const auto maybe_identifier = find_identifier(state, data.name);
+        const auto maybe_identifier = find_identifier(state.scopes, data.name);
 
         if (!maybe_identifier.has_value()) {
             Logger::error("Cannot resolve identifier '", data.name, "'\n");
@@ -616,7 +538,7 @@ namespace RaychelScript::Interpreter {
             return InterpreterErrorCode::ok;
         }
 
-        RAYCHEL_ANON_VAR details::PushScope{state, "if"};
+        RAYCHEL_ANON_VAR ScopePusher{state, true, "if"};
 
         for (const auto& body_node : *nodes_to_execute) {
             state._load_references = true;
@@ -673,7 +595,7 @@ namespace RaychelScript::Interpreter {
                 return InterpreterErrorCode::ok;
             }
 
-            RAYCHEL_ANON_VAR details::PushScope{state, "loop"};
+            RAYCHEL_ANON_VAR ScopePusher{state, true, "loop"};
 
             for (const auto& body_node : data.body) {
                 state._load_references = true;
@@ -723,7 +645,7 @@ namespace RaychelScript::Interpreter {
 
         RAYCHELSCRIPT_INTERPRETER_DEBUG("end evaluating argument list for function ", data.mangled_callee_name, '\n');
 
-        RAYCHEL_ANON_VAR details::PushScope{state, data.mangled_callee_name, false};
+        RAYCHEL_ANON_VAR ScopePusher{state, false, data.mangled_callee_name};
 
         //Push all arguments into the function scope
         for (const auto& [name, value] : argument_values) {
@@ -804,7 +726,7 @@ namespace RaychelScript::Interpreter {
     {
         State state{.ast = ast};
 
-        state.scopes.push_back(State::Scope{.inherits_from_parent_scope = false, .descriptor_table = {}});
+        state.scopes.push_back(Scope{.inherits_from_parent_scope = false, .lookup_table = {}});
 
         TRY(populate_input_descriptors(state, ast, parameters));
 

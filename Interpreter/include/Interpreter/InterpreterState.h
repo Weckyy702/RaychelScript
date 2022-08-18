@@ -28,18 +28,22 @@
 #ifndef RAYCHELSCRIPT_INTERPRETER_STATE_H
 #define RAYCHELSCRIPT_INTERPRETER_STATE_H
 
+#include "StateFlags.h"
+
+#include "shared/Misc/Scope.h"
+
 #include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "StateFlags.h"
 
 namespace RaychelScript {
     struct AST;
 } //namespace RaychelScript
 
 namespace RaychelScript::Interpreter {
+
 
     namespace details {
         struct ValueData
@@ -49,22 +53,20 @@ namespace RaychelScript::Interpreter {
         };
     } // namespace details
 
+    using Scope = BasicScope<details::ValueData>;
+
     struct State
     {
         using DescriptorTable = std::unordered_map<std::string, details::ValueData>;
+
+        void push_scope(bool, std::string_view) noexcept;
+        void pop_scope(std::string_view) noexcept;
 
         struct Registers
         {
             double result{};
 
             StateFlags flags{StateFlags::none};
-        };
-
-        struct Scope
-        {
-            bool inherits_from_parent_scope;
-
-            DescriptorTable descriptor_table{};
         };
 
         const AST& ast;

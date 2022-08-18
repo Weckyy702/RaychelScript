@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     const auto state = state_or_error.value();
 
     for (const auto& scope : state.scopes) {
-        for (const auto& [name, descriptor] : scope.descriptor_table) {
+        for (const auto& [name, descriptor] : scope.lookup_table) {
             if (descriptor.is_constant) {
                 Logger::log("Constant ", name, " = ", state.constants.at(descriptor.index).value_or(0.0), '\n');
             } else {
