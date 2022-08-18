@@ -849,9 +849,9 @@ namespace RaychelScript::Parser {
         return AST_Node{NumericConstantData{{}, is_negative ? -value : value}};
     }
 
-    [[nodiscard]] static std::optional<std::set<ArgumentData, std::less<>>> parse_arguments(LineView argument_tokens) noexcept
+    [[nodiscard]] static std::optional<std::vector<std::string>> parse_arguments(LineView argument_tokens) noexcept
     {
-        std::set<ArgumentData, std::less<>> arguments{};
+        std::vector<std::string> arguments{};
         if (argument_tokens.empty())
             return arguments;
 
@@ -868,12 +868,12 @@ namespace RaychelScript::Parser {
                 return;
             }
             auto argument_name = token.content.value();
-            if (arguments.contains(argument_name)) {
+            if (std::ranges::find(arguments, argument_name) != arguments.end()) {
                 Logger::error("Duplicate argument name '", argument_name, "'\n");
                 failed = true;
                 return;
             }
-            arguments.insert(ArgumentData{std::move(argument_name), argument_index});
+            arguments.emplace_back(std::move(argument_name));
             ++argument_index;
         });
 

@@ -30,34 +30,16 @@
 
 #include "AST_Node.h"
 
-#include <set>
 #include <string>
 #include <vector>
 
 namespace RaychelScript {
 
-    struct ArgumentData
-    {
-        std::string name;
-        std::size_t index_in_argument_list{};
-
-        auto operator<=>(const ArgumentData& other) const noexcept = default;
-        bool operator<(const std::string& other_name) const noexcept
-        {
-            return name < other_name;
-        }
-    };
-
-    inline bool operator<(const std::string& a, const ArgumentData& b) noexcept
-    {
-        return b < a;
-    }
-
     struct FunctionData
     {
-        std::string mangled_name;
-        std::set<ArgumentData, std::less<>> arguments;
-        std::vector<AST_Node> body;
+        std::string mangled_name{};
+        std::vector<std::string> arguments{};
+        std::vector<AST_Node> body{};
     };
 
 } //namespace RaychelScript

@@ -635,12 +635,13 @@ namespace RaychelScript::Interpreter {
 
         RAYCHELSCRIPT_INTERPRETER_DEBUG("begin evaluating argument list for function ", data.mangled_callee_name, ":\n");
 
-        for (const auto& [name, index] : function_data.arguments) {
+        std::size_t index{};
+        for (const auto& name : function_data.arguments) {
             const auto& argument_node = data.argument_expressions.at(index);
 
             state._load_references = true;
             TRY(execute_node(state, argument_node));
-            argument_values.at(index) = std::make_pair(name, state.registers.result);
+            argument_values.at(index++) = std::make_pair(name, state.registers.result);
         }
 
         RAYCHELSCRIPT_INTERPRETER_DEBUG("end evaluating argument list for function ", data.mangled_callee_name, '\n');
