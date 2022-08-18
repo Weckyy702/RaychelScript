@@ -116,6 +116,9 @@ namespace RaychelScript {
             for (const auto& node : data.body) {
                 handle_node(node, std::forward<F>(f));
             }
+            for (const auto& node : data.else_body) {
+                handle_node(node, std::forward<F>(f));
+            }
         }
 
         template <std::invocable<const AST_Node&> F>
@@ -126,42 +129,88 @@ namespace RaychelScript {
         }
 
         template <std::invocable<const AST_Node&> F>
+        void handle(const LoopData& data, F&& f) noexcept
+        {
+            handle_node(data.condition_node, std::forward<F>(f));
+            for (const auto& node : data.body) {
+                handle_node(node, std::forward<F>(f));
+            }
+        }
+
+        template <std::invocable<const AST_Node&> F>
+        void handle(const UpdateExpressionData& data, F&& f) noexcept
+        {
+            handle_node(data.lhs, std::forward<F>(f));
+            handle_node(data.rhs, std::forward<F>(f));
+        }
+
+        template <std::invocable<const AST_Node&> F>
+        void handle(const FunctionCallData& data, F&& f) noexcept
+        {
+            for (const auto& arg : data.argument_expressions) {
+                handle_node(arg, std::forward<F>(f));
+            }
+        }
+
+        template <std::invocable<const AST_Node&> F>
+        void handle(const FunctionReturnData& data, F&& f) noexcept
+        {
+            handle_node(data.return_value, std::forward<F>(f));
+        }
+
+        template <std::invocable<const AST_Node&> F>
         void handle_node(const AST_Node& node, F&& f) noexcept
         {
             f(node);
 
             switch (node.type()) {
                 case NodeType::assignment:
-                    handle(node.to_node_data<AssignmentExpressionData>(), std::forward<F>(f));
-                    break;
+                    return handle(node.to_node_data<AssignmentExpressionData>(), std::forward<F>(f));
                 case NodeType::arithmetic_operator:
-                    handle(node.to_node_data<ArithmeticExpressionData>(), std::forward<F>(f));
-                    break;
+                    return handle(node.to_node_data<ArithmeticExpressionData>(), std::forward<F>(f));
+                case NodeType::update_expression:
+                    return handle(node.to_node_data<UpdateExpressionData>(), std::forward<F>(f));
                 case NodeType::unary_operator:
-                    handle(node.to_node_data<UnaryExpressionData>(), std::forward<F>(f));
-                    break;
+                    return handle(node.to_node_data<UnaryExpressionData>(), std::forward<F>(f));
                 case NodeType::conditional_construct:
-                    handle(node.to_node_data<ConditionalConstructData>(), std::forward<F>(f));
-                    break;
+                    return handle(node.to_node_data<ConditionalConstructData>(), std::forward<F>(f));
                 case NodeType::relational_operator:
-                    handle(node.to_node_data<RelationalOperatorData>(), std::forward<F>(f));
+                    return handle(node.to_node_data<RelationalOperatorData>(), std::forward<F>(f));
+                case NodeType::loop:
+                    return handle(node.to_node_data<LoopData>(), std::forward<F>(f));
+                case NodeType::function_return:
+                    return handle(node.to_node_data<FunctionReturnData>(), std::forward<F>(f));
+                case NodeType::function_call:
+                    return handle(node.to_node_data<FunctionCallData>(), std::forward<F>(f));
+                case NodeType::variable_decl:
+                case NodeType::variable_ref:
+                case NodeType::numeric_constant:
+                case NodeType::inline_state_push:
+                case NodeType::inline_state_pop:
                     break;
-                default:
-                    return;
             }
         }
     } // namespace details
 
     template <std::invocable<const AST_Node&> F>
-    void for_each_node(const AST& ast, F&& f) noexcept
+    void for_each_node(const std::vector<AST_Node>& nodes, F&& f) noexcept(std::is_nothrow_invocable_v<F>)
     {
-        for (const auto& node : ast.nodes) {
+        for (const auto& node : nodes) {
             details::handle_node(node, std::forward<F>(f));
         }
     }
 
     template <std::invocable<const AST_Node&> F>
-    void for_each_top_node(const AST& ast, F&& f) noexcept
+    void for_each_node(const AST& ast, F&& f) noexcept(std::is_nothrow_invocable_v<F>)
+    {
+        for_each_node(ast.nodes, std::forward<F>(f));
+        for (const auto& [_, fn] : ast.functions) {
+            for_each_node(fn.body, std::forward<F>(f));
+        }
+    }
+
+    template <std::invocable<const AST_Node&> F>
+    void for_each_top_node(const AST& ast, F&& f) noexcept(std::is_nothrow_invocable_v<F>)
     {
         for (const auto& node : ast.nodes) {
             f(node);
