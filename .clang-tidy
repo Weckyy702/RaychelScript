@@ -20,7 +20,7 @@ Checks: " *,
           -bugprone-exception-escape,
           -fuchsia-trailing-return,
           -readability-static-accessed-through-instance,
-          -hicpp-braces-around-statements
+          -*-braces-around-statements
 "
 
 CheckOptions:
@@ -30,9 +30,13 @@ CheckOptions:
     value:          2
   - key:            readability-identifier-length.MinimumParameterNameLength
     value:          2
+  - key:            readability-identifier-length.MinimumVariableNameLength
+    value:          2
   - key:            readability-identifier-length.IgnoredParameterNames
-    value:          'c|n|f'
+    value:          'c|n|f|a|b|x|t'
   - key:            readability-identifier-length.IgnoredLoopCounterNames
     value:          'c|i|j|k|n'
+  - key:            readability-identifier-length.IgnoredVariableNames
+    value:          'i|_|a|b|c'
   - key:            readability-braces-around-statements.ShortStatementLines
     value:          2
