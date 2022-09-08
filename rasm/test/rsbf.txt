@@ -1,5 +1,4 @@
-#!!!: all data is written in native
-#endianness, so RSBF files are not portable!
+#!!! Since Version 5, all RSBF data is written in network byte order (big endian). This breaks compatibility with version 4 and prior
 
 #Array::
 #u32 size of the array
@@ -16,27 +15,20 @@
 
 #Instruction layout
 #u8 opcode
-#u8 data1
-#u8 data2
-#u8 reserved (must always be zero)
-#!!! Written as a u32 in native endianness
+#u12 index1
+#u12 index2
+#!!! written as u32
 
 u32 magic word
 
 u32 version number
 
-u8 number of memory locations
-
 #I/O section
-u32 number of input identifiers
-[ { String, u8 } input identifiers ]
-u32 number of output identifiers
-[ { String, u8 } output identifiers ]
+u8 number of input constants
+u8 number of output variables
 
 #Immediate section
-u32 number of immediate values
-[ { f64, u8 } immediate value data ]
+[ f64 immediate value data ]
 
-#Text section
-u32 number of instrucions
-[ u32 instrucion data ]
+#Scope chain data
+[ { u8 size, [ u32 instruction data]} scope data ]
