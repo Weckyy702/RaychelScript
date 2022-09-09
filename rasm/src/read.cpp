@@ -64,6 +64,11 @@ namespace RaychelScript::Assembly {
             if (!stream.good())
                 return std::nullopt;
 
+            //Put all data in network byteorder (big endian)
+            if constexpr (std::endian::native == std::endian::little)
+                std::ranges::reverse(bytes);
+            //FIXME: watch out for mixed endian!
+
             T obj{};
             std::memcpy(&obj, bytes.data(), byte_size);
 
@@ -96,119 +101,89 @@ namespace RaychelScript::Assembly {
 
     } // namespace details
 
-    std::optional<std::vector<std::pair<double, MemoryIndex>>> read_immediate_section(std::istream& stream) noexcept
-    {
-        TRY_READ(std::uint32_t, immediates_size, std::nullopt);
+    namespace V6 {
 
-        std::vector<std::pair<double, MemoryIndex>> vec{};
-        vec.reserve(immediates_size);
+        std::optional<std::vector<double>> read_immediate_section(std::istream& stream) noexcept
+        {
+            TRY_READ(std::uint32_t, immediates_size, std::nullopt);
 
-        for (std::uint32_t i = 0; i < immediates_size; i++) {
-            if (auto maybe_value = details::read_pair<double, MemoryIndex>(stream); maybe_value.has_value()) {
-                vec.emplace_back(std::move(maybe_value.value()));
-            } else {
-                return {};
+            std::vector<double> vec{};
+            vec.reserve(immediates_size);
+
+            for (std::uint32_t i{}; i != immediates_size; ++i) {
+                TRY_READ(double, value, std::nullopt);
+                vec.emplace_back(value);
             }
+
+            return vec;
         }
-        return vec;
-    }
+
+        std::optional<std::vector<VM::CallFrameDescriptor>> read_scope_data(std::istream& stream) noexcept
+        {
+            TRY_READ(std::uint32_t, scopes_size, std::nullopt);
+
+            std::vector<VM::CallFrameDescriptor> call_frames{};
+
+            for (std::uint32_t i{}; i != scopes_size; ++i) {
+                TRY_READ(std::uint8_t, frame_size, std::nullopt);
+                if (auto maybe_instructions = details::read_vector<Instruction>(stream); maybe_instructions.has_value()) {
+                    call_frames.emplace_back(
+                        VM::CallFrameDescriptor{.size = frame_size, .instructions = std::move(maybe_instructions).value()});
+                } else
+                    return std::nullopt;
+            }
+
+            return call_frames;
+        }
+
+        ReadResult do_read(std::istream& stream) noexcept
+        {
+            TRY_READ(std::uint8_t, num_input_constants, ReadingErrorCode::reading_failure);
+            TRY_READ(std::uint8_t, num_output_variables, ReadingErrorCode::reading_failure);
+
+            auto maybe_immediates = read_immediate_section(stream);
+            if (!maybe_immediates.has_value())
+                return ReadingErrorCode::reading_failure;
+
+            auto maybe_scopes = read_scope_data(stream);
+            if (!maybe_scopes.has_value())
+                return ReadingErrorCode::reading_failure;
+
+            return VM::VMData{
+                .num_input_identifiers = num_input_constants,
+                .num_output_identifiers = num_output_variables,
+                .immediate_values = std::move(maybe_immediates).value(),
+                .call_frames = std::move(maybe_scopes).value(),
+            };
+        }
+
+    } // namespace V6
 
     ReadResult read_rsbf(std::istream& stream) noexcept
     {
-        if (!stream) {
+        if (!stream)
             return ReadingErrorCode::file_not_found;
-        }
 
         TRY_READ(std::uint32_t, magic, ReadingErrorCode::reading_failure)
-        if (magic != magic_word) {
+        if (magic != magic_word)
             return ReadingErrorCode::no_magic_word;
-        }
 
         TRY_READ(std::uint32_t, version, ReadingErrorCode::reading_failure)
-        if (version > version_number()) {
+        if (version > version_number())
             return ReadingErrorCode::wrong_version;
-        }
-        if (version != version_number()) {
+
+        if (version <= 4)
+            Logger::warn("This file was written with RSBF v", version, " which is deprecated due to byteorder changes!\n");
+
+        if (version_number() >= 6 && version <= 4)
+            return ReadingErrorCode::wrong_version; //Version 5 is not backwards compatible because of byteorder changes
+
+        if (version != version_number())
             Logger::warn("Mismatched versions between reading library and written file. Please consider regenerating the file\n");
-        }
 
-        //since we always have the reserved A register, 0 is actually a sentinel value :)
-        std::uint8_t number_of_memory_locations{0};
-
-        if (version > 2) {
-            TRY_READ(std::uint8_t, num_memory_locations, ReadingErrorCode::reading_failure);
-            number_of_memory_locations = num_memory_locations;
-        }
-
-        std::size_t identifier_index{1};
-        std::vector<std::pair<std::string, MemoryIndex>> input_identifiers{};
-
-        if (version > 3) {
-            TRY_READ(std::uint32_t, size, ReadingErrorCode::reading_failure);
-            for (std::uint32_t i = 0; i < size; i++) {
-                if (auto maybe_value = details::read_pair<std::string, MemoryIndex>(stream); maybe_value.has_value()) {
-                    input_identifiers.emplace_back(std::move(maybe_value.value()));
-                }
-            }
-        } else {
-            auto maybe_input_identifiers = details::read_vector<std::string>(stream);
-            if (!maybe_input_identifiers.has_value()) {
-                return ReadingErrorCode::reading_failure;
-            }
-
-            //we have to convert the old data format to the new one (pain)
-            for (auto& identifier : maybe_input_identifiers.value()) {
-                input_identifiers.emplace_back(std::move(identifier), make_memory_index(identifier_index++));
-            }
-        }
-
-        std::vector<std::pair<std::string, MemoryIndex>> output_identifiers{};
-
-        if (version > 3) {
-            TRY_READ(std::uint32_t, size, ReadingErrorCode::reading_failure);
-            for (std::uint32_t i = 0; i < size; i++) {
-                if (auto maybe_value = details::read_pair<std::string, MemoryIndex>(stream); maybe_value.has_value()) {
-                    output_identifiers.emplace_back(std::move(maybe_value.value()));
-                }
-            }
-        } else {
-
-            auto maybe_output_identifiers = details::read_vector<std::string>(stream);
-            if (!maybe_output_identifiers.has_value()) {
-                return ReadingErrorCode::reading_failure;
-            }
-
-            //we have to convert the old data format to the new one (pain)
-            for (auto& identifier : maybe_output_identifiers.value()) {
-                output_identifiers.emplace_back(std::move(identifier), make_memory_index(identifier_index++));
-            }
-        }
-
-        //The immediate section was added in version 2
-        std::optional<std::vector<std::pair<double, MemoryIndex>>> maybe_immediates{};
-        if (version > 1) {
-            if (auto _maybe_immediates = read_immediate_section(stream); _maybe_immediates.has_value()) {
-                maybe_immediates = std::move(_maybe_immediates).value();
-            }
-        }
-
-        TRY_READ(std::uint32_t, num_instructions, ReadingErrorCode::reading_failure)
-        std::vector<Instruction> instructions;
-        instructions.reserve(num_instructions);
-
-        for (std::size_t i = 0; i < num_instructions; i++) {
-            auto maybe_instruction = details::read<Instruction>(stream);
-            if (!maybe_instruction.has_value()) {
-                return ReadingErrorCode::reading_failure;
-            }
-            instructions.emplace_back(maybe_instruction.value());
-        }
-
-        return VM::VMData{
-            .config_block = {input_identifiers, output_identifiers},
-            .immediate_values = maybe_immediates.value_or(std::vector<std::pair<double, MemoryIndex>>{}),
-            .instructions = instructions,
-            .num_memory_locations = number_of_memory_locations};
+        if (version == 6)
+            return V6::do_read(stream);
+        return ReadingErrorCode::wrong_version;
     }
 
 } //namespace RaychelScript::Assembly
