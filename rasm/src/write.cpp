@@ -28,11 +28,13 @@
 
 #include "rasm/write.h"
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <concepts>
 #include <cstring>
 #include <limits>
+#include <ranges>
 
 #include "RaychelCore/Raychel_assert.h"
 
@@ -44,7 +46,7 @@
 namespace RaychelScript::Assembly {
 
     template <typename T>
-    requires std::is_trivial_v<T>
+    requires std::is_arithmetic_v<T>
     bool write(std::ostream& stream, T data) noexcept
     {
         constexpr auto byte_size = sizeof(T);
@@ -57,33 +59,26 @@ namespace RaychelScript::Assembly {
         return stream.good();
     }
 
-    bool write(std::ostream& stream, const std::string& str) noexcept
+    bool write(std::ostream& stream, const Assembly::Instruction& instruction) noexcept
     {
-        RAYCHEL_ASSERT(str.size() < std::numeric_limits<std::uint32_t>::max());
-        TRY(write(stream, static_cast<std::uint32_t>(str.size())))
-        for (char elem : str) {
-            TRY(write(stream, elem))
-        }
-        return true;
+        return write(stream, instruction.to_binary());
     }
 
-    bool write(std::ostream& stream, MemoryIndex index) noexcept
-    {
-        return write(stream, index.value());
-    }
+    template <typename T>
+    bool write(std::ostream& stream, const std::vector<T>& vec) noexcept;
 
-    template <typename T1, typename T2>
-    bool write(std::ostream& stream, const std::pair<T1, T2>& pair) noexcept
+    bool write(std::ostream& stream, const VM::CallFrameDescriptor& frame) noexcept
     {
-        TRY(write(stream, pair.first));
-        TRY(write(stream, pair.second));
-        return true;
+        TRY(write(stream, frame.size));
+        return write(stream, frame.instructions);
     }
 
     template <typename T>
     bool write(std::ostream& stream, const std::vector<T>& vec) noexcept
     {
-        RAYCHEL_ASSERT(vec.size() < std::numeric_limits<std::uint32_t>::max());
+        if (!std::cmp_less_equal(vec.size(), std::numeric_limits<std::uint32_t>::max()))
+            return false;
+
         TRY(write(stream, static_cast<std::uint32_t>(vec.size())))
         for (const auto& elem : vec) {
             TRY(write(stream, elem))

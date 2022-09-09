@@ -28,7 +28,9 @@
 
 #include "rasm/read.h"
 
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <concepts>
 #include <cstring>
 #include <optional>
@@ -59,37 +61,13 @@ namespace RaychelScript::Assembly {
 
             stream.read(bytes.data(), byte_size);
 
-            if (!stream.good()) {
+            if (!stream.good())
                 return std::nullopt;
-            }
 
             T obj{};
             std::memcpy(&obj, bytes.data(), byte_size);
 
             return obj;
-        }
-
-        template <>
-        std::optional<std::string> read<std::string>(std::istream& stream) noexcept
-        {
-            TRY_READ(std::uint32_t, string_size, std::nullopt)
-
-            std::string obj{};
-            obj.reserve(string_size);
-
-            for (std::uint32_t i = 0; i < string_size; i++) {
-                TRY_READ(char, next_char, std::nullopt)
-                obj.push_back(next_char);
-            }
-
-            return obj;
-        }
-
-        template <>
-        std::optional<MemoryIndex> read<MemoryIndex>(std::istream& stream) noexcept
-        {
-            TRY_READ(std::uint8_t, value, std::nullopt);
-            return make_memory_index(value);
         }
 
         template <>
@@ -114,15 +92,6 @@ namespace RaychelScript::Assembly {
             }
 
             return obj;
-        }
-
-        template <typename T1, typename T2>
-        std::optional<std::pair<T1, T2>> read_pair(std::istream& stream) noexcept
-        {
-            TRY_READ(T1, value_1, std::nullopt);
-            TRY_READ(T2, value_2, std::nullopt);
-
-            return std::make_pair(value_1, value_2);
         }
 
     } // namespace details
