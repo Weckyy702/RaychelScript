@@ -54,6 +54,11 @@ namespace RaychelScript::Assembly {
 
         std::memcpy(bytes.data(), &data, byte_size); //non-UB reinterpret_cast
 
+        //Put all data in network byteorder (big endian)
+        if constexpr (std::endian::native == std::endian::little)
+            std::ranges::reverse(bytes);
+        //FIXME: watch out for mixed endian!
+
         stream.write(bytes.data(), byte_size);
 
         return stream.good();
@@ -96,23 +101,15 @@ namespace RaychelScript::Assembly {
         TRY(write(stream, magic_word))
         TRY(write(stream, version_number()))
 
-        //Number of memory locations
-        TRY(write(stream, data.num_memory_locations));
-
         //I/O section
-        TRY(write(stream, data.config_block.input_identifiers))
-        TRY(write(stream, data.config_block.output_identifiers))
+        TRY(write(stream, data.num_input_identifiers));
+        TRY(write(stream, data.num_output_identifiers));
 
         //Immediate section
         TRY(write(stream, data.immediate_values));
 
-        //Text section
-        RAYCHEL_ASSERT(data.instructions.size() < std::numeric_limits<std::uint32_t>::max());
-        TRY(write(stream, static_cast<std::uint32_t>(data.instructions.size())))
-        for (const auto& instr : data.instructions) {
-            TRY(write(stream, instr.to_binary()))
-        }
-
+        //Scope section
+        TRY(write(stream, data.call_frames));
         return true;
     }
 
