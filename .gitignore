@@ -19,6 +19,7 @@ Makefile
 **/.vs
 **/.cache/
 compile_commands.json
+.ccls
 
 #log files
 *.log
