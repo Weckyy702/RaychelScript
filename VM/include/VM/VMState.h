@@ -30,43 +30,92 @@
 
 #include "VMErrorCode.h"
 #include "shared/VM/VMData.h"
-#include "shared/rasm/Instruction.h"
 
+#include <array>
 #include <concepts>
-#include <cstring>
-#include <limits>
-#include <memory>
-#include <utility>
+#include <cstdint>
+#include <memory_resource>
+#include <stack>
 #include <vector>
 
 namespace RaychelScript::VM {
 
+    template <typename T>
+    using DynamicArray = std::pmr::vector<T>;
+
+    namespace details {
+        //Clang does not fully support ranges yet (at least libstdc++'s) so we need our own
+        // clang-format off
+        template <typename Container, typename It>
+        concept RangeConstructible = requires(Container c)
+        {
+            { c.begin() } -> std::same_as<It>;
+            { c.end() } -> std::same_as<It>;
+        };
+        // clang-format on
+        template <typename Ptr>
+        struct Range
+        {
+            template <RangeConstructible<Ptr> Container>
+            explicit constexpr Range(Container& c) : begin{c.begin()}, end{c.end()}
+            {}
+
+            template <RangeConstructible<Ptr> Container>
+            explicit constexpr Range(const Container& c) : begin{c.begin()}, end{c.end()}
+            {}
+
+            //NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+            constexpr Range(Ptr _begin, Ptr _end) : begin{_begin}, end{_end}
+            {}
+
+            Ptr begin{};
+            Ptr end{};
+        };
+
+        template <typename Container>
+        Range(Container&) -> Range<typename Container::iterator>;
+
+        template <typename Container>
+        Range(const Container&) -> Range<typename Container::const_iterator>;
+
+    } // namespace details
+
     struct VMState
     {
-        using InstructionBuffer = std::vector<Assembly::Instruction>;
-        using InstructionPointer = typename InstructionBuffer::const_iterator;
+        struct CallFrame;
+        using InstructionPointer = std::vector<Assembly::Instruction>::const_iterator;
+        using StackPointer = DynamicArray<double>::iterator;
+        using FramePointer = CallFrame*;
 
-        VMState(InstructionBuffer buffer, std::size_t number_of_memory_locations)
-            : instructions{std::move(buffer)}, instruction_pointer{instructions.begin()}, memory_size{number_of_memory_locations}
-        {}
+        struct CallFrame
+        {
+            InstructionPointer instruction_pointer{};
+            std::ptrdiff_t size{};
+        };
 
-        InstructionBuffer instructions;
-        InstructionPointer instruction_pointer;
+        explicit VMState(details::Range<StackPointer> memory, details::Range<FramePointer> stack, const VMData& data) noexcept;
 
-        std::array<double, std::numeric_limits<std::uint8_t>::max()> memory{};
-        std::size_t memory_size;
+        FramePointer frame_pointer;
+        StackPointer stack_pointer;
 
-        VMErrorCode error_code{VMErrorCode::ok};
+        VMErrorCode error{};
+        bool halt_flag : 1 {false};
+        bool flag : 1 {false};
 
-        //flags
-        bool flag{false};
-        bool halt_flag{false};
-        bool check_fp_flag{false};
+        std::size_t call_depth{};
+        std::size_t instruction_count{};
+        std::size_t function_call_count{};
+
+        //NOLINTBEGIN(misc-misplaced-const)
+        const FramePointer beginning_of_stack;
+        const FramePointer end_of_stack;
+        const StackPointer end_of_memory;
+        //NOLINTEND(misc-misplaced-const)
+
+        const VMData& data;
     };
 
     std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept;
-
-    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept;
 
     void dump_state(const VMState& state, const VMData& data) noexcept;
 } //namespace RaychelScript::VM

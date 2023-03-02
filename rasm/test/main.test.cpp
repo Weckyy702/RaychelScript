@@ -39,31 +39,30 @@
 int main()
 {
     using namespace RaychelScript::Assembly; //NOLINT
+    using namespace RaychelScript::VM;       //NOLINT
 
-    Instruction mov{OpCode::mov, 12_mi, 42_mi};
-    Instruction add{OpCode::add};
-    Instruction sub{OpCode::sub};
-    Instruction mul{OpCode::mul};
-    Instruction div{OpCode::div};
-    Instruction mag{OpCode::mag};
-    Instruction fac{OpCode::fac};
+    Instruction mov{OpCode::mov, 12_imm, 42_mi};
+    Instruction add{OpCode::add, 0_imm, 4_mi};
+    Instruction sub{OpCode::sub, 0_mi, 13_mi};
+    Instruction mul{OpCode::mul, 0_mi, 1_mi};
+    Instruction div{OpCode::div, 0_mi, 2_imm};
+    Instruction mag{OpCode::mag, 0_mi};
+    Instruction fac{OpCode::fac, 0_mi};
 
-    std::vector<Instruction> instructions{mov, add, div, Instruction{OpCode::mov, 0_mi, 12_mi}, sub, add, mov};
+    const std::vector<Instruction> instructions{
+        mov, add, div, Instruction{OpCode::mov, 0_imm, 12_mi}, sub, add, mov, Instruction{OpCode::hlt}};
 
     if (!write_rsbf(
             "./instr.rsbf",
-            RaychelScript::VM::VMData{
-                .config_block = {{{"a", 1_mi}, {"b", 2_mi}}, {{"c", 3_mi}}},
-                .immediate_values = {{0.1, 12_mi}, {12, 0_mi}, {99, 9_mi}},
-                .instructions = instructions,
-                .num_memory_locations = 12})) {
+            VMData{
+                .num_input_identifiers = 3U,
+                .num_output_identifiers = 1U,
+                .immediate_values = {0.1, 12, 99},
+                .call_frames = {
+                    CallFrameDescriptor{.size = 16U, .instructions = instructions},
+                    CallFrameDescriptor{
+                        .size = 1U, .instructions = {Instruction{OpCode::mov, 3_imm, 0_mi}, Instruction{OpCode::ret}}}}})) {
         Logger::error("Writing failed!\n");
-        return 1;
-    }
-
-    const auto data_or_error = read_rsbf("./instr.rsbf");
-    if (const auto* ec = std::get_if<ReadingErrorCode>(&data_or_error); ec) {
-        Logger::error("Reading failed!\n");
         return 1;
     }
 
@@ -73,27 +72,31 @@ int main()
         Logger::info('\t', instr, '\n');
     }
 
+    const auto data_or_error = read_rsbf("./instr.rsbf");
+    if (const auto* ec = std::get_if<ReadingErrorCode>(&data_or_error); ec) {
+        Logger::error("Reading failed!\n");
+        return 1;
+    }
+
     Logger::info("File\n");
 
-    const auto data = Raychel::get<RaychelScript::VM::VMData>(data_or_error);
+    const auto data = Raychel::get<VMData>(data_or_error);
 
-    for (const auto& [value, address] : data.config_block.input_identifiers) {
-        Logger::info('\t', address, " -> ", value, '\n');
+    Logger::info(static_cast<std::uint32_t>(data.num_input_identifiers), " input constants\n");
+    Logger::info(static_cast<std::uint32_t>(data.num_output_identifiers), " output variables\n");
+
+    std::size_t i{};
+    for (const auto& value : data.immediate_values) {
+        Logger::info('%', i++, " -> ", value, '\n');
     }
 
-    for (const auto& [value, address] : data.config_block.output_identifiers) {
-        Logger::info('\t', address, " -> ", value, '\n');
+    i = 0;
+    for (const auto& frame : data.call_frames) {
+        Logger::info("Call frame #", i++, " with memory size ", static_cast<std::uint32_t>(frame.size), ":\n");
+        for (const auto& instr : frame.instructions) {
+            Logger::info('\t', instr, '\n');
+        }
     }
-
-    for (const auto& [value, address] : data.immediate_values) {
-        Logger::info('\t', address, " -> ", value, '\n');
-    }
-
-    for (const auto& instr : data.instructions) {
-        Logger::info('\t', instr, '\n');
-    }
-
-    Logger::info(data.num_memory_locations, '\n');
 
     return 0;
 }

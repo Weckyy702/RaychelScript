@@ -345,6 +345,7 @@ namespace RaychelScript::Parser {
 
     [[nodiscard]] static ParseExpressionResult parse_expression(LineView expression_tokens) noexcept;
 
+    //NOLINTNEXTLINE(readability-function-cognitive-complexity)
     [[nodiscard]] static ParseExpressionResult
     parse_statement_or_expression(LineView expression_tokens, ParsingContext& ctx) noexcept
     {

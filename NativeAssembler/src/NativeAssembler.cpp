@@ -243,6 +243,11 @@ raychelscript_entry:
                     TRY_WRITE("jmp label" << static_cast<std::uint32_t>(instruction.data1()));
                     return NativeAssemblerErrorCode::ok;
                 case Op::hlt:
+                    return NativeAssemblerErrorCode::ok;
+                case Op::jsr:
+                case Op::ret:
+                case Op::put:
+                    return NativeAssemblerErrorCode::unknown_instruction;
                 case Op::num_op_codes:
                     return NativeAssemblerErrorCode::ok;
             }

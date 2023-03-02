@@ -34,11 +34,14 @@ namespace RaychelScript::Runtime {
 
     void ScriptRunner::_try_initialize(std::string_view path_to_binary) noexcept
     {
+        //NOLINTNEXTLINE(hicpp-signed-bitwise)
         platform_specific_data_ = dlopen(std::string{path_to_binary}.data(), RTLD_NOW | RTLD_LOCAL);
         if (platform_specific_data_ == nullptr) {
             initialization_error_code_ = RuntimeErrorCode::binary_not_found;
             return;
         }
+
+        //NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
 
         entry_point_ = reinterpret_cast<EntryPoint>(dlsym(platform_specific_data_, "raychelscript_entry"));
         if (entry_point_ == nullptr) {
@@ -62,6 +65,7 @@ namespace RaychelScript::Runtime {
         }
         script_output_vector_size_ = *output_vector_len_ptr;
 
+        //NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
         initialization_error_code_ = RuntimeErrorCode::ok;
     }
 

@@ -16,7 +16,7 @@ option(RAYCHELSCRIPT_BUILD_TESTS "Build Unit tests" ON)
 option(RAYCHELSCRIPT_ENABLE_ASAN "Enable ASAN instrumentation" ON)
 option(RAYCHELSCRIPT_ENABLE_UBSAN "Enable UBSAN instrumentation" ON)
 
-option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" OFF)
+option(RAYCHELSCRIPT_BUILD_TOOLCHAIN "Build the entire RaychelScript toolchain" ON)
 
 option(RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING "VM: enable logging execution time" OFF)
 option(RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_STATE_DUMP "VM: dump state when a floating-point exception is thrown during execution" ON)

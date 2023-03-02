@@ -25,540 +25,556 @@
 * SOFTWARE.
 *
 */
-#define RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO 0
-
-#pragma STDC FENV_ACCESS ON
+#include "VM/VMErrorCode.h"
+#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 1
+#define RAYCHELSCRIPT_VM_SILENT 1
+#define RAYCHELSCRIPT_VM_EXECUTION_TYPE RAYCHELSCRIPT_VM_EXECUTION_TYPE_COMPUTED_GOTO
 
 #include "VM/VM.h"
 
-#include "RaychelMath/equivalent.h"
+#include "RaychelCore/ScopedTimer.h"
 
-#include <algorithm>
-#include <array>
 #include <cerrno>
 #include <cfenv>
 #include <cmath>
-#include <span>
-#include <variant>
+#include <cstring>
+#include <utility>
 
-#define RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(code)                                                                        \
-    static void handle_##code(VMState& state, const Assembly::Instruction& instruction) noexcept
+#pragma STDC FENV_ACCESS ON
 
-#define RAYCHELSCRIPT_VM_END_REGULAR_HANDLER ++state.instruction_pointer;
+#if !RAYCHELSCRIPT_VM_SILENT
+    #define RAYCHELSCRIPT_VM_DEBUG(...) Logger::debug(indent(state), __VA_ARGS__, '\n')
+#else
+    #define RAYCHELSCRIPT_VM_DEBUG(...)
+#endif
 
-#define RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER                                                                                  \
-    state.check_fp_flag = true;                                                                                                  \
-    RAYCHELSCRIPT_VM_END_REGULAR_HANDLER
+#define RAYCHELSCRIPT_VM_THROW(_error)                                                                                           \
+    {                                                                                                                            \
+        state.error = _error;                                                                                                    \
+        state.halt_flag = true;                                                                                                  \
+        return;                                                                                                                  \
+    }
+
+#define RAYCHELSCRIPT_VM_EXECUTION_TYPE_SWITCH 1
+#define RAYCHELSCRIPT_VM_EXECUTION_TYPE_COMPUTED_GOTO 2
+
+#define RAYCHELSCRIPT_VM_EXECUTION_TYPE_DEFAULT RAYCHELSCRIPT_VM_EXECUTION_TYPE_SWITCH
 
 namespace RaychelScript::VM {
 
-    void set_error_state(VMState& state, VMErrorCode error_code) noexcept
+    using Assembly::MemoryIndex;
+
+    static double& get_location(VMState& state, std::uint8_t index) noexcept
     {
-        state.error_code = error_code;
-        state.halt_flag = true;
+        return *(state.stack_pointer + static_cast<std::ptrdiff_t>(index));
     }
 
-    void set_instruction_pointer(VMState& state, std::uint8_t instr_index) noexcept
+    static double& get_location(VMState& state, MemoryIndex index) noexcept
     {
-        state.instruction_pointer = state.instructions.begin() + instr_index;
+        return get_location(state, index.value());
     }
 
-    [[nodiscard]] double& get_location(VMState& state, std::uint8_t index) noexcept
+    static double& result_location(VMState& state) noexcept
     {
-        //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): we have checked all accesses beforehand
-        return state.memory[index];
+        return *state.stack_pointer;
     }
 
-    [[nodiscard]] double& get_result_location(VMState& state) noexcept
+    static double get_value(VMState& state, MemoryIndex index) noexcept
     {
-        return get_location(state, 0);
+        if (index.type() == MemoryIndex::ValueType::immediate)
+            return state.data.immediate_values[index.value()];
+        return get_location(state, index);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(mov)
+    void push_frame(VMState& state, const CallFrameDescriptor& descriptor) noexcept
     {
-        const auto rhs = get_location(state, instruction.data1());
-        auto& lhs = get_location(state, instruction.data2());
+        if (state.frame_pointer == std::prev(state.end_of_stack)) [[unlikely]]
+            RAYCHELSCRIPT_VM_THROW(VMErrorCode::stack_overflow);
 
-        lhs = rhs;
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
+        new (std::to_address(++state.frame_pointer))
+            VMState::CallFrame{descriptor.instructions.begin(), static_cast<std::ptrdiff_t>(descriptor.size)};
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(add)
+    static void update_instruction_pointer(VMState& state, MemoryIndex offset)
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-        auto& result = get_result_location(state);
-
-        result = lhs + rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        state.frame_pointer->instruction_pointer += static_cast<std::ptrdiff_t>(static_cast<std::int8_t>(offset.value()) - 1);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(sub)
+    [[maybe_unused]] static auto indent(VMState& state)
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-        auto& result = get_result_location(state);
-
-        result = lhs - rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        return std::string_view(
+            "|..................................................................................................................."
+            ".....................................................................................",
+            state.call_depth * 2 + 1);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(mul)
+    // Instruction Handlers
+    //NOLINTBEGIN(bugprone-easily-swappable-parameters)
+
+    static void handle_mov(VMState& state, MemoryIndex from, MemoryIndex to) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-        auto& result = get_result_location(state);
-
-        result = lhs * rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        RAYCHELSCRIPT_VM_DEBUG("handle_mov: ", from, " (", get_value(state, from), ") -> ", to);
+        get_location(state, to) = get_value(state, from);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(div)
+    static void handle_add(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-        auto& result = get_result_location(state);
+        RAYCHELSCRIPT_VM_DEBUG("handle_add: ", a, " (", get_value(state, a), ") + ", b, " (", get_value(state, b), ')');
 
-        result = lhs / rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        result_location(state) = get_value(state, a) + get_value(state, b);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(mag)
+    static void handle_sub(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        auto& result = get_result_location(state);
+        RAYCHELSCRIPT_VM_DEBUG("handle_sub: ", a, " (", get_value(state, a), ") - ", b, " (", get_value(state, b), ')');
 
-        result = std::abs(lhs);
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        result_location(state) = get_value(state, a) - get_value(state, b);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(fac)
+    static void handle_mul(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        auto& result = get_result_location(state);
+        RAYCHELSCRIPT_VM_DEBUG("handle_mul: ", a, " (", get_value(state, a), ") * ", b, " (", get_value(state, b), ')');
 
-        result = std::tgamma(lhs + 1);
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        result_location(state) = get_value(state, a) * get_value(state, b);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(pow)
+    static void handle_div(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-        auto& result = get_result_location(state);
+        RAYCHELSCRIPT_VM_DEBUG("handle_div: ", a, " (", get_value(state, a), ") / ", b, " (", get_value(state, b), ')');
 
-        result = std::pow(lhs, rhs);
+        const auto divisor = get_value(state, b);
 
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        if (divisor == 0.0) [[unlikely]]
+            RAYCHELSCRIPT_VM_THROW(VMErrorCode::divide_by_zero);
+
+        result_location(state) = get_value(state, a) / divisor;
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(inc)
+    static void handle_mag(VMState& state, MemoryIndex a) noexcept
     {
-        auto& lhs = get_location(state, instruction.data1());
-        const auto& rhs = get_location(state, instruction.data2());
+        RAYCHELSCRIPT_VM_DEBUG("handle_mag: ", a, " (", get_value(state, a), ')');
 
-        lhs += rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        result_location(state) = std::abs(get_value(state, a));
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(dec)
+    static void handle_fac(VMState& state, MemoryIndex a) noexcept
     {
-        auto& lhs = get_location(state, instruction.data1());
-        const auto& rhs = get_location(state, instruction.data2());
+        RAYCHELSCRIPT_VM_DEBUG("handle_fac: ", a, " (", get_value(state, a), ')');
 
-        lhs -= rhs;
+        result_location(state) = std::tgamma(get_value(state, a) + 1);
 
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        if constexpr (math_errhandling & MATH_ERREXCEPT) { // NOLINT(hicpp-signed-bitwise)
+            if (std::fetestexcept(FE_DIVBYZERO) != 0) [[unlikely]]
+                RAYCHELSCRIPT_VM_THROW(VMErrorCode::divide_by_zero);
+            if (std::fetestexcept(FE_INVALID) != 0) [[unlikely]]
+                RAYCHELSCRIPT_VM_THROW(VMErrorCode::invalid_operand);
+        } else {
+            const auto _errno = errno;
+            if (_errno == EDOM) [[unlikely]]
+                RAYCHELSCRIPT_VM_THROW(VMErrorCode::invalid_operand);
+            if (_errno == ERANGE) [[unlikely]]
+                RAYCHELSCRIPT_VM_THROW(VMErrorCode::divide_by_zero);
+        }
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(mas)
+    static void handle_pow(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        auto& lhs = get_location(state, instruction.data1());
-        const auto& rhs = get_location(state, instruction.data2());
+        RAYCHELSCRIPT_VM_DEBUG("handle_pow: ", a, " (", get_value(state, a), ") ^ ", b, " (", get_value(state, b), ')');
 
-        lhs *= rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        result_location(state) = std::pow(get_value(state, a), get_value(state, b));
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(das)
+    static void handle_inc(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        auto& lhs = get_location(state, instruction.data1());
-        const auto& rhs = get_location(state, instruction.data2());
+        RAYCHELSCRIPT_VM_DEBUG("handle_inc: ", a, " (", get_value(state, a), ") += ", b, " (", get_value(state, b), ')');
 
-        lhs /= rhs;
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        get_location(state, a) += get_value(state, b);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(pas)
+    static void handle_dec(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        auto& lhs = get_location(state, instruction.data1());
-        const auto& rhs = get_location(state, instruction.data2());
+        RAYCHELSCRIPT_VM_DEBUG("handle_dec: ", a, " (", get_value(state, a), ") -= ", b, " (", get_value(state, b), ')');
 
-        lhs = std::pow(lhs, rhs);
-
-        RAYCHELSCRIPT_VM_END_ARITHMETIC_HANDLER;
+        get_location(state, a) -= get_value(state, b);
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(jpz)
+    static void handle_mas(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
     {
-        if (state.flag) {
-            state.flag = false;
-            RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
+        RAYCHELSCRIPT_VM_DEBUG("handle_mas: ", a, " (", get_value(state, a), ") *= ", b, " (", get_value(state, b), ')');
+
+        get_location(state, a) *= get_value(state, b);
+    }
+
+    static void handle_das(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_das: ", a, " (", get_value(state, a), ") /= ", b, " (", get_value(state, b), ')');
+
+        const auto divisor = get_value(state, b);
+
+        if (divisor == 0.0) [[unlikely]]
+            RAYCHELSCRIPT_VM_THROW(VMErrorCode::divide_by_zero);
+
+        get_location(state, a) /= get_value(state, b);
+    }
+
+    static void handle_pas(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_pas: ", a, " (", get_value(state, a), ") ^= ", b, " (", get_value(state, b), ')');
+
+        auto& res = get_location(state, a);
+
+        res = std::pow(res, get_value(state, b));
+    }
+
+    static void handle_clt(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_clt: ", a, " (", get_value(state, a), ") < ", b, " (", get_value(state, b), ')');
+
+        state.flag = get_value(state, a) < get_value(state, b);
+    }
+
+    static void handle_cgt(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_cgt: ", a, " (", get_value(state, a), ") > ", b, " (", get_value(state, b), ')');
+
+        state.flag = get_value(state, a) > get_value(state, b);
+    }
+
+    static void handle_ceq(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_ceq: ", a, " (", get_value(state, a), ") == ", b, " (", get_value(state, b), ')');
+
+        state.flag = get_value(state, a) == get_value(state, b);
+    }
+
+    static void handle_cne(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_cne: ", a, " (", get_value(state, a), ") != ", b, " (", get_value(state, b), ')');
+
+        state.flag = get_value(state, a) != get_value(state, b);
+    }
+
+    static void handle_jpz(VMState& state, MemoryIndex a) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_jpz: ", a, state.flag ? ": true" : ": false");
+
+        if (state.flag)
             return;
+        update_instruction_pointer(state, a);
+    }
+
+    static void handle_jmp(VMState& state, MemoryIndex a) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_jmp: ", a);
+
+        update_instruction_pointer(state, a);
+    }
+
+    static void handle_jsr(VMState& state, MemoryIndex a) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_jsr: ", a);
+
+        const auto& descriptor = state.data.call_frames[a.value()];
+
+        //It's ok to possibly corrput the stack pointer here because we will immediately bail out if we do
+        state.stack_pointer += state.frame_pointer->size;
+        if (state.stack_pointer >= state.end_of_memory) [[unlikely]]
+            RAYCHELSCRIPT_VM_THROW(VMErrorCode::memory_overflow);
+
+        push_frame(state, descriptor);
+
+        ++state.call_depth;
+        ++state.function_call_count;
+    }
+
+    static void handle_ret(VMState& state) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_ret");
+
+        if (state.frame_pointer == state.beginning_of_stack) [[unlikely]]
+            RAYCHELSCRIPT_VM_THROW(VMErrorCode::stack_underflow);
+
+        //we need to transfer the zero location since it contains the result of the call
+        const auto result = result_location(state);
+        state.stack_pointer -= std::prev(state.frame_pointer)->size;
+        --state.frame_pointer;
+        result_location(state) = result;
+
+        --state.call_depth;
+    }
+
+    static void handle_put(VMState& state, MemoryIndex a, MemoryIndex b) noexcept
+    {
+        RAYCHELSCRIPT_VM_DEBUG("handle_put: ", a, " (", get_value(state, a), ") -> ", b);
+
+        const auto next_stack_pointer = state.stack_pointer + state.frame_pointer->size;
+
+        *(next_stack_pointer + static_cast<std::ptrdiff_t>(b.value())) = get_value(state, a);
+    }
+
+    //NOLINTEND(bugprone-easily-swappable-parameters)
+    // Main execution loop
+
+    VMErrorCode do_execute(VMState& state)
+    {
+#if RAYCHELSCRIPT_VM_EXECUTION_TYPE == RAYCHELSCRIPT_VM_EXECUTION_TYPE_SWITCH
+        while (!state.halt_flag) [[likely]] {
+            using enum Assembly::OpCode;
+
+            ++state.instruction_count;
+            const auto instruction = *(state.frame_pointer->instruction_pointer++);
+            const auto a = instruction.index1();
+            const auto b = instruction.index2();
+
+            switch (instruction.op_code()) {
+                case mov:
+                    handle_mov(state, instruction.index1(), instruction.index2());
+                    break;
+                case add:
+                    handle_add(state, a, b);
+                    break;
+                case sub:
+                    handle_sub(state, a, b);
+                    break;
+                case mul:
+                    handle_mul(state, a, b);
+                    break;
+                case div:
+                    handle_div(state, a, b);
+                    break;
+                case mag:
+                    handle_mag(state, a);
+                    break;
+                case fac:
+                    handle_fac(state, a);
+                    break;
+                case pow:
+                    handle_pow(state, a, b);
+                    break;
+                case inc:
+                    handle_inc(state, a, b);
+                    break;
+                case dec:
+                    handle_dec(state, a, b);
+                    break;
+                case mas:
+                    handle_mas(state, a, b);
+                    break;
+                case das:
+                    handle_das(state, a, b);
+                    break;
+                case pas:
+                    handle_pas(state, a, b);
+                    break;
+                case clt:
+                    handle_clt(state, a, b);
+                    break;
+                case cgt:
+                    handle_cgt(state, a, b);
+                    break;
+                case ceq:
+                    handle_ceq(state, a, b);
+                    break;
+                case cne:
+                    handle_cne(state, a, b);
+                    break;
+                case jpz:
+                    handle_jpz(state, a);
+                    break;
+                case jmp:
+                    handle_jmp(state, a);
+                    break;
+                case hlt:
+                    return state.error;
+                case jsr:
+                    handle_jsr(state, a);
+                    break;
+                case ret:
+                    handle_ret(state);
+                    break;
+                case put:
+                    handle_put(state, a, b);
+                    break;
+                default:
+                    return VMErrorCode::unknown_opcode;
+            }
         }
+        return state.error;
 
-        set_instruction_pointer(state, instruction.data1());
-    }
+#elif RAYCHELSCRIPT_VM_EXECUTION_TYPE == RAYCHELSCRIPT_VM_EXECUTION_TYPE_COMPUTED_GOTO
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(jmp)
-    {
-        set_instruction_pointer(state, instruction.data1());
-    }
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpedantic"
 
-#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(hlt)
-    {
-        (void)instruction;
-        state.halt_flag = true;
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
-    }
+        constexpr static std::array labels{
+            &&done, &&unknown_opcode,
+
+            &&mov,  &&add,
+            &&sub,  &&mul,
+            &&div,  &&mag,
+            &&fac,  &&pow,
+            &&inc,  &&dec,
+            &&mas,  &&das,
+            &&pas,  &&clt,
+            &&cgt,  &&ceq,
+            &&cne,  &&jpz,
+            &&jmp,  &&hlt,
+            &&jsr,  &&ret,
+            &&put,
+        };
+
+        MemoryIndex index1{};
+        MemoryIndex index2{};
+
+        const auto next = [&] {
+            if (state.halt_flag) [[unlikely]]
+                return labels[0]; //done
+
+            ++state.instruction_count;
+            const auto& instruction = *(state.frame_pointer->instruction_pointer++);
+            const auto code = instruction.op_code();
+            if (code >= Assembly::OpCode::num_op_codes) [[unlikely]]
+                return labels[1]; //unknown_opcode
+
+            index1 = instruction.index1();
+            index2 = instruction.index2();
+
+            //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index): we have checked the index before
+            return labels[static_cast<std::size_t>(instruction.op_code()) + 2];
+        };
+
+        goto* next();
+
+    mov:
+        handle_mov(state, index1, index2);
+        goto* next();
+    add:
+        handle_add(state, index1, index2);
+        goto* next();
+    sub:
+        handle_sub(state, index1, index2);
+        goto* next();
+    mul:
+        handle_mul(state, index1, index2);
+        goto* next();
+    div:
+        handle_div(state, index1, index2);
+        goto* next();
+    mag:
+        handle_mag(state, index1);
+        goto* next();
+    fac:
+        handle_fac(state, index1);
+        goto* next();
+    pow:
+        handle_pow(state, index1, index2);
+        goto* next();
+    inc:
+        handle_inc(state, index1, index2);
+        goto* next();
+    dec:
+        handle_dec(state, index1, index2);
+        goto* next();
+    mas:
+        handle_mas(state, index1, index2);
+        goto* next();
+    das:
+        handle_das(state, index1, index2);
+        goto* next();
+    pas:
+        handle_pas(state, index1, index2);
+        goto* next();
+    clt:
+        handle_clt(state, index1, index2);
+        goto* next();
+    cgt:
+        handle_cgt(state, index1, index2);
+        goto* next();
+    ceq:
+        handle_ceq(state, index1, index2);
+        goto* next();
+    cne:
+        handle_cne(state, index1, index2);
+        goto* next();
+    jpz:
+        handle_jpz(state, index1);
+        goto* next();
+    jmp:
+        handle_jmp(state, index1);
+        goto* next();
+    hlt:
+        return VMErrorCode::ok;
+    jsr:
+        handle_jsr(state, index1);
+        goto* next();
+    ret:
+        handle_ret(state);
+        goto* next();
+    put:
+        handle_put(state, index1, index2);
+        goto* next();
+    unknown_opcode:
+        return VMErrorCode::unknown_opcode;
+    done:
+        return state.error;
+    #pragma GCC diagnostic pop
+#else
+    #error "Unknown execution type"
 #endif
-
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(clt)
-    {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-
-        state.flag = lhs < rhs;
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
     }
 
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(cgt)
+    VMErrorCode execute(
+        const VMData& data, std::span<const double> input_variables, std::span<double> output_values, std::size_t stack_size,
+        std::size_t memory_size, std::pmr::memory_resource* resource) noexcept
     {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-
-        state.flag = lhs > rhs;
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
-    }
-
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(ceq)
-    {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-
-        state.flag = Raychel::equivalent(lhs, rhs);
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
-    }
-
-    RAYCHELSCRIPT_VM_DEFINE_INSTRUCTION_HANDLER(cne)
-    {
-        const auto lhs = get_location(state, instruction.data1());
-        const auto rhs = get_location(state, instruction.data2());
-
-        state.flag = !Raychel::equivalent(lhs, rhs);
-        RAYCHELSCRIPT_VM_END_REGULAR_HANDLER;
-    }
-
-#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
-    [[maybe_unused]] static void execute_next_instruction(VMState& state) noexcept
-    {
-        constexpr std::array dispatch_table{handle_mov, handle_add, handle_sub, handle_mul, handle_div, handle_mag, handle_fac,
-                                            handle_pow, handle_inc, handle_dec, handle_mas, handle_das, handle_pas, handle_clt,
-                                            handle_cgt, handle_ceq, handle_cne, handle_jpz, handle_jmp, handle_hlt};
-
-        const auto& instruction = *state.instruction_pointer;
-
-        if (instruction.op_code() >= Assembly::OpCode::num_op_codes) {
-            set_error_state(state, VMErrorCode::unknow_op_code);
-            return;
-        }
-        dispatch_table[static_cast<std::size_t>(instruction.op_code())](state, instruction);
-    }
-#endif
-
-    namespace details {
-        [[nodiscard]] static bool
-        instruction_indecies_in_range(const Assembly::Instruction& instruction, std::size_t size) noexcept
-        {
-            return std::cmp_less(instruction.data1(), size) && std::cmp_less(instruction.data2(), size);
-        }
-
-        [[nodiscard]] static bool instruction_access_in_range(const Assembly::Instruction& instruction, const VMState& state)
-        {
-            using Assembly::OpCode;
-
-            if (instruction.op_code() <= OpCode::cne) {
-                return instruction_indecies_in_range(instruction, state.memory_size);
-            }
-            if (instruction.op_code() < OpCode::hlt) {
-                return instruction_indecies_in_range(instruction, state.instructions.size());
-            }
-            return instruction.op_code() == OpCode::hlt;
-        }
-
-#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
-        [[maybe_unused]] [[nodiscard]] static bool has_fp_exception() noexcept
-        {
-            //NOLINTNEXTLINE(hicpp-signed-bitwise): we cannot change the STL spec :(
-            return errno != 0 || fetestexcept(FE_ALL_EXCEPT & ~FE_INEXACT) != 0;
-        }
-
-        static std::string_view errno_string() noexcept
-        {
-            static std::array<char, 255> output_buffer{};
-
-    #ifdef _WIN32
-            strerror_s(output_buffer.data(), output_buffer.size(), errno);
-            return output_buffer.data();
-    #else
-            strerror_r(errno, output_buffer.data(), output_buffer.size());
-            return output_buffer.data();
-    #endif
-        }
-
-        [[maybe_unused]] static std::string_view get_error_description() noexcept
-        {
-            if (errno != 0) {
-                return errno_string();
-            }
-
-            if (std::fetestexcept(FE_DIVBYZERO) != 0) {
-                return "Division by zero";
-            }
-            if (std::fetestexcept(FE_INVALID) != 0) {
-                return "Argument is out of domain";
-            }
-            if (std::fetestexcept(FE_OVERFLOW) != 0) {
-                return "Floating point overflow";
-            }
-            if (std::fetestexcept(FE_UNDERFLOW) != 0) {
-                return "Floating point underflow";
-            }
-            return "Unknown error";
-        }
-
-        [[maybe_unused]] static void
-        dump_state_fp_error([[maybe_unused]] const VMData& data, [[maybe_unused]] const VMState& state) noexcept
-        {
-    #if RAYCHELSCRIPT_VM_ENABLE_FP_EXCEPTION_DUMP
-            Logger::error("Floating-point error during execution: ", get_error_description(), "! Dumping state...\n");
-            dump_state(state, data);
-    #endif
-        }
-#endif
-    } // namespace details
-
-    VMResult execute(const VMData& data, std::span<const double> input_variables) noexcept
-    {
-#if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
+#ifdef RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
         const auto start = std::chrono::high_resolution_clock::now();
 #endif
-        //Check for the correct number of input identifiers
-        if (input_variables.size() != data.config_block.input_identifiers.size()) {
-            Logger::error(
-                "Mismatched number of input identifiers! Expected ",
-                data.config_block.input_identifiers.size(),
-                ", got ",
-                input_variables.size(),
-                '\n');
-            return VMErrorCode::mismatched_input_identifiers;
-        }
+        //Bail out early if the input sizes don't match up
+        if (std::cmp_not_equal(input_variables.size(), data.num_input_identifiers))
+            return VMErrorCode::mismatched_inputs;
 
-        //Sanity check that the last instruction is a HLT instruction
-        if (data.instructions.back().op_code() != Assembly::OpCode::hlt) {
-            Logger::error("Last instruction is not a HLT instruction!\n");
-            return VMErrorCode::last_instruction_not_hlt;
-        }
+        if (std::cmp_not_equal(output_values.size(), data.num_output_identifiers))
+            return VMErrorCode::mismatched_outputs;
 
-        //Initialize state
-        VMState state{data.instructions, data.num_memory_locations};
+        //NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto* call_stack = reinterpret_cast<VMState::CallFrame*>(
+            resource->allocate(stack_size * sizeof(VMState::CallFrame), alignof(VMState::CallFrame)));
 
-        //Check all instruction indecies before execution so we don't have to check for out-of-bounds accesses during execution
-        for (const auto& instr : state.instructions) {
-            if (!details::instruction_access_in_range(instr, state)) {
-                return VMErrorCode::invalid_instruction_access;
-            }
-        }
+        DynamicArray<double> memory(memory_size, 0.0, resource);
 
-        //initialize special variables
-        {
-            auto it = input_variables.begin();
-            for (const auto& [_, address] : data.config_block.input_identifiers) {
-                get_location(state, address.value()) = *(it++);
-            }
-        }
+        //NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        VMState state{details::Range{memory}, details::Range{call_stack, call_stack + stack_size}, data};
 
-        for (const auto& [value, index] : data.immediate_values) {
-            get_location(state, index.value()) = value;
-        }
-
-#if !RAYCHELSCRIPT_VM_USE_COMPUTED_GOTO
-        //NOLINTNEXTLINE(hicpp-signed-bitwise)
-        feclearexcept(FE_ALL_EXCEPT); //clear the FP exception flags
-
-        //main execution loop
-        while (!state.halt_flag) {
-            execute_next_instruction(state);
-
-            if (state.check_fp_flag) {
-                state.check_fp_flag = false;
-                if (details::has_fp_exception()) {
-                    details::dump_state_fp_error(data, state);
-                    return VMErrorCode::fp_exception;
-                }
-            }
-        }
-#else
-        {
-            constexpr std::array jump_table{&&mov, &&add, &&sub, &&mul, &&div, &&mag, &&fac, &&pow, &&inc, &&dec,           &&mas,
-                                            &&das, &&pas, &&clt, &&cgt, &&ceq, &&cne, &&jpz, &&jmp, &&hlt, &&invalid_opcode};
-            const auto next_instruction = [&] {
-                if (state.instruction_pointer->op_code() >= Assembly::OpCode::num_op_codes) {
-                    return jump_table.back();
-                }
-                return jump_table[static_cast<std::size_t>(state.instruction_pointer->op_code())];
-            };
-
-            goto* next_instruction();
-
-        mov:
-            handle_mov(state, *state.instruction_pointer);
-            goto* next_instruction();
-        add:
-            handle_add(state, *state.instruction_pointer);
-            goto* next_instruction();
-        sub:
-            handle_sub(state, *state.instruction_pointer);
-            goto* next_instruction();
-        mul:
-            handle_mul(state, *state.instruction_pointer);
-            goto* next_instruction();
-        div:
-            handle_div(state, *state.instruction_pointer);
-            goto* next_instruction();
-        mag:
-            handle_mag(state, *state.instruction_pointer);
-            goto* next_instruction();
-        fac:
-            handle_fac(state, *state.instruction_pointer);
-            goto* next_instruction();
-        pow:
-            handle_pow(state, *state.instruction_pointer);
-            goto* next_instruction();
-        inc:
-            handle_inc(state, *state.instruction_pointer);
-            goto* next_instruction();
-        dec:
-            handle_dec(state, *state.instruction_pointer);
-            goto* next_instruction();
-        mas:
-            handle_mas(state, *state.instruction_pointer);
-            goto* next_instruction();
-        das:
-            handle_das(state, *state.instruction_pointer);
-            goto* next_instruction();
-        pas:
-            handle_pas(state, *state.instruction_pointer);
-            goto* next_instruction();
-        clt:
-            handle_clt(state, *state.instruction_pointer);
-            goto* next_instruction();
-        cgt:
-            handle_cgt(state, *state.instruction_pointer);
-            goto* next_instruction();
-        ceq:
-            handle_ceq(state, *state.instruction_pointer);
-            goto* next_instruction();
-        cne:
-            handle_cne(state, *state.instruction_pointer);
-            goto* next_instruction();
-        jpz:
-            handle_jpz(state, *state.instruction_pointer);
-            goto* next_instruction();
-        jmp:
-            handle_jmp(state, *state.instruction_pointer);
-            goto* next_instruction();
-        invalid_opcode:
-            return VMErrorCode::unknow_op_code;
-        hlt:
-        {
-            //nothing to do here :)
-        }
-        }
+#ifdef RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
+        [[maybe_unused]] Raychel::Finally _{[start, &state] {
+            const auto end = std::chrono::high_resolution_clock::now();
+            std::cout << "Executed " << state.instruction_count << " instructions (" << state.function_call_count
+                      << " function calls) in " << duration_cast<std::chrono::microseconds>(end - start).count() << "µs\n";
+        }};
 #endif
 
-#if RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING
-        const auto end = std::chrono::high_resolution_clock::now();
-
-        Logger::info(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count(), "ns\n");
-#endif
-
-        if (state.error_code != VMErrorCode::ok) {
-            return state.error_code;
+        std::size_t i{1};
+        for (const auto& value : input_variables) {
+            RAYCHELSCRIPT_VM_DEBUG("Assigning input value ", value, " to address $", static_cast<std::uint32_t>(i));
+            memory[i] = value;
         }
 
-        return state;
+        if (const auto ec = do_execute(state); ec != VMErrorCode::ok) [[unlikely]]
+            return ec;
+
+        for (uint8_t j{}; j != data.num_output_identifiers; ++j) {
+            const auto value = memory[i + j];
+            RAYCHELSCRIPT_VM_DEBUG(
+                "storing output variable #",
+                static_cast<std::uint32_t>(j),
+                " (from $",
+                static_cast<std::uint32_t>(i + j),
+                "): ",
+                value);
+            output_values[j] = value;
+        }
+
+        return VMErrorCode::ok;
     }
-
-    namespace details {
-
-        static void dump_instructions(const VMState& state) noexcept
-        {
-            Logger::log("Instruction dump: (active instruction marked with '*'):\n");
-            for (auto it = state.instructions.begin(); it != state.instructions.end(); it++) {
-                if (it == std::prev(state.instruction_pointer)) {
-                    Logger::log('*');
-                } else {
-                    Logger::log(' ');
-                }
-                Logger::log(*it, '\n');
-            }
-        }
-
-        static bool dump_value_with_maybe_name(std::size_t index, double value, const auto& container) noexcept
-        {
-            const auto it = std::find_if(container.begin(), container.end(), [&](const auto& descriptor) {
-                return std::cmp_equal(descriptor.second.value(), index);
-            });
-            if (it == container.end()) {
-                return false;
-            }
-            Logger::log(' ', it->first, " = ", value, '\n');
-            return true;
-        }
-
-        static void dump_memory(const VMData& data, const VMState& state) noexcept
-        {
-            Logger::log("$A = ", state.memory.at(0), '\n');
-            for (std::size_t i = 1; i < state.memory_size; i++) {
-                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.input_identifiers)) {
-                    continue;
-                }
-                if (dump_value_with_maybe_name(i, state.memory.at(i), data.config_block.output_identifiers)) {
-                    continue;
-                }
-                Logger::log('$', i, " = ", state.memory.at(i), '\n');
-            }
-        }
-    } // namespace details
-
-    void dump_state(const VMState& state, const VMData& data) noexcept
-    {
-        if (data.num_memory_locations != state.memory_size) {
-            return;
-        }
-        details::dump_instructions(state);
-        details::dump_memory(data, state);
-    }
-
-} //namespace RaychelScript::VM
+} // namespace RaychelScript::VM

@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for Instruction class
 * \date 2021-12-13
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
 #define RAYCHELSCRIPT_ASSEMBLY_INSTRUCTION_H
@@ -36,41 +36,46 @@
 
 namespace RaychelScript::Assembly {
 
-    //TODO: cramming all the instruction data into just 32 bits feels a bit silly. Maybe we should just use 32-bit memory indecies
-
     class Instruction
     {
     public:
-        explicit Instruction(OpCode op_code, MemoryIndex data1 = {}, MemoryIndex data2 = {})
-            : code_{op_code}, data1_{data1.value()}, data2_{data2.value()}
+        explicit Instruction() = default;
+
+        explicit Instruction(OpCode op_code, MemoryIndex index1 = {}, MemoryIndex index2 = {})
+            : code_{op_code}, index1_{index1}, index2_{index2}
         {}
 
         static std::optional<Instruction> from_binary(std::uint32_t data) noexcept
         {
-            const auto op_code = static_cast<OpCode>((data >> 24U) & 0xFFU);
-            if (op_code >= OpCode::num_op_codes) {
+            const auto code = static_cast<OpCode>((data >> 24U) & 0xFFU);
+            if (code >= OpCode::num_op_codes) {
+                return std::nullopt;
+            }
+            const auto maybe_index1 = MemoryIndex::from_binary((data >> 12U) & 0xFFFU);
+            if (!maybe_index1.has_value()) {
+                return std::nullopt;
+            }
+            const auto maybe_index2 = MemoryIndex::from_binary(data & 0xFFFU);
+            if (!maybe_index2.has_value()) {
                 return std::nullopt;
             }
 
-            const auto data1 = static_cast<std::uint8_t>((data >> 16U) & 0xFFU);
-            const auto data2 = static_cast<std::uint8_t>((data >> 8U) & 0xFFU);
-
-            return Instruction{op_code, make_memory_index(data1), make_memory_index(data2)};
+            return Instruction{code, maybe_index1.value(), maybe_index2.value()};
         }
 
         [[nodiscard]] std::uint32_t to_binary() const noexcept
         {
             /*
             Instruction layout:
-            |........|........|........|........|
-             OpCode   DATA1    DATA2    zero
+            |....:....|....:....|....:....|....:....|
+            |OpCode...|....Index1....|....Index2....|
             */
 
-            std::uint32_t instr = 0U;
+            std::uint32_t instr{};
 
             instr |= (static_cast<std::uint32_t>(code_) & 0xFFU) << 24U;
-            instr |= (static_cast<std::uint32_t>(data1_) & 0xFFU) << 16U;
-            instr |= (static_cast<std::uint32_t>(data2_) & 0xFFU) << 8U;
+            instr |= index1_.to_binary() << 12U;
+            instr |= index2_.to_binary();
 
             return instr;
         }
@@ -80,44 +85,42 @@ namespace RaychelScript::Assembly {
             return code_;
         }
 
-        [[nodiscard]] auto data1() const noexcept
+        [[nodiscard]] auto index1() const noexcept
         {
-            return data1_;
+            return index1_;
         }
 
-        [[nodiscard]] auto data2() const noexcept
+        [[nodiscard]] auto index2() const noexcept
         {
-            return data2_;
+            return index2_;
         }
 
-        [[nodiscard]] auto& data1() noexcept
+        [[nodiscard]] auto& index1() noexcept
         {
-            return data1_;
+            return index1_;
         }
 
-        [[nodiscard]] auto& data2() noexcept
+        [[nodiscard]] auto& index2() noexcept
         {
-            return data2_;
+            return index2_;
         }
-
-        friend std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept;
 
     private:
-        OpCode code_;
-        std::uint8_t data1_;
-        std::uint8_t data2_;
+        OpCode code_{OpCode::num_op_codes};
+        MemoryIndex index1_{};
+        MemoryIndex index2_{};
     };
 
     inline std::ostream& operator<<(std::ostream& os, const Instruction& instr) noexcept
     {
-        auto num_args = number_of_arguments(instr.code_);
+        const auto num_args = number_of_arguments(instr.op_code());
 
-        os << instr.code_;
+        os << instr.op_code();
         if (num_args > 0) {
-            os << " $" << static_cast<std::uint32_t>(instr.data1_);
+            os << ' ' << instr.index1();
         }
         if (num_args > 1) {
-            os << " $" << static_cast<std::uint32_t>(instr.data2_);
+            os << ' ' << instr.index2();
         }
         return os;
     }

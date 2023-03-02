@@ -1,9 +1,9 @@
 #include "Assembler/AssemblerPipe.h"
+
 #include "Lexer/LexerPipe.h"
 #include "Parser/ParserPipe.h"
-#include "rasm/WritePipe.h"
+#include "rasm/write.h"
 
-#include "rasm/read.h"
 int main(int argc, char** argv)
 {
     using namespace RaychelScript::Pipes; //NOLINT
@@ -14,58 +14,43 @@ int main(int argc, char** argv)
         }
         return "script.rsc";
     }();
-    const auto output_name = [&]() -> std::string {
+
+    const auto output_filename = [&]() -> std::string {
         if (argc > 2) {
-            return argv[2]; //NOLINT
+            return argv[2]; //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         }
-        return "out.rsbf";
+        return {};
     }();
 
     Logger::setMinimumLogLevel(Logger::LogLevel::debug);
-    {
-        const auto ast_or_error = Lex{lex_file, script_name} | Parse{};
 
-        const auto label = Logger::startTimer("Assembling time");
-        const auto data_or_error = ast_or_error | Assemble{};
-        Logger::logDuration<std::chrono::microseconds>(label);
+    auto data_or_error = Lex{lex_file, script_name} | Parse{} | Assemble{};
+    if (log_if_error(data_or_error)) {
+        return 1;
+    }
+    const auto data = std::move(data_or_error).value();
 
-        if (log_if_error(data_or_error)) {
-            return 1;
-        }
+    Logger::log<std::size_t, const char*>(data.num_input_identifiers, " inputs\n");
 
-        if (log_if_error(data_or_error | Write{output_name})) {
-            return 1;
+    Logger::log("Immediates:\n");
+    std::size_t immediate_index{};
+    for (const auto& immediate_value : data.immediate_values) {
+        Logger::log("  %", immediate_index++, " = ", immediate_value, '\n');
+    }
+
+    std::size_t frame_index{};
+    for (const auto& frame : data.call_frames) {
+        Logger::log("Frame #", frame_index++, " with memory size ", static_cast<int>(frame.size), ":\n");
+        std::size_t instruction_index{};
+        for (const auto& instr : frame.instructions) {
+            Logger::log('%', instruction_index++, ": ", instr, '\n');
         }
     }
 
-    {
-        const auto data_or_error = PipeResult<RaychelScript::VM::VMData>{RaychelScript::Assembly::read_rsbf(output_name)};
+    if (output_filename.empty())
+        return 0;
 
-        if (log_if_error(data_or_error)) {
-            return 1;
-        }
+    Logger::log("Writing output to '", output_filename, "'\n");
 
-        const auto data = data_or_error.value();
-
-        Logger::log("Input identifiers:\n");
-        for (const auto& [identifier, address] : data.config_block.input_identifiers) {
-            Logger::info(address, " -> ", identifier, '\n');
-        }
-
-        Logger::log("Output identifiers:\n");
-        for (const auto& [identifier, address] : data.config_block.output_identifiers) {
-            Logger::info(address, " -> ", identifier, '\n');
-        }
-
-        Logger::log("Immediate values:\n");
-        for (const auto& [value, address] : data.immediate_values) {
-            Logger::info(address, " -> ", value, '\n');
-        }
-
-        Logger::log("Instructions:\n");
-        std::size_t index{0};
-        for (const auto instr : data.instructions) {
-            Logger::info(index++, ": ", instr, '\n');
-        }
-    }
+    return RaychelScript::Assembly::write_rsbf(output_filename, data) ? 0 : 1;
 }

@@ -28,35 +28,23 @@
 
 #include "VM/VMState.h"
 
+#include <span>
+
 namespace RaychelScript::VM {
-    std::vector<double> get_output_values(const VMState& state, const VM::VMData& data) noexcept
+
+    //defined in VM.cpp
+    void push_frame(VMState&, const CallFrameDescriptor&);
+
+    VMState::VMState(details::Range<StackPointer> memory, details::Range<FramePointer> stack, const VMData& _data) noexcept
+        : frame_pointer{stack.begin},
+          stack_pointer{memory.begin},
+          beginning_of_stack{stack.begin},
+          end_of_stack{stack.end},
+          end_of_memory{memory.end},
+          data{_data}
     {
-        if (std::cmp_not_equal(state.memory.size(), data.num_memory_locations)) {
-            return {};
-        }
-
-        std::vector<double> result;
-        result.reserve(data.config_block.output_identifiers.size());
-        for ([[maybe_unused]] const auto& [_, address] : data.config_block.output_identifiers) {
-            result.emplace_back(state.memory.at(address.value()));
-        }
-
-        return result;
-    }
-
-    std::vector<std::pair<std::string, double>> get_output_variables(const VMState& state, const VM::VMData& data) noexcept
-    {
-        if (std::cmp_not_equal(state.memory_size, data.num_memory_locations)) {
-            return {};
-        }
-
-        std::vector<std::pair<std::string, double>> result;
-        result.reserve(data.config_block.output_identifiers.size());
-        for (const auto& [name, address] : data.config_block.output_identifiers) {
-            result.emplace_back(name, state.memory.at(address.value()));
-        }
-
-        return result;
+        const auto& global_frame = data.call_frames.front();
+        new (std::to_address(frame_pointer)) CallFrame{global_frame.instructions.begin(), global_frame.size};
     }
 
 } //namespace RaychelScript::VM

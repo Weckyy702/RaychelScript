@@ -34,6 +34,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "RaychelCore/ClassMacros.h"
+
 namespace RaychelScript {
 
     namespace details {
@@ -61,7 +63,7 @@ namespace RaychelScript {
     template <typename Reffered, typename Key = std::string, typename Data = void>
     struct BasicScope
     {
-        bool inherits_from_parent_scope;
+        bool inherits_from_parent_scope{};
 
         details::scope_data_t<Data> scope_data{};
         std::unordered_map<Key, Reffered> lookup_table{};
@@ -122,20 +124,22 @@ namespace RaychelScript {
     }
 
     template <typename T, typename... ExtraArgs>
-    requires(requires(T& t) {
-        t.push_scope(std::declval<bool>(), std::declval<ExtraArgs>()...);
-        t.pop_scope(std::declval<ExtraArgs>()...);
+    requires(requires(T& thing) {
+        thing.push_scope(std::declval<bool>(), std::declval<ExtraArgs>()...);
+        thing.pop_scope(std::declval<ExtraArgs>()...);
     }) class ScopePusher
     {
     public:
-        explicit ScopePusher(T& t, bool inherits_from_parent_scope, ExtraArgs... extra_args) : pop_args_{t, extra_args...}
+        explicit ScopePusher(T& thing, bool inherits_from_parent_scope, ExtraArgs... extra_args) : pop_args_{thing, extra_args...}
         {
-            t.push_scope(inherits_from_parent_scope, std::forward<ExtraArgs>(extra_args)...);
+            thing.push_scope(inherits_from_parent_scope, std::forward<ExtraArgs>(extra_args)...);
         }
+
+        RAYCHEL_MAKE_NONCOPY_NONMOVE(ScopePusher)
 
         ~ScopePusher() noexcept
         {
-            std::apply(&T::pop_scope, std::move(pop_args_));
+            (void)std::apply(&T::pop_scope, std::move(pop_args_));
         }
 
     private:

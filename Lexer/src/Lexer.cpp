@@ -61,6 +61,7 @@ namespace RaychelScript::Lexer {
     }
 
     //TODO: make this code less awful
+    //NOLINTNEXTLINE(readability-function-cognitive-complexity)
     std::pair<std::vector<Token>, LexerErrorCode> _lex_raw(std::istream& source_stream) noexcept
     {
         std::vector<Token> tokens_so_far{};

@@ -63,6 +63,9 @@ namespace RaychelScript::Assembly {
         jpz, //jump if flag is not set
         jmp, //jump unconditionally
         hlt, //halt execution
+        jsr, //jump to subroutine
+        ret, //return from subroutine
+        put, //put argument into the next stack frame
 
         num_op_codes
     };
@@ -110,6 +113,12 @@ namespace RaychelScript::Assembly {
                 return "CEQ";
             case OpCode::cne:
                 return "CNE";
+            case OpCode::jsr:
+                return "JSR";
+            case OpCode::ret:
+                return "RET";
+            case OpCode::put:
+                return "PUT";
             case OpCode::num_op_codes:
                 break;
         }
@@ -134,17 +143,20 @@ namespace RaychelScript::Assembly {
             case OpCode::cgt:
             case OpCode::ceq:
             case OpCode::cne:
+            case OpCode::put:
                 return 2;
             case OpCode::mag:
             case OpCode::fac:
             case OpCode::jpz:
             case OpCode::jmp:
+            case OpCode::jsr:
                 return 1;
             case OpCode::hlt:
+            case OpCode::ret:
             case OpCode::num_op_codes:
                 return 0;
         }
-        return 0;
+        return static_cast<std::size_t>(-1);
     }
 
     inline std::ostream& operator<<(std::ostream& os, OpCode code) noexcept

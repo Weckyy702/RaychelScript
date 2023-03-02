@@ -28,241 +28,224 @@
 #ifndef RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 #define RAYCHELSCRIPT_ASSEMBLER_CONTEXT_H
 
+#include "AssemblerErrorCode.h"
+#include "shared/AST/AST.h"
+#include "shared/AST/FunctionData.h"
+#include "shared/Misc/Scope.h"
+#include "shared/VM/VMData.h"
 #include "shared/rasm/Instruction.h"
 
-#include <algorithm>
-#include <stack>
+#include "RaychelCore/Finally.h"
+
+#include <queue>
+#include <set>
 #include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
+#include <variant>
 
 namespace RaychelScript::Assembler {
+
+    using namespace Assembly; //NOLINT(google-build-using-namespace)
+
+    template <typename T>
+    using ErrorOr = std::variant<AssemblerErrorCode, T>;
 
     class AssemblingContext
     {
 
-        using Immediates = std::vector<std::pair<double, Assembly::MemoryIndex>>;
-
-        struct ScopeData
+        struct MarkedFunction
         {
-            std::vector<std::string> names;
+            /*implicit*/ MarkedFunction(std::string _mangled_name, std::ptrdiff_t _index = 0) //NOLINT
+                : mangled_name{std::move(_mangled_name)}, index{_index}
+            {}
+
+            std::string mangled_name{};
+            std::ptrdiff_t index{};
+
+            constexpr auto operator<=>(const MarkedFunction& other) const noexcept
+            {
+                return mangled_name <=> other.mangled_name;
+            }
         };
 
     public:
-        explicit AssemblingContext(std::vector<Assembly::Instruction>& instructions, Immediates& immediate_values)
-            : instructions_{instructions}, immediate_values_{immediate_values}
-        {}
+        using Scope = BasicScope<MemoryIndex, std::string, std::queue<MemoryIndex>>;
 
-        /**
-        * \brief Return if the name has a memory index assigned to it
-        *
-        * \param name name of a variable
-        * \return true The name has a memory index associated with it
-        * \return false The name does not have a memory index associated with it
-        */
-        [[nodiscard]] bool has_name(const std::string& name) const noexcept
+        explicit AssemblingContext(const AST& _ast, VM::VMData& data) : ast{_ast}, data_{data}
         {
-            return names_.find(name) != names_.end();
+            //push the global scope
+            push_function_scope("__global");
         }
 
-        /**
-        * \brief Return if the context has at least one scope on the stack
-        *
-        * \return true The context has at least one scope on the stack
-        * \return false The context has no scopes on the stack
-        */
-        [[nodiscard]] bool has_scopes() const noexcept
+        [[nodiscard]] constexpr MemoryIndex a_index() //NOLINT(readability-convert-member-functions-to-static)
         {
-            return !scopes_.empty();
+            return make_memory_index(0U, MemoryIndex::ValueType::stack);
         }
 
-        /**
-        * \brief Return if the index points to an intermediate location
-        *
-        * \param index Index of a memory location
-        * \return true The index points to an intermediate value
-        * \return false The index does not point to an intermediate value
-        */
-        [[nodiscard]] bool is_intermediate(std::uint8_t index) const noexcept
+        ErrorOr<MemoryIndex> add_variable(std::string name)
         {
-            return std::find_if(intermediates_.begin(), intermediates_.end(), [&](const auto& intermediate) {
-                       return intermediate.second.value() == index;
-                   }) != intermediates_.end();
+            if (has_identifier(scopes_, name))
+                return AssemblerErrorCode::duplicate_name;
+            return _current_scope().lookup_table.emplace(std::move(name), _new_stack_index()).first->second;
         }
 
-        /**
-        * \brief Return the memory index associated with a name
-        *
-        * \param name Name of a variable
-        * \return Assembly::MemoryIndex memory index for the name
-        */
-        [[nodiscard]] Assembly::MemoryIndex memory_index_for(const std::string& name) const noexcept
+        MemoryIndex allocate_intermediate()
         {
-            RAYCHEL_ASSERT(has_name(name));
-            return names_.find(name)->second;
-        }
-
-        /**
-        * \brief Return the index for the reserved A register
-        */
-        [[nodiscard]] static constexpr Assembly::MemoryIndex result_index() noexcept
-        {
-            return Assembly::make_memory_index(0);
-        }
-
-        /**
-        * \brief Return the index to the last instruction
-        */
-        [[nodiscard]] auto instruction_index() const noexcept
-        {
-            return instructions_.size() - 1;
-        }
-
-        /**
-        * \brief Return a reference to the internal instruction buffer
-        */
-        [[nodiscard]] auto& instructions() noexcept
-        {
-            return instructions_;
-        }
-
-        /**
-        * \brief Return a constant reference to the internal instruction buffer
-        */
-        [[nodiscard]] const auto& instructions() const noexcept
-        {
-            return instructions_;
-        }
-
-        /**
-        * \brief Add a new instruction to the buffer and return its index
-        *
-        * \tparam code op code of the instruction
-        * \tparam Ts Constructor arguments for the instruction. Must match the number expected for the op code
-        */
-        template <Assembly::OpCode code, typename... Ts>
-        auto emit(const Ts&... args) noexcept
-        {
-            static_assert(
-                sizeof...(Ts) == Assembly::number_of_arguments(code),
-                "Number of instructions arguments does not match number required!");
-            instructions_.emplace_back(Assembly::Instruction{code, args...});
-            return instruction_index();
-        }
-
-        void push_scope() noexcept
-        {
-            scopes_.emplace();
-        }
-
-        void pop_scope() noexcept
-        {
-            RAYCHEL_ASSERT(!scopes_.empty());
-            const auto& scope = scopes_.top();
-
-            for (const auto& name : scope.names) {
-                names_.erase(name);
+            if (_current_scope().scope_data.empty()) {
+                return _new_intermediate_index();
             }
-
-            scopes_.pop();
+            auto tmp = _current_scope().scope_data.front();
+            _current_scope().scope_data.pop();
+            return tmp;
         }
 
-        /**
-        * \brief Allocate a new variable and return its memory index
-        *
-        * \param name Name of the variable
-        */
-        [[nodiscard]] auto allocate_variable(const std::string& name) noexcept
+        void free_intermediate(MemoryIndex index)
         {
-            const auto [did_insert, index] = _allocate_new(names_, name);
-            if (did_insert && !scopes_.empty()) {
-                scopes_.top().names.emplace_back(name);
-            }
-            return index;
+            if (index.type() != MemoryIndex::ValueType::intermediate)
+                return;
+            _current_scope().scope_data.push(index);
         }
 
-        /**
-        * \brief Allocate a new immediate value and return its memory index
-        *
-        * \param value immediate value
-        */
-        [[nodiscard]] auto allocate_immediate(double value) noexcept
+        MemoryIndex allocate_immediate(double x)
         {
-            const auto [did_insert, index] = _allocate_new(immediates_, value);
-            if (did_insert) {
-                immediate_values_.emplace_back(std::make_pair(value, index));
-            }
-            return index;
-        }
-
-        /**
-        * \brief allocate a new intermediate value and return its memory index
-        */
-        [[nodiscard]] auto allocate_intermediate() noexcept
-        {
-            for (auto& [free, index] : intermediates_) {
-                if (free) {
-                    free = false;
-                    return index;
+            for (std::size_t i{}; i != data_.immediate_values.size(); ++i) {
+                if (data_.immediate_values.at(i) == x) {
+                    return make_memory_index(i, MemoryIndex::ValueType::immediate);
                 }
             }
-
-            auto idx = _new_index();
-            intermediates_.emplace_back(false, idx);
-            return idx;
+            data_.immediate_values.emplace_back(x);
+            return make_memory_index(data_.immediate_values.size() - 1, MemoryIndex::ValueType::immediate);
         }
 
-        /**
-        * \brief Mark all intermediate values as free so they can be reused
-        */
-        void free_intermediates() noexcept
+        ErrorOr<MemoryIndex> index_for(const std::string& name)
         {
-            for (auto& [free, _] : intermediates_) {
-                free = true;
+            auto maybe_index = find_identifier(scopes_, name);
+            if (!maybe_index.has_value())
+                return AssemblerErrorCode::unresolved_identifier;
+            return maybe_index.value();
+        }
+
+        void push_scope(bool inherits_from_parent_scope, std::string_view name)
+        {
+            Logger::debug("Pushing new scope with name '", name, "'\n");
+            scopes_.emplace_back(
+                Scope{.inherits_from_parent_scope = inherits_from_parent_scope, .scope_data = {}, .lookup_table = {}});
+        }
+
+        AssemblerErrorCode pop_scope(std::string_view name)
+        {
+            if (scopes_.size() == 1)
+                return AssemblerErrorCode::invalid_scope_pop;
+            scopes_.pop_back();
+
+            Logger::debug("Popping scope with name '", name, "'\n");
+
+            return AssemblerErrorCode::ok;
+        }
+
+        void push_function_scope(std::string_view name)
+        {
+            current_frame_ = &data_.call_frames.emplace_back();
+            push_scope(false, name);
+        }
+
+        void pop_function_scope(std::string_view name)
+        {
+            current_frame_ = &data_.call_frames.front();
+            (void)pop_scope(name);
+        }
+
+        template <OpCode op_code>
+        auto emit(MemoryIndex a = {}, MemoryIndex b = {})
+        {
+            current_frame_->instructions.emplace_back(op_code, a, b);
+            return current_frame_->instructions.size() - 1U;
+        }
+
+        [[nodiscard]] std::string_view indent() const
+        {
+            return std::string_view{
+                "..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|."
+                ".|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|.."
+                "|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|..|",
+                debug_depth * 3};
+        }
+
+        [[nodiscard]] auto& instructions()
+        {
+            return current_frame_->instructions;
+        }
+
+        [[nodiscard]] auto next_instruction_index()
+        {
+            return instructions().size();
+        }
+
+        ErrorOr<MemoryIndex> find_function(const std::string& mangled_name)
+        {
+            if (const auto it = all_marked_functions_.find(mangled_name); it != all_marked_functions_.end())
+                return make_memory_index(it->index, MemoryIndex::ValueType::immediate);
+            return AssemblerErrorCode::unresolved_identifier;
+        }
+
+        AssemblerErrorCode mark_function(const std::string& mangled_name)
+        {
+            Logger::debug("Marking function '", mangled_name, "'\n");
+            if (all_marked_functions_.contains(mangled_name)) {
+                return AssemblerErrorCode::ok;
             }
+            if (const auto it = ast.functions.find(mangled_name); it != ast.functions.end()) {
+                const auto [i, _] = all_marked_functions_.emplace(mangled_name, all_marked_functions_.size() + 1);
+                Logger::debug("New function will get index ", i->index, '\n');
+                marked_functions_.emplace(it->second);
+                return AssemblerErrorCode::ok;
+            }
+            Logger::error("Tried to mark nonexistent function '", mangled_name, "'\n");
+            return AssemblerErrorCode::unresolved_identifier;
         }
 
-        [[nodiscard]] auto number_of_memory_locations() const noexcept
+        bool has_marked_functions()
         {
-            RAYCHEL_ASSERT(std::cmp_less_equal(current_index_, std::numeric_limits<std::uint8_t>::max()));
-            return static_cast<std::uint8_t>(current_index_);
+            return !marked_functions_.empty();
         }
+
+        auto next_marked_function()
+        {
+            auto next_function = std::move(marked_functions_.front());
+            marked_functions_.pop();
+            return next_function;
+        }
+
+        //NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
+        const AST& ast;
+        std::size_t debug_depth{};
+        //NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes)
 
     private:
-        /**
-        * \brief Return the memory index for the given value. If none is assigned yet, allocate a new one
-        *
-        * \tparam Container Type of the container
-        * \tparam T value type of the container
-        * \param container container to search in
-        * \param value value to search for
-        */
-        template <typename Container, typename T = typename Container::value_type>
-        [[nodiscard]] std::pair<bool, Assembly::MemoryIndex> _allocate_new(Container& container, const T& value) noexcept
+        MemoryIndex _new_stack_index()
         {
-            if (const auto it = container.find(value); it != container.end()) {
-                return {false, it->second};
-            }
-            const auto it = container.insert({value, _new_index()});
-            return {true, it.first->second};
+            return _new_index(MemoryIndex::ValueType::stack);
         }
 
-        [[nodiscard]] Assembly::MemoryIndex _new_index() noexcept
+        MemoryIndex _new_intermediate_index()
         {
-            return Assembly::make_memory_index(current_index_++);
+            return _new_index(MemoryIndex::ValueType::intermediate);
         }
 
-        std::vector<Assembly::Instruction>& instructions_;
-        Immediates& immediate_values_;
-        std::vector<std::pair<bool, Assembly::MemoryIndex>> intermediates_;
+        MemoryIndex _new_index(MemoryIndex::ValueType type)
+        {
+            return make_memory_index(current_frame_->size++, type);
+        }
 
-        std::size_t current_index_{1}; //the first index is reserved for the A register
+        [[nodiscard]] Scope& _current_scope()
+        {
+            return scopes_.back();
+        }
 
-        std::unordered_map<std::string, Assembly::MemoryIndex> names_;
-        std::unordered_map<double, Assembly::MemoryIndex> immediates_;
-
-        std::stack<ScopeData, std::vector<ScopeData>> scopes_;
+        std::queue<FunctionData> marked_functions_{};
+        std::set<MarkedFunction> all_marked_functions_{};
+        VM::VMData& data_;
+        VM::CallFrameDescriptor* current_frame_{};
+        std::vector<Scope> scopes_{};
     };
 
 } //namespace RaychelScript::Assembler

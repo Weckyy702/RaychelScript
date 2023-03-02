@@ -36,6 +36,7 @@
 #include <map>
 #include <optional>
 
+//NOLINTBEGIN(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 static std::optional<std::pair<std::string, double>>
 try_parse_argument(char const* const* const argv, int argument_index) noexcept
 {
@@ -89,7 +90,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto state = state_or_error.value();
+    const auto& state = state_or_error.value();
 
     for (const auto& scope : state.scopes) {
         for (const auto& [name, descriptor] : scope.lookup_table) {
@@ -101,3 +102,5 @@ int main(int argc, char** argv)
         }
     }
 }
+
+//NOLINTEND(cppcoreguidelines-pro-bounds-pointer-arithmetic)

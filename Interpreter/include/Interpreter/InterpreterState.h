@@ -37,13 +37,11 @@
 #include <unordered_map>
 #include <vector>
 
-
 namespace RaychelScript {
     struct AST;
 } //namespace RaychelScript
 
 namespace RaychelScript::Interpreter {
-
 
     namespace details {
         struct ValueData

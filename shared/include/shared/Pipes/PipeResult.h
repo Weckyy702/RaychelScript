@@ -235,7 +235,7 @@ namespace RaychelScript::Pipes {
         requires std::is_enum_v<E>
         PipeResult(std::variant<E, T>&& value_or_error) //NOLINT we want this constructor to be implicit
         {
-            if (const auto* ec = std::get_if<E>(&value_or_error); ec) {
+            if (const auto* ec = std::get_if<E>(&value_or_error); ec != nullptr) {
                 error_container() = *ec;
                 return;
             }

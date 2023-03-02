@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for VMData class
 * \date 2021-12-17
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,23 +23,22 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_VM_DATA_H
 #define RAYCHELSCRIPT_VM_DATA_H
 
-#include "shared/AST/ConfigBlock.h"
 #include "shared/rasm/Instruction.h"
 
 #include <vector>
+
 namespace RaychelScript::VM {
 
-    struct VMConfigBlock
+    struct CallFrameDescriptor
     {
-        using IdentiferContainer = std::vector<std::pair<std::string, Assembly::MemoryIndex>>;
+        std::uint8_t size{1};
 
-        IdentiferContainer input_identifiers;
-        IdentiferContainer output_identifiers;
+        std::vector<Assembly::Instruction> instructions{};
     };
 
     /**
@@ -47,12 +46,11 @@ namespace RaychelScript::VM {
     */
     struct VMData
     {
-        VMConfigBlock config_block;
+        std::uint8_t num_input_identifiers{};
+        std::uint8_t num_output_identifiers{};
 
-        std::vector<std::pair<double, Assembly::MemoryIndex>> immediate_values;
-
-        std::vector<Assembly::Instruction> instructions;
-        std::uint8_t num_memory_locations;
+        std::vector<double> immediate_values{};
+        std::vector<CallFrameDescriptor> call_frames{};
     };
 
 } // namespace RaychelScript::VM

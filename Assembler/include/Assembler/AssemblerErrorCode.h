@@ -3,7 +3,7 @@
 * \author Weckyy702 (weckyy702@gmail.com)
 * \brief Header file for AssemblerErrorCode class
 * \date 2021-12-21
-* 
+*
 * MIT License
 * Copyright (c) [2021] [Weckyy702 (weckyy702@gmail.com | https://github.com/Weckyy702)]
 * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -12,10 +12,10 @@
 * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 * copies of the Software, and to permit persons to whom the Software is
 * furnished to do so, subject to the following conditions:
-* 
+*
 * The above copyright notice and this permission notice shall be included in all
 * copies or substantial portions of the Software.
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,7 +23,7 @@
 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
-* 
+*
 */
 #ifndef RAYCHELSCRIPT_ASSEMBLER_ERROR_CODE_H
 #define RAYCHELSCRIPT_ASSEMBLER_ERROR_CODE_H
@@ -33,13 +33,14 @@
 
 namespace RaychelScript::Assembler {
 
-    enum class AssemblerErrorCode {
+    enum class [[nodiscard]] AssemblerErrorCode{
         ok,
         duplicate_name,
         unresolved_identifier,
-        unknown_arithmetic_expression,
-        not_implemented,
+        unknown_arithmetic_operation,
+        unknown_relational_operation,
         invalid_scope_pop,
+        not_implemented,
     };
 
     inline std::string_view error_code_to_reason_string(AssemblerErrorCode ec) noexcept
@@ -51,12 +52,14 @@ namespace RaychelScript::Assembler {
                 return "Duplicate name";
             case AssemblerErrorCode::unresolved_identifier:
                 return "Unresolved identifier";
-            case AssemblerErrorCode::unknown_arithmetic_expression:
-                return "Unknown arithmetic operator";
+            case AssemblerErrorCode::unknown_arithmetic_operation:
+                return "Unknown arithmetic operation";
+            case AssemblerErrorCode::unknown_relational_operation:
+                return "Unknown relational operation";
+            case AssemblerErrorCode::invalid_scope_pop:
+                return "Tried to pop a scope with no scopes left on the stack";
             case AssemblerErrorCode::not_implemented:
                 return "Not implemented";
-            case AssemblerErrorCode::invalid_scope_pop:
-                return "Tried to pop a scope when there was no scope left on the stack";
         }
         return "unknown reason";
     }

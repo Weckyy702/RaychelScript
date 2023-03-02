@@ -36,6 +36,24 @@
 
 namespace RaychelScript::Pipes {
 
+    namespace details {
+        template <std::size_t N>
+        struct VMReturnTypeFor
+        {
+            using type = std::array<double, N>;
+        };
+
+        template <>
+        struct VMReturnTypeFor<std::dynamic_extent>
+        {
+            using type = std::vector<double>;
+        };
+
+        template <std::size_t N>
+        using vm_return_type_for = typename VMReturnTypeFor<N>::type;
+    } // namespace details
+
+    template <std::size_t N, std::size_t stack_size = 128, std::size_t memory_size = 1'024>
     class Execute
     {
 
@@ -43,24 +61,26 @@ namespace RaychelScript::Pipes {
         explicit Execute(std::vector<double> args) : args_{std::move(args)}
         {}
 
-        VM::VMResult operator()(const VM::VMData& data) const noexcept
+        auto operator()(const VM::VMData& data) const noexcept
         {
-            return VM::execute(data, args_);
+            return VM::execute<N, stack_size, memory_size>(data, args_);
         }
 
     private:
         std::vector<double> args_;
     };
 
-    inline PipeResult<std::pair<VM::VMData, VM::VMState>>
-    operator|(const PipeResult<VM::VMData>& input, const Execute& vm) noexcept
+    template <std::size_t N, std::size_t stack_size, std::size_t memory_size>
+    PipeResult<details::vm_return_type_for<N>>
+    operator|(const PipeResult<VM::VMData>& input, const Execute<N, stack_size, memory_size>& vm) noexcept
     {
+        using T = details::vm_return_type_for<N>;
         RAYCHELSCRIPT_PIPES_RETURN_IF_ERROR(input);
-        const auto state_or_error = vm(input.value());
-        if (const auto* ec = std::get_if<VM::VMErrorCode>(&state_or_error); ec) {
+        const auto output_or_error = vm(input.value());
+        if (const auto* ec = std::get_if<VM::VMErrorCode>(&output_or_error); ec) {
             return *ec;
         }
-        return std::make_pair(input.value(), Raychel::get<VM::VMState>(state_or_error));
+        return Raychel::get<T>(output_or_error);
     }
 
 } //namespace RaychelScript::Pipes

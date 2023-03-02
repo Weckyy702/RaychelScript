@@ -50,7 +50,7 @@
     if (log_if_error(res)) {
         return;
     }
-    const auto ast = res.value();
+    const auto& ast = res.value();
     RaychelScript::pretty_print_ast(ast);
 }
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     if (argc < 2)
         echo_AST_from_stdin();
     else {
-        std::ifstream input_stream{argv[1]};
+        std::ifstream input_stream{argv[1]}; //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         const auto AST_or_error = RaychelScript::Parser::parse(input_stream);
 
         if (const auto* ec = std::get_if<RaychelScript::Parser::ParserErrorCode>(&AST_or_error); ec) {

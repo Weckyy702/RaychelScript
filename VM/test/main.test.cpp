@@ -1,4 +1,4 @@
-#define RAYCHELSCRIPT_VM_ENABLE_DEBUG_TIMING 1
+#include <span>
 #include "VM/VM.h"
 
 #include "Assembler/AssemblerPipe.h"
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
             }
             return _args;
         }
-        return {1, 2, 3};
+        return {10};
     }();
 
     const auto is_binary_file = file_name.ends_with(".rsbf");
@@ -47,22 +47,16 @@ int main(int argc, char** argv)
         return Lex{{}, file_name} | Parse{} | Assemble{};
     }();
 
-    if (log_if_error(data_or_error)) {
+    const auto values_or_error = data_or_error | RaychelScript::Pipes::Execute<std::dynamic_extent, 32, 128>(args);
+
+    if (log_if_error(values_or_error)) {
         return 1;
     }
 
-    const auto state_or_error = data_or_error | RaychelScript::Pipes::Execute{args};
-
-    if (log_if_error(state_or_error)) {
-        return 1;
+    std::size_t i{};
+    for (const auto& value : values_or_error.value()) {
+        Logger::info("Output #", ++i, " = ", value, '\n');
     }
-
-    const auto [data, state] = state_or_error.value();
-
-    for (const auto value : state.memory) {
-        std::cout << value << ' ';
-    }
-    std::cout << '\n';
 
     return 0;
 }
